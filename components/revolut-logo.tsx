@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 
-export function RevolutLogo({ className = "", style }: { className?: string; style?: CSSProperties }) {
+export function UppiLogo({ className = "", style }: { className?: string; style?: CSSProperties }) {
   return (
     <svg
       viewBox="0 0 24 24"

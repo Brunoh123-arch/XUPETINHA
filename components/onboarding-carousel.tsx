@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { StarBurst } from "@/components/star-burst"
-import { RevolutLogo } from "@/components/revolut-logo"
+import { UppiLogo } from "@/components/revolut-logo"
 
 const TOTAL_SLIDES = 5
 const SLIDE_DURATION = 5000
@@ -17,7 +17,7 @@ const slides = [
     themeColor: "#000000",
     textColor: "white",
     image: "/revolut-coin.jpg",
-    imageAlt: "Revolut metallic coin",
+    imageAlt: "Corrida urbana Uppi",
     animated: true,
     logoBg: "white",
     logoColor: "black",
@@ -43,7 +43,7 @@ const slides = [
     themeColor: "#0a0a0a",
     textColor: "white",
     image: "/slide-cards.jpg",
-    imageAlt: "Revolut Business credit cards stacked",
+    imageAlt: "Cartões Uppi empilhados",
     animated: false,
     logoBg: "white",
     logoColor: "black",
@@ -69,7 +69,7 @@ const slides = [
     themeColor: "#080808",
     textColor: "white",
     image: "/slide-security.jpg",
-    imageAlt: "Exploded security chip with Revolut logo",
+    imageAlt: "Chip de segurança Uppi",
     animated: false,
     logoBg: "white",
     logoColor: "black",
@@ -242,7 +242,7 @@ export function OnboardingCarousel() {
             className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: slide.logoBg }}
           >
-            <RevolutLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
+            <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
           </div>
           <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
             Uppi — Mobilidade

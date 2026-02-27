@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { RevolutLogo } from "@/components/revolut-logo"
+import { UppiLogo } from "@/components/revolut-logo"
 
 export const metadata = {
   title: "Política de Privacidade — Uppi",
@@ -58,7 +58,7 @@ export default function PrivacyPage() {
         <div className="max-w-2xl mx-auto px-5 py-4 flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-              <RevolutLogo className="w-4 h-4 text-primary-foreground" />
+              <UppiLogo className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
               Uppi

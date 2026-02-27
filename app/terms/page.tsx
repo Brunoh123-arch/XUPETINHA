@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { RevolutLogo } from "@/components/revolut-logo"
+import { UppiLogo } from "@/components/revolut-logo"
 
 export const metadata = {
   title: "Termos de Uso — Uppi",
@@ -17,7 +17,7 @@ const sections = [
   },
   {
     title: "3. Elegibilidade",
-    content: `Para usar o Revolut Business, você deve ter pelo menos 18 anos de idade, ter capacidade legal para celebrar contratos vinculativos, e não estar proibido de usar o serviço por qualquer lei aplicável. Ao usar o aplicativo, você declara e garante que atende a todos esses requisitos.`,
+    content: `Para usar o Uppi, você deve ter pelo menos 18 anos de idade, ter capacidade legal para celebrar contratos vinculativos, e não estar proibido de usar o serviço por qualquer lei aplicável. Ao usar o aplicativo, você declara e garante que atende a todos esses requisitos.`,
   },
   {
     title: "4. Conta do usuário",
@@ -62,7 +62,7 @@ export default function TermsPage() {
         <div className="max-w-2xl mx-auto px-5 py-4 flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-              <RevolutLogo className="w-4 h-4 text-primary-foreground" />
+              <UppiLogo className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
               Uppi
