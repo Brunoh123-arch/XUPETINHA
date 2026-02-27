@@ -2,19 +2,19 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 // POST /api/v1/auth/email-otp/send
-// Gera um código de 6 dígitos e envia por email via Supabase Auth OTP
+// Envia um código OTP de 6 dígitos por email via Supabase Auth (signInWithOtp)
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { email } = body
 
-    if (!email || !email.includes('@')) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'E-mail inválido' }, { status: 400 })
     }
 
     const supabase = await createClient()
 
-    // Usa o signInWithOtp do Supabase que envia o código de 6 dígitos por email
+    // O Supabase Auth gera e envia automaticamente um OTP de 6 dígitos para o email
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
