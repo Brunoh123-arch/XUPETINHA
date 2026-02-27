@@ -3,49 +3,18 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { RevolutLogo } from "@/components/revolut-logo"
-import { ArrowLeft, ChevronDown } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
-
-// iso2 = código de 2 letras para flagcdn.com/24x18/{iso2}.png
-const countries = [
-  { code: "+55",  iso2: "br", name: "Brasil" },
-  { code: "+1",   iso2: "us", name: "EUA" },
-  { code: "+351", iso2: "pt", name: "Portugal" },
-  { code: "+44",  iso2: "gb", name: "Reino Unido" },
-  { code: "+34",  iso2: "es", name: "Espanha" },
-  { code: "+54",  iso2: "ar", name: "Argentina" },
-  { code: "+56",  iso2: "cl", name: "Chile" },
-  { code: "+57",  iso2: "co", name: "Colômbia" },
-  { code: "+52",  iso2: "mx", name: "México" },
-  { code: "+49",  iso2: "de", name: "Alemanha" },
-  { code: "+33",  iso2: "fr", name: "França" },
-  { code: "+39",  iso2: "it", name: "Itália" },
-]
-
-function FlagImg({ iso2, size = 24 }: { iso2: string; size?: number }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={`https://flagcdn.com/${size}x${Math.round(size * 0.75)}/${iso2}.png`}
-      srcSet={`https://flagcdn.com/${size * 2}x${Math.round(size * 2 * 0.75)}/${iso2}.png 2x`}
-      width={size}
-      height={Math.round(size * 0.75)}
-      alt={iso2.toUpperCase()}
-      className="rounded-sm object-cover flex-shrink-0"
-    />
-  )
-}
 
 export default function PhonePage() {
   const router = useRouter()
   const [step, setStep] = useState<1 | 2>(1)
-  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
   const [code, setCode] = useState(["", "", "", "", "", ""])
   const [loading, setLoading] = useState(false)
-  const [selectedCountry, setSelectedCountry] = useState(countries[0])
-  const [showPicker, setShowPicker] = useState(false)
+  const [error, setError] = useState("")
 
-  const phoneOk = phone.length >= 10 && /^\d+$/.test(phone)
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const codeOk = code.every((c) => c.length === 1)
 
   const handleCodeChange = (index: number, value: string) => {
@@ -54,25 +23,59 @@ export default function PhonePage() {
     newCode[index] = value
     setCode(newCode)
     if (value && index < 5) {
-      const nextInput = document.getElementById(`code-${index + 1}`)
-      nextInput?.focus()
+      document.getElementById(`code-${index + 1}`)?.focus()
     }
   }
 
   const handleSendCode = async () => {
     setLoading(true)
-    // Simulação de envio de código
-    await new Promise((r) => setTimeout(r, 1000))
-    setStep(2)
-    setLoading(false)
+    setError("")
+    try {
+      const res = await fetch("/api/v1/auth/email-otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Erro ao enviar código")
+        return
+      }
+      setStep(2)
+    } catch {
+      setError("Erro de conexão. Tente novamente.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleVerifyCode = async () => {
     setLoading(true)
-    // Simulação de verificação
-    await new Promise((r) => setTimeout(r, 1200))
-    router.push("/home")
-    setLoading(false)
+    setError("")
+    try {
+      const token = code.join("")
+      const res = await fetch("/api/v1/auth/email-otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, token }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || "Código inválido ou expirado")
+        return
+      }
+      router.push("/home")
+    } catch {
+      setError("Erro de conexão. Tente novamente.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setCode(["", "", "", "", "", ""])
+    setError("")
+    await handleSendCode()
   }
 
   return (
@@ -84,7 +87,7 @@ export default function PhonePage() {
         <button
           type="button"
           onClick={() => {
-            if (step === 2) setStep(1)
+            if (step === 2) { setStep(1); setError("") }
             else router.back()
           }}
           className="flex items-center justify-center w-9 h-9 rounded-full"
@@ -104,81 +107,37 @@ export default function PhonePage() {
           <span className="text-sm font-medium text-white/80">Revolut Business</span>
         </div>
         <h1 className="text-[2rem] font-bold text-white leading-tight text-balance">
-          {step === 1 ? "Seu telefone" : "Verificar código"}
+          {step === 1 ? "Seu e-mail" : "Verificar código"}
         </h1>
         <p className="mt-2 text-[15px] text-white/50 leading-relaxed">
           {step === 1
-            ? "Usaremos esse número para enviar um código de verificação."
-            : `Enviamos um código para ${phone}`}
+            ? "Enviaremos um código de 6 dígitos para o seu e-mail."
+            : `Enviamos um código para ${email}`}
         </p>
       </div>
 
       {/* Form */}
       <div className="relative z-10 flex-1 px-5 flex flex-col gap-4">
         {step === 1 ? (
-          <>
-            {/* Phone input */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold uppercase tracking-widest text-white/40">
-                Número de telefone
-              </label>
-              <div className="flex items-center gap-2">
-                {/* Country picker button */}
-                <button
-                  type="button"
-                  onClick={() => setShowPicker((v) => !v)}
-                  className="flex items-center gap-1.5 px-3 py-[15px] rounded-2xl bg-white/5 border border-white/10 text-white text-[15px] font-medium flex-shrink-0 active:scale-[0.97] transition-transform"
-                >
-                  <FlagImg iso2={selectedCountry.iso2} size={20} />
-                  <span className="text-white/50 text-[13px]">{selectedCountry.code}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-white/30" />
-                </button>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  placeholder="11 9 1234-5678"
-                  className="flex-1 px-4 py-[15px] rounded-2xl bg-white/5 text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/30 transition-all"
-                  style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                />
-              </div>
-
-              {/* Country dropdown */}
-              {showPicker && (
-                <div
-                  className="rounded-2xl overflow-hidden mt-1"
-                  style={{ backgroundColor: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)" }}
-                >
-                  {countries.map((country) => (
-                    <button
-                      key={country.code + country.name}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCountry(country)
-                        setShowPicker(false)
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3.5 text-left text-[15px] active:bg-white/10 transition-colors"
-                      style={{
-                        backgroundColor: selectedCountry.name === country.name ? "rgba(255,255,255,0.07)" : "transparent",
-                        borderBottom: "1px solid rgba(255,255,255,0.05)",
-                      }}
-                    >
-                      <FlagImg iso2={country.iso2} size={20} />
-                      <span className="text-white flex-1">{country.name}</span>
-                      <span className="text-white/40 text-[13px]">{country.code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {phone && !phoneOk && (
-                <p className="text-[12px] text-red-400/80">Digite um número válido (mínimo 10 dígitos)</p>
-              )}
-            </div>
-          </>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="email-input" className="text-xs font-semibold uppercase tracking-widest text-white/40">
+              Endereço de e-mail
+            </label>
+            <input
+              id="email-input"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError("") }}
+              placeholder="seu@email.com"
+              className="w-full px-4 py-[15px] rounded-2xl bg-white/5 text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/30 transition-all"
+              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+            />
+            {error && <p className="text-[12px] text-red-400/90">{error}</p>}
+          </div>
         ) : (
           <>
-            {/* OTP inputs */}
             <div className="flex flex-col gap-3">
               <label className="text-xs font-semibold uppercase tracking-widest text-white/40">
                 Código de verificação
@@ -192,22 +151,27 @@ export default function PhonePage() {
                     inputMode="numeric"
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => handleCodeChange(i, e.target.value)}
+                    onChange={(e) => { handleCodeChange(i, e.target.value); setError("") }}
                     onKeyDown={(e) => {
                       if (e.key === "Backspace" && !digit && i > 0) {
                         document.getElementById(`code-${i - 1}`)?.focus()
                       }
                     }}
                     className="w-12 h-16 text-center text-white text-xl font-bold rounded-2xl bg-white/5 outline-none focus:ring-2 focus:ring-white/50 transition-all"
-                    style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+                    style={{ border: `1px solid ${error ? "rgba(248,113,113,0.5)" : "rgba(255,255,255,0.1)"}` }}
                   />
                 ))}
               </div>
+              {error && <p className="text-[12px] text-red-400/90 text-center">{error}</p>}
             </div>
 
-            {/* Resend code */}
             <div className="flex justify-center pt-2">
-              <button type="button" className="text-[13px] text-white/40 hover:text-white/70 transition-colors">
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={loading}
+                className="text-[13px] text-white/40 hover:text-white/70 transition-colors disabled:opacity-30"
+              >
                 Reenviar código
               </button>
             </div>
@@ -216,10 +180,10 @@ export default function PhonePage() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="relative z-10 px-5 pb-10 pt-6 flex flex-col gap-3">
+      <div className="relative z-10 px-5 pb-10 pt-6">
         <button
           type="button"
-          disabled={step === 1 ? !phoneOk : !codeOk || loading}
+          disabled={step === 1 ? !emailOk || loading : !codeOk || loading}
           onClick={() => {
             if (step === 1) handleSendCode()
             else handleVerifyCode()
