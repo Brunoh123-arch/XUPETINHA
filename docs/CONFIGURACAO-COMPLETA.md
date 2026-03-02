@@ -1,8 +1,23 @@
 # UPPI - Configuracao Completa
 
-**Data:** 24/02/2026  
-**Versao:** 11.0  
-**Status:** Operacional — Banco ativo, 73 tabelas, pronto para testes E2E e deploy
+**Data:** 24/02/2026 | **Atualizado:** 02/03/2026
+**Versao:** 12.0
+**Status:** Operacional — Banco ativo, **74 tabelas** (176 total), 145 RLS policies, 20 triggers, Supabase conectado (pjlbixnzjndezoscbhej)
+
+---
+
+## Estado do Banco de Dados — 02/03/2026
+
+| Metrica | Valor confirmado via SQL |
+|---------|--------------------------|
+| Tabelas public | **74** |
+| Tabelas totais (todos schemas) | **176** |
+| RLS policies ativas | **145** |
+| Triggers ativos | **20** |
+| RPCs callable | **15** |
+| Tabelas Realtime | **8** |
+| Extensoes | **7** (postgis 3.3.7, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
+| Migrations aplicadas | **4** (001_core_tables, 002_location_wallet_social, 003_driver_security_support, 004_routes_reviews_misc) |
 
 ---
 

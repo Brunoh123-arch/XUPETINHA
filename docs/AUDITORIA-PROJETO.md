@@ -1,8 +1,8 @@
 # AUDITORIA COMPLETA - PROJETO UPPI
 
 **Data:** 02/03/2026
-**Versao:** 14.1
-**Status Geral:** 100% Operacional — Supabase conectado (pjlbixnzjndezoscbhej / supabase-amber-door), 74 tabelas public / 176 tabelas total (verificado via SQL), 152 paginas, 57 rotas API, 15 funcoes RPC
+**Versao:** 14.2
+**Status Geral:** 100% Operacional — Supabase pjlbixnzjndezoscbhej, 74 tabelas public / 176 total, 145 RLS policies, 20 triggers, 15 RPCs, 7 extensoes, 4 migrations, 152 paginas, 57 rotas API
 
 ---
 
@@ -12,12 +12,16 @@
 |------|---------|
 | Projeto Supabase | pjlbixnzjndezoscbhej (supabase-amber-door) |
 | Migrations aplicadas | 001_core_tables, 002_location_wallet_social, 003_driver_security_support, 004_routes_reviews_misc |
-| Tabelas no schema public | **74** (criadas e verificadas via supabase_list_tables) |
-| RLS | Habilitado em todas as 74 tabelas |
-| Trigger auto-profile | on_auth_user_created ativo |
-| Realtime | rides, messages, notifications, price_offers, driver_locations, ride_tracking, support_messages, ride_offers |
-| RPC Functions | 15 ativas |
+| Tabelas no schema public | **74** (verificadas via SQL em 02/03/2026) |
+| Tabelas totais (todos schemas) | **176** (74 public + 64 pg_catalog + 21 auth + 8 storage + 4 info + 3 realtime + 2 outros) |
+| RLS Policies ativas | **145** (em 73 tabelas — verificado via pg_policies) |
+| Triggers ativos (public) | **20** (18 updated_at + 2 contadores sociais) |
+| Extensoes instaladas | **7** (postgis 3.3.7, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
+| Trigger auto-profile | on_auth_user_created ativo → public.handle_new_user() |
+| Realtime | 8 tabelas publicadas (rides, messages, notifications, price_offers, driver_locations, ride_tracking, support_messages, ride_offers) |
+| RPC Functions | 15 callable + 5 helpers internos |
 | Seed executado | system_settings (6), pricing_rules (6 tipos), rating_categories (4) |
+| Documentacao detalhada | docs/03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md |
 
 ---
 
@@ -29,7 +33,7 @@
 |-----------|--------|----------|
 | **Frontend** | 100% | 152 paginas (70 uppi + 9 auth + 33 admin + outros) |
 | **Backend API** | 100% | 57 route.ts, 92+ handlers em /api/v1/ |
-| **Banco de Dados** | 100% | 74 tabelas public criadas no Supabase, 4 migrations, 98+ RLS, 15 RPC |
+| **Banco de Dados** | 100% | 74 tabelas public / 176 total, 145 RLS policies, 20 triggers, 15 RPCs, 7 extensoes, 4 migrations |
 | **Versionamento** | 100% | /api/v1/* ativo, middleware implementado |
 | **Componentes** | 100% | 48 custom + 85 ui (54 shadcn + 31 iOS) = 133 total |
 | **Services** | 100% | 13 services de dominio |

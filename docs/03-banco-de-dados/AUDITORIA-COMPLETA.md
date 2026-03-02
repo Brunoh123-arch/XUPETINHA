@@ -1,39 +1,71 @@
 # UPPI - AUDITORIA COMPLETA FINAL (CODIGO vs BANCO DE DADOS)
 **Data da Auditoria:** 24/02/2026
-**Ultima Atualizacao:** 24/02/2026
-**Versao:** 11.0
-**Status do Banco:** OPERACIONAL — 73 tabelas ativas no Supabase
-**Total de Arquivos no Projeto:** 490
+**Ultima Atualizacao:** 02/03/2026
+**Versao:** 12.0
+**Status do Banco:** OPERACIONAL — 74 tabelas public / 176 total — Supabase pjlbixnzjndezoscbhej
+**Migrations:** 4 aplicadas via v0 em 02/03/2026 — verificadas via SQL direto no banco
 
 ---
 
 ## SUMARIO EXECUTIVO
 
-| Item | Quantidade |
-|------|------------|
-| Tabelas no banco (real) | 73 (exportado do Supabase em 24/02/2026) |
-| RLS Policies ativas | 98+ (em todas as tabelas) |
-| RPC Functions definidas | 45 (em 16 scripts) |
-| Triggers definidos | 24 (em 10 scripts) |
-| Indexes definidos | 60 (em 14 scripts) |
-| API Routes (arquivos) | 38 |
-| Endpoints HTTP totais | 63 |
-| Paginas (page.tsx) | 65 |
-| Components custom | 26 |
-| Components shadcn/ui | 55 |
-| Hooks custom | 8 |
-| Lib utilities | 18 arquivos |
-| Scripts SQL | 25 + 1 JS |
-| Documentacao (MD) | 9 arquivos |
-| Public assets | 4 arquivos |
-| Config files | 4 (next.config.mjs, tailwind.config.ts, postcss.config.mjs, components.json) |
-| Middleware | 1 (middleware.ts) |
-| Layouts | 3 (root, uppi, admin) |
-| Client components | 4 (analytics, recording, referral, supabase) |
+| Item | Quantidade | Fonte |
+|------|------------|-------|
+| Tabelas no schema public | **74** | supabase_list_tables em 02/03/2026 |
+| Tabelas totais (todos schemas) | **176** | SQL: information_schema.tables em 02/03/2026 |
+| RLS Policies ativas | **145** | SQL: pg_policies WHERE schemaname='public' |
+| Triggers ativos (public) | **20** | SQL: information_schema.triggers |
+| RPC Functions callable | **15** | SQL: information_schema.routines (dominio) |
+| Funcoes trigger/helper | **5** | update_updated_at, handle_new_user, etc. |
+| Tabelas com Realtime | **8** | pg_publication_tables (supabase_realtime) |
+| Extensoes instaladas | **7** | pg_extension |
+| Migrations aplicadas | **4** | supabase_migrations.schema_migrations |
+| API Routes (arquivos) | 57 | route.ts no projeto |
+| Endpoints HTTP totais | 92+ | handlers em /api/v1/ |
+| Paginas (page.tsx) | 152 | app/**/ |
+| Documentacao (MD) | 19 arquivos | docs/**/ |
+| Schemas ativos | 8 | public, auth, storage, realtime, vault, migrations, pg_catalog, information_schema |
 
 ---
 
-## SECAO 1: TODAS AS TABELAS SQL (73 tabelas)
+## ESTADO REAL DO BANCO — VERIFICADO VIA SQL (02/03/2026)
+
+### Distribuicao por schema
+
+| Schema | Tabelas | Responsabilidade |
+|--------|---------|-----------------|
+| public | 74 | Dominio UPPI — 4 migrations (001-004) |
+| pg_catalog | 64 | Catalogo interno PostgreSQL |
+| auth | 21 | Supabase Auth (users, sessions, tokens, MFA, SAML, OAuth) |
+| storage | 8 | Supabase Storage (buckets, objects, multipart S3) |
+| information_schema | 4 | Views SQL padrao |
+| realtime | 3 | Supabase Realtime (subscription, messages, migrations) |
+| supabase_migrations | 1 | Controle de versao |
+| vault | 1 | Segredos AES-GCM |
+| **TOTAL** | **176** | |
+
+### RLS: 145 policies em 73 tabelas
+
+### Triggers: 20 ativos no schema public
+18 triggers de `updated_at` + 2 de controle social (likes, comments) + 1 trigger no auth (on_auth_user_created → handle_new_user)
+
+### Realtime: 8 tabelas publicadas
+rides, messages, notifications, price_offers, driver_locations, ride_tracking, support_messages, ride_offers
+
+### Extensoes: 7 instaladas
+plpgsql 1.0, uuid-ossp 1.1, postgis 3.3.7, pgcrypto 1.3, pg_graphql 1.5.11, pg_stat_statements 1.11, supabase_vault 0.3.1
+
+### Migrations: 4 aplicadas em 02/03/2026
+| Version | Nome | Criado por |
+|---------|------|------------|
+| 20260302200021 | 001_core_tables | limessoare@outlook.com |
+| 20260302200119 | 002_location_wallet_social | limessoare@outlook.com |
+| 20260302200356 | 003_driver_security_support | limessoare@outlook.com |
+| 20260302200508 | 004_routes_reviews_misc | limessoare@outlook.com |
+
+---
+
+## SECAO 1: TODAS AS TABELAS SQL (74 tabelas no schema public)
 
 ### 1.1 setup-database.sql (8 tabelas base)
 

@@ -15,13 +15,18 @@
 | API route.ts | 57 | 57 | 100% |
 | Tabelas no Banco (public) | 74 | 74 | 100% |
 | Tabelas totais (todos schemas) | 176 | 176 | 100% |
-| Funcoes SQL (RPC) | 15 | 15 | 100% |
-| Realtime (tabelas) | 8 | 8 | 100% |
+| RLS Policies ativas | 145 | 145 | 100% |
+| Triggers ativos (public) | 20 | 20 | 100% |
+| Funcoes SQL (RPC callable) | 15 | 15 | 100% |
+| Funcoes helper/trigger | 5 | 5 | 100% |
+| Realtime (tabelas publicadas) | 8 | 8 | 100% |
+| Extensoes instaladas | 7 | 7 | 100% |
+| Migrations aplicadas | 4 | 4 | 100% |
 | Components Custom | 48 | 48 | 100% |
 | Components UI | 85 | 85 | 100% |
 | Services | 13 | 13 | 100% |
 | Hooks | 12 | 12 | 100% |
-| Documentacao | 17 | 17 | 100% |
+| Documentacao | 19 | 19 | 100% |
 | Versionamento API | v1 | v1 | 100% |
 | Build sem erros | Sim | — | 100% |
 
