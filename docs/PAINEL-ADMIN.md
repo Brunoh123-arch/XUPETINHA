@@ -1,9 +1,219 @@
 # UPPI - Painel Administrativo
 
 **Ultima Atualizacao:** 01/03/2026
-**Versao:** 1.0
+**Versao:** 2.0
+**Total de Paginas:** 17
 **Rota base:** /admin
 **Autenticacao:** profiles.is_admin = true (verificado em layout.tsx via requireAdmin)
+
+---
+
+## 1. Visao Geral
+
+O painel admin e uma aplicacao Next.js completa com **17 paginas**, sidebar com 4 grupos de navegacao, header com notificacoes em tempo real e tema escuro proprio. Controla 100% do app em tempo real via Supabase Realtime.
+
+### Componentes base
+| Arquivo | Descricao |
+|---------|-----------|
+| `app/admin/layout.tsx` | Layout raiz: protecao de rota + AdminSidebar + AdminHeader |
+| `components/admin/admin-sidebar.tsx` | Sidebar com 4 grupos, 17 links, icones Lucide |
+| `components/admin/admin-header.tsx` | Header com busca global, notificacoes Realtime, avatar do admin |
+
+### Estrutura da Sidebar (4 grupos)
+```
+Visao Geral      → Dashboard, Analytics, Monitor ao Vivo
+Gestao           → Usuarios, Motoristas, Corridas, Ofertas de Preco, Avaliacoes, Cupons, Indicacoes
+Operacoes        → Financeiro, Pagamentos, Mensagens, Notificacoes, Suporte
+Sistema          → Webhooks, Logs de Erro, Configuracoes
+```
+
+---
+
+## 2. Paginas (17)
+
+### PAGINAS ORIGINAIS (11)
+
+### 2.1 Dashboard — /admin
+**Arquivo:** `app/admin/page.tsx` | Realtime: Sim
+
+- KPIs: total usuarios/motoristas/corridas, corridas ativas, motoristas online, receita dia/total, corridas hoje, taxa conclusao
+- AreaChart: corridas nos ultimos 7 dias (dados reais do banco)
+- BarChart: distribuicao por hora do dia
+- Feed de ultimas corridas com status colorido
+- **Correcao:** `ResponsiveContainer` redundante removido (warning Recharts eliminado)
+
+### 2.2 Usuarios — /admin/users
+**Arquivo:** `app/admin/users/page.tsx` | Realtime: Sim
+
+- Lista completa de usuarios com busca por nome/email
+- Filtro por tipo (passageiro/motorista) e status (ativo/banido)
+- Acoes: banir (com motivo), reativar, ver perfil
+
+### 2.3 Motoristas — /admin/drivers
+**Arquivo:** `app/admin/drivers/page.tsx` | Realtime: Sim
+
+- Lista com dados do veiculo e status de verificacao
+- Acoes: aprovar documentos, rejeitar (com motivo), ver localizacao atual
+- Filtro por status de verificacao e disponibilidade
+
+### 2.4 Corridas — /admin/rides
+**Arquivo:** `app/admin/rides/page.tsx` | Realtime: Sim
+
+- Lista de corridas com filtro por status
+- Acoes admin: forcar conclusao, cancelamento, atribuir motorista
+- Realtime: novas corridas aparecem automaticamente
+
+### 2.5 Financeiro — /admin/financeiro
+**Arquivo:** `app/admin/financeiro/page.tsx` | Realtime: Nao
+
+- Receita total / taxa plataforma / repasses motoristas
+- Grafico de receita por dia (ultimos 30 dias)
+- Filtro por metodo de pagamento e periodo, exportar CSV
+
+### 2.6 Analytics — /admin/analytics
+**Arquivo:** `app/admin/analytics/page.tsx` | Realtime: Nao
+
+- 5 RPCs Supabase: corridas/hora, receita/dia, top drivers, retencao, heatmap
+- Charts: BarChart, LineChart, AreaChart, PieChart
+
+### 2.7 Monitor — /admin/monitor
+**Arquivo:** `app/admin/monitor/page.tsx` | Realtime: Sim
+
+- Mapa Google Maps com motoristas online ao vivo
+- **Correcao:** `createMap()` definida dentro do `useEffect` (antes era chamada sem estar definida)
+- Centro padrao: Brasilia (-15.7801, -47.9292)
+
+### 2.8 Cupons — /admin/cupons
+**Arquivo:** `app/admin/cupons/page.tsx` | Realtime: Nao
+
+- CRUD completo: criar, editar inline, ativar/desativar, deletar
+- Badges: ativo/expirado/esgotado — tabela `coupons`
+
+### 2.9 Notificacoes — /admin/notifications
+**Arquivo:** `app/admin/notifications/page.tsx` | Realtime: Nao
+
+- Broadcast para todos/passageiros/motoristas + envio individual
+- **Correcao:** Bug `result?.ok !== false` corrigido com variaveis locais `ok` e `msg`
+- APIs: `/api/v1/push/send` e `/api/v1/push/broadcast`
+
+### 2.10 Logs — /admin/logs
+**Arquivo:** `app/admin/logs/page.tsx` | Realtime: Sim
+
+- `error_logs` em tempo real, filtro por nivel (error/warn/info), stack trace expansivel
+
+### 2.11 Configuracoes — /admin/settings
+**Arquivo:** `app/admin/settings/page.tsx` | Realtime: Nao
+
+- Salva em `system_settings` — 6 parametros populados via migration (01/03/2026)
+- Toggle visual para maintenance_mode
+
+---
+
+### NOVAS PAGINAS (6) — Adicionadas em 01/03/2026
+
+### 2.12 Mensagens — /admin/messages
+**Arquivo:** `app/admin/messages/page.tsx` | Realtime: Sim
+**Baseada em:** `/uppi/ride/[id]/chat`
+
+- Lista de conversas agrupadas por corrida (passageiro + motorista)
+- Visualizacao das mensagens em tempo real com layout de chat
+- Acao: deletar mensagem abusiva com feedback visual
+- Supabase Realtime no canal `admin-messages-rt` (tabela `messages`)
+- Tabelas: `messages`, `rides`, `profiles`
+
+### 2.13 Pagamentos — /admin/payments
+**Arquivo:** `app/admin/payments/page.tsx` | Realtime: Sim
+**Baseada em:** `/uppi/wallet` + `/uppi/ride/[id]/payment`
+
+- Aba "Corridas": todas as transacoes com status (pending/completed/failed/refunded)
+- Aba "Carteira": transacoes de `wallet_transactions` (credito/debito)
+- KPIs: receita plataforma, volume total, repasse motoristas, pendentes
+- Realtime nos canais `payments` e `wallet_transactions`
+- Tabelas: `payments`, `wallet_transactions`, `profiles`
+
+### 2.14 Avaliacoes — /admin/reviews
+**Arquivo:** `app/admin/reviews/page.tsx` | Realtime: Nao
+**Baseada em:** `/uppi/ride/[id]/review`
+
+- Lista com distribuicao visual por estrela (barra de progresso)
+- KPIs: total, media geral, notas baixas (1-2 estrelas), com comentario
+- Filtro por quantidade de estrelas (1 a 5)
+- Acao: remover avaliacao abusiva
+- Tabela: `reviews`
+
+### 2.15 Suporte — /admin/suporte
+**Arquivo:** `app/admin/suporte/page.tsx` | Realtime: Sim
+**Baseada em:** `/uppi/suporte` + `/uppi/suporte/chat`
+
+- Lista de tickets com prioridade (high/medium/low) e status (open/in_progress/resolved)
+- Painel de detalhe: ver mensagem do usuario, dados do perfil
+- Acoes: "Atender" (in_progress), "Resolver" (resolved)
+- Campo de notas internas do admin (salvo em `admin_notes`)
+- Realtime no canal `admin-support-rt` (tabela `support_tickets`)
+- Tabelas: `support_tickets`, `profiles`
+
+### 2.16 Ofertas de Preco — /admin/price-offers
+**Arquivo:** `app/admin/price-offers/page.tsx` | Realtime: Sim
+**Baseada em:** `/uppi/ride/[id]/offers`
+
+- Comparacao visual: oferta do motorista vs oferta do passageiro (+ diferenca colorida)
+- KPIs: pendentes, aceitas, oferta media, taxa de aceite
+- Indicador de oferta ao vivo (ping animado em pendentes)
+- Filtro por status (pending/accepted/rejected/expired)
+- Realtime no canal `admin-price-offers-rt` (tabela `price_offers`)
+- Tabelas: `price_offers`, `rides`, `profiles`
+
+### 2.17 Indicacoes — /admin/referrals
+**Arquivo:** `app/admin/referrals/page.tsx` | Realtime: Nao
+**Baseada em:** `/uppi/referral`
+
+- Aba "Historico": todas as indicacoes com status (convertida/pendente) e recompensas
+- Aba "Top Indicadores": ranking com podio (ouro/prata/bronze)
+- KPIs: total indicacoes, convertidas, taxa de conversao, recompensas pagas
+- Tabelas: `referrals`, `profiles`
+
+---
+
+## 3. Bugs Corrigidos
+
+| Pagina | Bug | Correcao |
+|--------|-----|----------|
+| Dashboard | `ResponsiveContainer` redundante dentro de `ChartContainer` (warning Recharts linhas 227/256) | Removido — `ChartContainer` ja gerencia dimensoes |
+| Monitor | `createMap()` chamada sem estar definida — mapa nao renderizava | Definida dentro do `useEffect` antes de `initMap()` |
+| Notifications | `result?.ok !== false` sempre true porque `result` era `null` no momento da avaliacao | Substituido por variaveis locais `ok` e `msg` |
+
+---
+
+## 4. Seguranca (RLS)
+
+| Tabela | Policy | Acesso |
+|--------|--------|--------|
+| system_settings | admins_all_system_settings | is_admin = true |
+| error_logs | admins_all_error_logs + auth_insert | Admins CRUD; auth INSERT |
+| coupons | admins_all + auth_read_active | Admins CRUD; usuarios SELECT ativos |
+| webhook_endpoints | admins_all_webhooks | is_admin = true |
+| payments | own_payments + auth_insert | Ver proprios; admin ve todos |
+| notifications | own_notifications | Ver proprias; admin ve todas |
+
+---
+
+## 5. Realtime no Painel Admin
+
+| Canal | Tabela | Evento | Pagina |
+|-------|--------|--------|--------|
+| `admin-rides` | rides | INSERT/UPDATE | Dashboard, Rides, Monitor |
+| `admin-drivers` | driver_profiles | UPDATE | Monitor (GPS) |
+| `admin-logs` | error_logs | INSERT | Logs |
+| `admin-messages-rt` | messages | INSERT/DELETE | Mensagens |
+| `admin-payments-rt` | payments | INSERT/UPDATE | Pagamentos |
+| `admin-payments-rt` | wallet_transactions | INSERT | Pagamentos |
+| `admin-support-rt` | support_tickets | INSERT/UPDATE | Suporte |
+| `admin-price-offers-rt` | price_offers | INSERT/UPDATE | Ofertas de Preco |
+
+---
+
+**Atualizado em 01/03/2026**
+
 
 ---
 

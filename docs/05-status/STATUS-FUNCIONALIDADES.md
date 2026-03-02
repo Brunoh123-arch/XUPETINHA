@@ -1,8 +1,8 @@
 # UPPI - Status de Funcionalidades
 
-**Ultima Atualizacao:** 01/03/2026
-**Versao:** 12.0
-**Status Geral:** 100% Operacional — Painel Admin completo (11 paginas), banco com 11 tabelas ativas, 16 RLS policies, 17 indexes
+**Ultima Atualizacao:** 02/03/2026
+**Versao:** 13.0
+**Status Geral:** 100% Operacional — Painel Admin completo (17 paginas), banco com 11 tabelas ativas, 16 RLS policies, 17 indexes
 
 ---
 
@@ -10,8 +10,8 @@
 
 | Categoria | Pronto | Total | % |
 |-----------|--------|-------|---|
-| Paginas (total) | 73 | 73 | 100% |
-| Paginas Admin | 11 | 11 | 100% |
+| Paginas (total) | 79 | 79 | 100% |
+| Paginas Admin | 17 | 17 | 100% |
 | API route.ts | 56 | 56 | 100% |
 | Tabelas ativas no Banco | 11 | 11 | 100% |
 | RLS Policies ativas | 16 | 16 | 100% |
@@ -106,7 +106,7 @@
 - [x] /uppi/legal/privacy — politica de privacidade
 - [x] /uppi/legal/terms — termos de uso
 
-### Admin (11 paginas) — /admin/
+### Admin (17 paginas) — /admin/
 - [x] /admin — dashboard KPIs realtime + AreaChart + BarChart (warning Recharts corrigido — ResponsiveContainer removido)
 - [x] /admin/users — gerenciar usuarios: banir, ativar, busca, filtros, Supabase Realtime
 - [x] /admin/drivers — gerenciar motoristas: aprovar/rejeitar documentos, status online/offline
@@ -118,6 +118,12 @@
 - [x] /admin/notifications — push broadcast + individual (bug result?.ok corrigido, historico funcional)
 - [x] /admin/logs — error_logs em tempo real, filtro por nivel (error/warn/info), stack trace
 - [x] /admin/settings — system_settings do Supabase (6 parametros populados via migration)
+- [x] /admin/messages — moderacao de chats (tabela messages, Realtime, deletar mensagens)
+- [x] /admin/payments — transacoes de corridas + carteira (tabelas payments + wallet_transactions)
+- [x] /admin/reviews — moderacao de avaliacoes (filtro por estrela, remover abusivas)
+- [x] /admin/suporte — suporte ao cliente: tickets, prioridade, notas internas, Realtime
+- [x] /admin/price-offers — ofertas de preco em tempo real (ping animado, comparacao passageiro vs motorista)
+- [x] /admin/referrals — indicacoes + ranking top indicadores
 
 ### Root (2)
 - [x] / — redirect para /auth/welcome
