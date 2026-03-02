@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Auth routes - redirect to home if already logged in
-    const authPaths = ['/auth/login', '/auth/signup']
+    const authPaths = ['/login', '/signup', '/forgot-password']
     const isAuthRoute = authPaths.some((path) =>
       request.nextUrl.pathname.startsWith(path)
     )

@@ -2,11 +2,33 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { UppiLogo } from "@/components/revolut-logo"
-import { Eye, EyeOff, ArrowLeft, Phone } from "lucide-react"
-import { AppBackground } from "@/components/app-background"
-import { createClient } from "@/lib/supabase/client"
+import { Eye, EyeOff, Phone } from "lucide-react"
+import { AuthShell } from "@/components/auth/auth-shell"
 import { GoogleAuthButton } from "@/components/google-auth-button"
+import { createClient } from "@/lib/supabase/client"
+
+function Spinner() {
+  return (
+    <svg
+      className="w-4 h-4 animate-spin"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  )
+}
+
+const inputCls =
+  "w-full px-4 py-[15px] rounded-2xl text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/25 transition-all font-sans"
+const inputStyle = {
+  backgroundColor: "rgba(255,255,255,0.05)",
+  border: "1px solid rgba(255,255,255,0.09)",
+}
+
+const labelCls = "text-[11px] font-semibold uppercase tracking-widest text-white/35 font-sans"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,117 +38,89 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const canSubmit = email.includes("@") && password.length >= 6
+
   const handleLogin = async () => {
-    if (!email || !password) return
+    if (!canSubmit) return
     setIsLoading(true)
     setError("")
     try {
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
       if (authError) {
-        setError("Email ou senha incorretos.")
+        setError("E-mail ou senha incorretos.")
         return
       }
       router.push("/uppi/home")
-    } catch {
-      setError("Erro inesperado. Tente novamente.")
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes("Variáveis de ambiente")) {
+        setError("Configuração do servidor incompleta. Contate o suporte.")
+      } else {
+        setError("Erro inesperado. Tente novamente.")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ background: "#000" }}>
-      <AppBackground />
-
-      {/* Back button */}
-      <div className="relative z-10 px-5 pt-12 pb-2">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center justify-center w-9 h-9 rounded-full"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-4 h-4 text-white" />
-        </button>
-      </div>
-
-      {/* Logo + title */}
-      <div className="relative z-10 px-5 pt-6 pb-8">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center flex-shrink-0">
-            <UppiLogo className="w-4 h-4 text-black" />
-          </div>
-          <span className="text-sm font-medium text-white/80">Uppi</span>
-        </div>
-        <h1 className="text-[2rem] font-bold text-white leading-tight text-balance">
-          Bem-vindo de volta
-        </h1>
-        <p className="mt-2 text-[15px] text-white/50 leading-relaxed">
-          Entre na sua conta para continuar.
-        </p>
-      </div>
-
-      {/* Social login */}
+    <AuthShell title="Bem-vindo de volta" subtitle="Entre na sua conta para continuar.">
+      {/* Social */}
       <div className="relative z-10 px-5 flex flex-col gap-3 mb-2">
         <GoogleAuthButton label="Continuar com Google" />
         <button
           type="button"
           onClick={() => router.push("/phone")}
-          className="w-full flex items-center justify-center gap-3 py-[15px] rounded-2xl font-semibold text-[15px] text-white active:scale-[0.98] transition-transform duration-100"
-          style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
+          className="w-full flex items-center justify-center gap-3 py-[15px] rounded-2xl font-semibold text-[15px] text-white active:scale-[0.98] transition-transform duration-100 font-sans"
+          style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)" }}
         >
-          <Phone className="w-5 h-5 text-white/80" />
+          <Phone className="w-5 h-5 text-white/60 flex-shrink-0" />
           Continuar com Telefone
         </button>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 py-1">
-          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
-          <span className="text-[12px] font-medium text-white/35 uppercase tracking-widest">ou</span>
-          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(255,255,255,0.1)" }} />
+          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(255,255,255,0.09)" }} />
+          <span className="text-[11px] font-medium text-white/30 uppercase tracking-widest font-sans">ou</span>
+          <div className="flex-1 h-px" style={{ backgroundColor: "rgba(255,255,255,0.09)" }} />
         </div>
       </div>
 
       {/* Form */}
       <div className="relative z-10 flex-1 px-5 flex flex-col gap-4">
-
-        {/* Email */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-widest text-white/40">
-            E-mail
-          </label>
+          <label className={labelCls}>E-mail</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
             placeholder="seu@email.com"
             autoComplete="email"
-            className="w-full px-4 py-[15px] rounded-2xl bg-white/5 text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/30 transition-all"
-            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+            className={inputCls}
+            style={inputStyle}
           />
         </div>
 
-        {/* Password */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-widest text-white/40">
-            Senha
-          </label>
+          <label className={labelCls}>Senha</label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               placeholder="••••••••"
               autoComplete="current-password"
-              className="w-full px-4 py-[15px] pr-12 rounded-2xl bg-white/5 text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/30 transition-all"
-              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+              className={`${inputCls} pr-12`}
+              style={inputStyle}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/60 transition-colors"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -134,44 +128,39 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Forgot password */}
-        <div className="flex justify-end">
-          <button type="button" className="text-[13px] text-white/40 hover:text-white/70 transition-colors">
+        <div className="flex justify-end -mt-1">
+          <button
+            type="button"
+            onClick={() => router.push("/forgot-password")}
+            className="text-[13px] text-white/40 hover:text-white/65 transition-colors font-sans"
+          >
             Esqueci minha senha
           </button>
         </div>
       </div>
 
-      {/* Bottom CTA */}
-      <div className="relative z-10 px-5 pb-10 pt-6 flex flex-col gap-3">
+      {/* CTA */}
+      <div className="relative z-10 px-5 pb-10 pt-4 flex flex-col gap-3">
         {error && (
-          <p className="text-[13px] text-red-400/90 text-center">{error}</p>
+          <p className="text-[13px] text-red-400/90 text-center font-sans">{error}</p>
         )}
         <button
           type="button"
           onClick={handleLogin}
-          disabled={isLoading || !email || !password}
-          className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 shadow-md disabled:opacity-40 flex items-center justify-center gap-2"
+          disabled={!canSubmit || isLoading}
+          className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 shadow-md disabled:opacity-35 flex items-center justify-center gap-2 font-sans"
         >
-          {isLoading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin text-black/50" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-              </svg>
-              Entrando...
-            </>
-          ) : "Entrar"}
+          {isLoading ? <><Spinner />Entrando...</> : "Entrar"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/signup")}
-          className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 text-white"
-          style={{ backgroundColor: "rgba(255,255,255,0.1)" }}
+          className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 text-white font-sans"
+          style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
         >
           Criar conta
         </button>
       </div>
-    </div>
+    </AuthShell>
   )
 }
