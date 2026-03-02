@@ -127,11 +127,7 @@ export default function DriverEarningsPage() {
           }
         }))
       } else {
-        // fallback
-        setHotZones([
-          { name: 'Centro / Av. Paulista', demand: 'peak', distance: '—' },
-          { name: 'Aeroporto Congonhas', demand: 'high', distance: '—' },
-        ])
+        setHotZones([])
       }
     } catch (error) {
       console.error('Error loading earnings:', error)
