@@ -35,7 +35,26 @@ export default function DriverSettingsPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    loadSettings()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/onboarding/splash'); return }
+
+      await loadSettings()
+
+      // Real-time: sync settings if changed from another device/admin
+      channel = supabase
+        .channel(`driver-settings-${user.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        }, () => loadSettings())
+        .subscribe()
+    }
+
+    init()
+    return () => { channel && supabase.removeChannel(channel) }
   }, [])
 
   const loadSettings = async () => {

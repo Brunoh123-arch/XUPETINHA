@@ -33,6 +33,17 @@ export default function DriverProfilePage() {
 
   useEffect(() => {
     loadData()
+
+    // Real-time: listen for ride updates (driver assignment, status changes)
+    const channel = supabase
+      .channel(`ride-driver-profile-${rideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rides',
+        filter: `id=eq.${rideId}`,
+      }, () => loadData())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [rideId])
 
   const loadData = async () => {

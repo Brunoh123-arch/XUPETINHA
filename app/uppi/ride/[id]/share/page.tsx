@@ -20,6 +20,17 @@ export default function ShareRidePage() {
 
   useEffect(() => {
     loadData()
+
+    // Real-time: update driver info if driver changes or ride ends
+    const channel = supabase
+      .channel(`ride-share-${rideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rides',
+        filter: `id=eq.${rideId}`,
+      }, () => loadData())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [rideId])
 
   const loadData = async () => {

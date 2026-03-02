@@ -22,6 +22,17 @@ export default function RideReceiptPage() {
 
   useEffect(() => {
     loadReceipt()
+
+    // Real-time: listen for payment status update on the ride (e.g. admin refund)
+    const channel = supabase
+      .channel(`ride-receipt-${rideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rides',
+        filter: `id=eq.${rideId}`,
+      }, () => loadReceipt())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [rideId])
 
   const loadReceipt = async () => {

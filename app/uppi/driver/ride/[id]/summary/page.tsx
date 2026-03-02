@@ -22,6 +22,17 @@ export default function DriverRideSummaryPage() {
 
   useEffect(() => {
     loadRide()
+
+    // Real-time: listen for ride updates (e.g. payment confirmation)
+    const channel = supabase
+      .channel(`driver-summary-${rideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rides',
+        filter: `id=eq.${rideId}`,
+      }, () => loadRide())
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [rideId])
 
   const loadRide = async () => {

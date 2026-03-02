@@ -32,7 +32,30 @@ export default function DriverProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    loadProfile()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/onboarding/splash'); return }
+
+      await loadProfile()
+
+      // Real-time: sync profile changes (e.g. admin verification updates)
+      channel = supabase
+        .channel(`driver-profile-rt-${user.id}`)
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'driver_profiles',
+          filter: `id=eq.${user.id}`,
+        }, () => loadProfile())
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        }, () => loadProfile())
+        .subscribe()
+    }
+
+    init()
+    return () => { channel && supabase.removeChannel(channel) }
   }, [])
 
   const loadProfile = async () => {

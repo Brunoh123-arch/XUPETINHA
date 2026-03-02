@@ -30,6 +30,23 @@ export default function CancelRidePage() {
 
   useEffect(() => {
     loadRide()
+
+    // Real-time: detect if the other party cancelled or status changed
+    const channel = supabase
+      .channel(`ride-cancel-${rideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE', schema: 'public', table: 'rides',
+        filter: `id=eq.${rideId}`,
+      }, (payload) => {
+        const updated = payload.new as Ride
+        setRide(updated)
+        if (updated.status === 'cancelled' || updated.status === 'completed') {
+          router.push('/uppi/home')
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [rideId])
 
   const loadRide = async () => {

@@ -24,7 +24,26 @@ export default function DriverRatingsPage() {
   const [distribution, setDistribution] = useState([0, 0, 0, 0, 0])
 
   useEffect(() => {
-    loadRatings()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/onboarding/splash'); return }
+
+      await loadRatings()
+
+      // Real-time: listen for new reviews
+      channel = supabase
+        .channel(`driver-reviews-${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'driver_reviews',
+          filter: `driver_id=eq.${user.id}`,
+        }, () => loadRatings())
+        .subscribe()
+    }
+
+    init()
+    return () => { channel && supabase.removeChannel(channel) }
   }, [])
 
   const loadRatings = async () => {

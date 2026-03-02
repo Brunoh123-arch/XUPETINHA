@@ -19,7 +19,30 @@ export default function DriverWalletPage() {
   const [showWithdraw, setShowWithdraw] = useState(false)
 
   useEffect(() => {
-    loadWallet()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/onboarding/splash'); return }
+
+      await loadWallet()
+
+      // Real-time: listen for wallet transaction changes
+      channel = supabase
+        .channel(`driver-wallet-${user.id}`)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'wallet_transactions',
+          filter: `user_id=eq.${user.id}`,
+        }, () => loadWallet())
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'user_wallets',
+          filter: `user_id=eq.${user.id}`,
+        }, () => loadWallet())
+        .subscribe()
+    }
+
+    init()
+    return () => { channel && supabase.removeChannel(channel) }
   }, [])
 
   const loadWallet = async () => {
