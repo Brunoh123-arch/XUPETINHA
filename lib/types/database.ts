@@ -148,10 +148,14 @@ export interface Notification {
   id: string
   user_id: string
   title: string
+  // Schema real: "message" (não "body"), "is_read" (não "read")
   message: string
   type: string
   data?: any
-  read: boolean
+  is_read: boolean
+  action_url?: string
+  image_url?: string
+  expires_at?: string
   created_at: string
 }
 
@@ -159,9 +163,9 @@ export interface Message {
   id: string
   ride_id: string
   sender_id: string
-  content: string
-  type: 'text' | 'image' | 'audio' | 'location'
-  read: boolean
+  // Schema real: "message" (não "content"), sem campo "type", "is_read" → "read" via is_read não existe
+  message: string
+  is_read: boolean
   created_at: string
 }
 
@@ -190,12 +194,16 @@ export interface SupportMessage {
 export interface WalletTransaction {
   id: string
   user_id: string
+  // Schema real: "credit"/"debit"/"withdrawal"/"refund"/"bonus" (não "ride_payment")
   type: TransactionType
   amount: number
+  balance_after: number
   description?: string
-  ride_id?: string
-  status: TransactionStatus
+  // Schema real: "reference_id" é uuid (não string genérica), "reference_type" é text
   reference_id?: string
+  reference_type?: string
+  metadata?: Record<string, any>
+  status: TransactionStatus
   created_at: string
 }
 
@@ -236,10 +244,11 @@ export interface UserCoupon {
 export interface Favorite {
   id: string
   user_id: string
+  // Schema real: "label" (não "name"), "latitude"/"longitude" (não "lat"/"lng")
   label: string
   address: string
-  lat?: number
-  lng?: number
+  latitude?: number
+  longitude?: number
   icon?: string
   created_at: string
 }
@@ -417,26 +426,25 @@ export interface UserAchievement {
 export interface LeaderboardEntry {
   id: string
   user_id: string
-  user_type: 'passenger' | 'driver'
-  period: 'weekly' | 'monthly' | 'alltime'
+  // Schema real: "metric"/"score"/"rank"/"period" (não user_type/rides_count/rating_avg)
+  period: string
+  metric: string
   score: number
   rank?: number
-  rides_count?: number
-  rating_avg?: number
-  period_start?: string
-  period_end?: string
   updated_at: string
 }
 
 export interface HotZone {
   id: string
   name: string
-  latitude: number
-  longitude: number
-  radius: number
-  danger_level: 'low' | 'medium' | 'high' | 'critical'
+  // Schema real: "center_lat"/"center_lng"/"radius_km"/"demand_score"
+  center_lat: number
+  center_lng: number
+  radius_km: number
+  demand_score: number
   is_active: boolean
   created_at: string
+  updated_at: string
 }
 
 export interface PopularRoute {

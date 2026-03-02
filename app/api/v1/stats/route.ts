@@ -10,22 +10,22 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get ride statistics
+    // Corridas como passageiro — schema real: "final_price" (não "price")
     const { data: ridesAsPassenger, error: passengerError } = await supabase
       .from('rides')
-      .select('id, status, price, created_at')
+      .select('id, status, final_price, created_at')
       .eq('passenger_id', user.id)
 
     if (passengerError) throw passengerError
 
     const { data: ridesAsDriver, error: driverError } = await supabase
       .from('rides')
-      .select('id, status, price, created_at')
+      .select('id, status, final_price, created_at')
       .eq('driver_id', user.id)
 
     if (driverError) throw driverError
 
-    // Calculate statistics
+    // Calcular estatísticas
     const totalRides = (ridesAsPassenger?.length || 0) + (ridesAsDriver?.length || 0)
     const completedRides = [
       ...(ridesAsPassenger || []),
@@ -34,32 +34,27 @@ export async function GET() {
 
     const totalSpent = ridesAsPassenger
       ?.filter(r => r.status === 'completed')
-      .reduce((sum, r) => sum + (r.price || 0), 0) || 0
+      .reduce((sum, r) => sum + (r.final_price || 0), 0) || 0
 
     const totalEarned = ridesAsDriver
       ?.filter(r => r.status === 'completed')
-      .reduce((sum, r) => sum + (r.price || 0), 0) || 0
+      .reduce((sum, r) => sum + (r.final_price || 0), 0) || 0
 
-    // Get ratings
+    // Rating — schema real: "rated_id" (não "rated_user_id"), campo "score"
     const { data: ratingsReceived, error: ratingsError } = await supabase
       .from('ratings')
-      .select('rating')
-      .eq('rated_user_id', user.id)
+      .select('score')
+      .eq('rated_id', user.id)
 
     if (ratingsError) throw ratingsError
 
     const averageRating = ratingsReceived && ratingsReceived.length > 0
-      ? ratingsReceived.reduce((sum, r) => sum + r.rating, 0) / ratingsReceived.length
+      ? ratingsReceived.reduce((sum, r) => sum + (r.score || 0), 0) / ratingsReceived.length
       : 0
 
-    // Get wallet balance
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('wallet_balance')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError) throw profileError
+    // Saldo da carteira via função SQL (profile não tem wallet_balance)
+    const { data: walletBalance } = await supabase
+      .rpc('calculate_wallet_balance', { p_user_id: user.id })
 
     return NextResponse.json({
       stats: {
@@ -68,7 +63,7 @@ export async function GET() {
         totalSpent,
         totalEarned,
         averageRating: averageRating.toFixed(1),
-        walletBalance: profile?.wallet_balance || 0,
+        walletBalance: walletBalance ?? 0,
         ridesThisMonth: ridesAsPassenger?.filter(r => {
           const rideDate = new Date(r.created_at)
           const now = new Date()

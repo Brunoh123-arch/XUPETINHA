@@ -17,13 +17,14 @@ export async function sendNotification({
 
   console.log('[v0] Sending notification:', { userId, type, title })
 
+  // Schema real: "message" (não "body"/"ride_id"), "is_read" (não "read")
   const { error } = await supabase.from('notifications').insert({
     user_id: userId,
     type,
     title,
     message,
-    ride_id: rideId,
-    read: false,
+    data: rideId ? { ride_id: rideId } : {},
+    is_read: false,
   })
 
   if (error) {

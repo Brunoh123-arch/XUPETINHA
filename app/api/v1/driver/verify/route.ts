@@ -31,31 +31,33 @@ export async function POST(request: Request) {
     // In production, this would call a facial recognition API
     // For now, we'll simulate verification with a high confidence score
     const confidence_score = 0.95 + Math.random() * 0.05 // 0.95-1.00
+    const isApproved = confidence_score >= 0.90
 
-    // Create verification record
+    // Schema real: driver_verifications tem driver_id, photo_url, status, notes
+    // Não tem confidence_score, device_info, ip_address
     const { data: verification, error: verifyError } = await supabase
       .from('driver_verifications')
       .insert({
         driver_id: user.id,
         photo_url,
-        status: confidence_score >= 0.90 ? 'verified' : 'failed',
-        confidence_score,
-        device_info: device_info || {},
-        ip_address: request.headers.get('x-forwarded-for') || 'unknown',
+        status: isApproved ? 'approved' : 'rejected',
+        notes: isApproved
+          ? 'Verificação facial aprovada automaticamente'
+          : `Verificação falhou (confiança: ${(confidence_score * 100).toFixed(0)}%)`,
       })
       .select()
       .single()
 
     if (verifyError) throw verifyError
 
-    // Update driver profile
-    if (confidence_score >= 0.90) {
+    // Update driver profile — verification_status aceita 'approved'/'rejected'/'pending'
+    if (isApproved) {
       await supabase
         .from('driver_profiles')
         .update({
           last_verification_at: new Date().toISOString(),
           verification_photo_url: photo_url,
-          verification_status: 'verified',
+          verification_status: 'approved',
           requires_verification: false,
           verification_attempts: 0,
         })
@@ -65,16 +67,16 @@ export async function POST(request: Request) {
       await supabase
         .from('driver_profiles')
         .update({
-          verification_status: 'failed',
+          verification_status: 'rejected',
           verification_attempts: (driverProfile.verification_attempts || 0) + 1,
         })
         .eq('id', user.id)
     }
 
     return NextResponse.json({
-      success: confidence_score >= 0.90,
+      success: isApproved,
       verification,
-      message: confidence_score >= 0.90
+      message: isApproved
         ? 'Verificacao facial aprovada'
         : 'Verificacao facial falhou. Tente novamente.',
     })

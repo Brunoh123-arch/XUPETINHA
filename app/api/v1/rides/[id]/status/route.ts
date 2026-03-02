@@ -83,13 +83,14 @@ export async function PATCH(
     }
 
     for (const notif of notifications) {
+      // Schema real: "message"/"is_read"
       await supabase.from('notifications').insert({
         user_id: notif.user_id,
         type: 'ride',
         title: notif.title,
         message: notif.message,
         data: { ride_id: id, status },
-        read: false,
+        is_read: false,
       })
     }
 
