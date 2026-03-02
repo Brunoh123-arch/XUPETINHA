@@ -2,15 +2,56 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { UppiLogo } from "@/components/revolut-logo"
 import { Eye, EyeOff, ArrowLeft, Phone } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
+import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const canSubmit = email.includes("@") && password.length >= 6
+
+  async function handleLogin() {
+    if (!canSubmit) return
+    setLoading(true)
+    setError("")
+
+    const supabase = createClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      setError(
+        signInError.message === "Invalid login credentials"
+          ? "E-mail ou senha incorretos."
+          : "Ocorreu um erro. Tente novamente."
+      )
+      setLoading(false)
+      return
+    }
+
+    router.push("/uppi/home")
+    router.refresh()
+  }
+
+  async function handleGoogleLogin() {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+  }
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ background: "#000" }}>
@@ -49,6 +90,7 @@ export default function LoginPage() {
       <div className="relative z-10 px-5 flex flex-col gap-3 mb-2">
         <button
           type="button"
+          onClick={handleGoogleLogin}
           className="w-full flex items-center justify-center gap-3 py-[15px] rounded-2xl font-semibold text-[15px] text-white active:scale-[0.98] transition-transform duration-100"
           style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
         >
@@ -81,6 +123,16 @@ export default function LoginPage() {
       {/* Form */}
       <div className="relative z-10 flex-1 px-5 flex flex-col gap-4">
 
+        {/* Error message */}
+        {error && (
+          <div
+            className="px-4 py-3 rounded-2xl text-[13px] text-red-400"
+            style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+          >
+            {error}
+          </div>
+        )}
+
         {/* Email */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold uppercase tracking-widest text-white/40">
@@ -109,6 +161,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               autoComplete="current-password"
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className="w-full px-4 py-[15px] pr-12 rounded-2xl bg-white/5 text-white placeholder:text-white/25 text-[15px] outline-none focus:ring-1 focus:ring-white/30 transition-all"
               style={{ border: "1px solid rgba(255,255,255,0.1)" }}
             />
@@ -125,9 +178,12 @@ export default function LoginPage() {
 
         {/* Forgot password */}
         <div className="flex justify-end">
-          <button type="button" className="text-[13px] text-white/40 hover:text-white/70 transition-colors">
+          <Link
+            href="/forgot-password"
+            className="text-[13px] text-white/40 hover:text-white/70 transition-colors"
+          >
             Esqueci minha senha
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -135,9 +191,11 @@ export default function LoginPage() {
       <div className="relative z-10 px-5 pb-10 pt-6 flex flex-col gap-3">
         <button
           type="button"
-          className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 shadow-md"
+          onClick={handleLogin}
+          disabled={!canSubmit || loading}
+          className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-all duration-100 shadow-md disabled:opacity-40"
         >
-          Entrar
+          {loading ? "Entrando..." : "Entrar"}
         </button>
         <button
           type="button"

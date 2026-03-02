@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { HomeSkeleton } from '@/components/ui/ios-skeleton'
@@ -51,7 +51,8 @@ export default function HomePage() {
   const [favoriteAddresses, setFavoriteAddresses] = useState<string[]>([])
   const mapRef = useRef<GoogleMapHandle>(null)
   const router = useRouter()
-  const supabase = createClient()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const supabase = useMemo(() => createClient(), [])
   const { notification: couponNotification, showNotification: showCouponModal, closeNotification: closeCouponModal } = useCouponNotification()
 
   const quickServices = [
