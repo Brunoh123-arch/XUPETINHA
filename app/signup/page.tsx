@@ -6,6 +6,7 @@ import Link from "next/link"
 import { UppiLogo } from "@/components/revolut-logo"
 import { Eye, EyeOff, ArrowLeft, Check, Phone } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
+import { createClient } from "@/lib/supabase/client"
 
 const requirements = [
   { label: "Mínimo 8 caracteres", test: (p: string) => p.length >= 8 },
@@ -20,10 +21,54 @@ export default function SignupPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [step, setStep] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const passwordOk = requirements.every((r) => r.test(password))
   const step1Ok = name.trim().length > 0 && email.includes("@")
   const step2Ok = passwordOk
+
+  async function handleGoogleSignup() {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+  }
+
+  async function handleCreateAccount() {
+    if (!step2Ok) return
+    setLoading(true)
+    setError("")
+
+    const supabase = createClient()
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo:
+          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+          `${window.location.origin}/auth/callback`,
+        data: {
+          full_name: name,
+        },
+      },
+    })
+
+    if (signUpError) {
+      setError(
+        signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")
+          ? "Este e-mail já está cadastrado. Tente fazer login."
+          : "Ocorreu um erro ao criar a conta. Tente novamente."
+      )
+      setLoading(false)
+      return
+    }
+
+    router.push("/auth/sign-up-success")
+  }
 
   return (
     <div className="relative w-full h-full flex flex-col overflow-hidden" style={{ background: "#000" }}>
@@ -86,6 +131,7 @@ export default function SignupPage() {
         <div className="relative z-10 px-5 flex flex-col gap-3 mb-2">
           <button
             type="button"
+            onClick={handleGoogleSignup}
             className="w-full flex items-center justify-center gap-3 py-[15px] rounded-2xl font-semibold text-[15px] text-white active:scale-[0.98] transition-transform duration-100"
             style={{ backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
           >
@@ -118,6 +164,17 @@ export default function SignupPage() {
 
       {/* Form */}
       <div className="relative z-10 flex-1 px-5 flex flex-col gap-4">
+
+        {/* Error message */}
+        {error && (
+          <div
+            className="px-4 py-3 rounded-2xl text-[13px] text-red-400"
+            style={{ backgroundColor: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}
+          >
+            {error}
+          </div>
+        )}
+
         {step === 1 ? (
           <>
             {/* Name */}
@@ -210,14 +267,19 @@ export default function SignupPage() {
       <div className="relative z-10 px-5 pb-10 pt-6 flex flex-col gap-3">
         <button
           type="button"
-          disabled={step === 1 ? !step1Ok : !step2Ok}
+          disabled={step === 1 ? !step1Ok : (!step2Ok || loading)}
           onClick={() => {
-            if (step === 1 && step1Ok) setStep(2)
+            if (step === 1 && step1Ok) {
+              setError("")
+              setStep(2)
+            } else if (step === 2) {
+              handleCreateAccount()
+            }
           }}
           className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-all duration-100 shadow-md disabled:opacity-30"
           style={{ backgroundColor: "white", color: "black" }}
         >
-          {step === 1 ? "Continuar" : "Criar conta"}
+          {step === 1 ? "Continuar" : loading ? "Criando conta..." : "Criar conta"}
         </button>
         <button
           type="button"
