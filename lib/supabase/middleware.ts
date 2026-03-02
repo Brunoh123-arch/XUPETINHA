@@ -38,20 +38,16 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Protected routes - require authentication OR onboarding completion
+    // Protected routes - require authentication
     const protectedPaths = ['/uppi']
     const isProtectedRoute = protectedPaths.some((path) =>
       request.nextUrl.pathname.startsWith(path)
     )
 
     if (isProtectedRoute && !user) {
-      // Permitir acesso se completou o onboarding
-      const onboardingDone = request.cookies.get('onboarding_done')
-      if (!onboardingDone) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/onboarding/splash'
-        return NextResponse.redirect(url)
-      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding/splash'
+      return NextResponse.redirect(url)
     }
 
     // Auth routes - redirect to home if already logged in
