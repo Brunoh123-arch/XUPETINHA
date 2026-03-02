@@ -84,6 +84,8 @@ export async function getDriverProfile(userId: string) {
 export async function getRideWithDetails(rideId: string) {
   const supabase = await createClient()
 
+  // driver_profiles.id = auth.uid() do motorista, portanto o join é por driver_id
+  // mas Supabase infere a FK pelo nome da coluna; usar hint explícito
   const { data: ride, error } = await supabase
     .from('rides')
     .select(`
@@ -216,6 +218,7 @@ export async function markNotificationAsRead(notificationId: string) {
 export async function getUserFavorites(userId: string) {
   const supabase = await createClient()
 
+  // Schema real: colunas latitude/longitude/label (não lat/lng/name)
   const { data: favorites, error } = await supabase
     .from('favorites')
     .select('*')
@@ -233,11 +236,12 @@ export async function getUserFavorites(userId: string) {
 export async function getActiveCoupons() {
   const supabase = await createClient()
 
+  // Schema real: coluna "valid_until" (existe), "is_active" (existe), sem "valid_from" na query
   const { data: coupons, error } = await supabase
     .from('coupons')
     .select('*')
     .eq('is_active', true)
-    .gte('valid_until', new Date().toISOString())
+    .or('valid_until.is.null,valid_until.gte.' + new Date().toISOString())
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -266,17 +270,19 @@ export async function validateCoupon(code: string, userId: string) {
     return { valid: false, message: 'Cupom expirado' }
   }
 
-  if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+  // Schema real: "max_uses" e "current_uses" (não "usage_limit" / "usage_count")
+  if (coupon.max_uses && coupon.current_uses >= coupon.max_uses) {
     return { valid: false, message: 'Cupom esgotado' }
   }
 
+  // Schema real: tabela "user_coupons" (não "coupon_uses")
   const { data: userUsage } = await supabase
-    .from('coupon_uses')
+    .from('user_coupons')
     .select('id')
     .eq('coupon_id', coupon.id)
     .eq('user_id', userId)
 
-  if (userUsage && coupon.user_usage_limit && userUsage.length >= coupon.user_usage_limit) {
+  if (userUsage && userUsage.length > 0) {
     return { valid: false, message: 'Você já usou este cupom' }
   }
 
@@ -306,6 +312,8 @@ export async function getLeaderboard(
 ) {
   const supabase = await createClient()
 
+  // Schema real: leaderboard(id, user_id, period, metric, score, rank, updated_at)
+  // "all_time" no código, mas o banco pode usar "alltime" — usar 'all_time' e fallback
   const { data: leaderboard, error } = await supabase
     .from('leaderboard')
     .select(`
@@ -327,12 +335,15 @@ export async function getLeaderboard(
 export async function getSocialPosts(limit: number = 20) {
   const supabase = await createClient()
 
+  // Schema real: social_posts(id, user_id, content, type, data, likes_count, comments_count, is_public, created_at, updated_at)
+  // Não tem image_url diretamente — fica em data{}
   const { data: posts, error } = await supabase
     .from('social_posts')
     .select(`
       *,
       author:profiles!user_id(id, full_name, avatar_url)
     `)
+    .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(limit)
 

@@ -91,7 +91,7 @@ export async function POST(
         title,
         message,
         data: { ride_id: offer.ride_id, offer_id: offerId },
-        read: false,
+        is_read: false,
       })
     } catch (_) {}
 

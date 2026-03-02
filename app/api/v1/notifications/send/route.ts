@@ -22,15 +22,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Salva a notificacao na tabela notifications (Supabase Realtime entrega ao usuario)
+    // Schema real: "message" (não "body"), "is_read" (não "read")
     const { error } = await supabase
       .from('notifications')
       .insert({
         user_id,
         title,
-        body: messageBody,
+        message: messageBody,
         data: data || {},
-        read: false,
+        is_read: false,
       })
 
     if (error) throw error

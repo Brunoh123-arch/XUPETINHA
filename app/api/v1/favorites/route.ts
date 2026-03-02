@@ -44,15 +44,15 @@ export async function POST(request: Request) {
       )
     }
 
+    // Schema real: colunas "latitude"/"longitude"/"label" (não lat/lng/name)
     const { data: favorite, error } = await supabase
       .from('favorites')
       .insert({
         user_id: user.id,
-        name,
+        label: name,
         address,
-        lat,
-        lng,
-        type: type || 'other',
+        latitude: lat,
+        longitude: lng,
         icon,
       })
       .select()

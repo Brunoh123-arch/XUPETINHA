@@ -11,15 +11,16 @@ export const favoritesService = {
   }) {
     const supabase = createClient()
     
+    // Schema real: colunas "latitude"/"longitude"/"label"
     const { data: favorite, error } = await supabase
       .from('favorites')
       .insert({
         user_id: userId,
         address: data.address,
-        lat: data.lat,
-        lng: data.lng,
+        latitude: data.lat,
+        longitude: data.lng,
         label: data.label || 'Local Salvo',
-        icon: data.icon || '📍',
+        icon: data.icon || null,
       })
       .select()
       .single()

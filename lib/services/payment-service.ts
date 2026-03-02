@@ -62,15 +62,20 @@ class PaymentService {
 
       const tx = data.data
       const supabase = createClient()
+      // Schema real: payments(id, payer_id, payee_id, ride_id, amount, payment_method, status, gateway_ref, metadata, created_at)
+      // Não tem pix_qr_code/expires_at — guardar em metadata
       await supabase.from('payments').insert({
         id: String(tx.transaction_id),
         ride_id: request.ride_id,
         amount: request.amount / 100,
         payment_method: 'pix',
         status: 'pending',
-        pix_qr_code: tx.qr_code_base64,
-        pix_qr_code_text: tx.qr_code,
-        expires_at: tx.expires_at,
+        gateway_ref: String(tx.transaction_id),
+        metadata: {
+          qr_code_base64: tx.qr_code_base64,
+          qr_code_text: tx.qr_code,
+          expires_at: tx.expires_at,
+        },
       }).throwOnError().catch(() => {})
 
       return {
@@ -138,13 +143,22 @@ class PaymentService {
         return false
       }
 
-      // Criar transação
+      // Criar transação — schema real: type deve ser 'debit', com balance_after e metadata obrigatórios
+      // Também precisa de balance_after — calcular via RPC antes
+      const { data: currentBalance } = await supabase
+        .rpc('calculate_wallet_balance', { p_user_id: userId })
+      const balanceAfter = (currentBalance ?? 0) - amount
+
       const { error: txError } = await supabase.from('wallet_transactions').insert({
         user_id: userId,
-        amount: -amount,
-        type: 'ride_payment',
+        amount,
+        type: 'debit',
+        balance_after: balanceAfter,
         description: `Pagamento da corrida`,
-        ride_id: rideId,
+        reference_id: rideId,
+        reference_type: 'ride',
+        status: 'completed',
+        metadata: {},
       })
 
       if (txError) {

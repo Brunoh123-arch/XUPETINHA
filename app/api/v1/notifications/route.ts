@@ -43,8 +43,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { user_id, type, title, message, ride_id } = body
+    const { user_id, type, title, message, ride_id, data: notifData } = body
 
+    // Schema real: colunas "message", "is_read" (não "body"/"read")
+    // Coluna "ride_id" não existe na tabela notifications — vai em data{}
     const { data: notification, error } = await supabase
       .from('notifications')
       .insert({
@@ -52,8 +54,8 @@ export async function POST(request: Request) {
         type,
         title,
         message,
-        ride_id,
-        read: false,
+        data: notifData || (ride_id ? { ride_id } : {}),
+        is_read: false,
       })
       .select()
       .single()
@@ -82,9 +84,10 @@ export async function PATCH(request: Request) {
     const body = await request.json()
     const { notification_id, read } = body
 
+    // Schema real: coluna "is_read" (não "read")
     const { data: notification, error } = await supabase
       .from('notifications')
-      .update({ read })
+      .update({ is_read: read })
       .eq('id', notification_id)
       .eq('user_id', user.id)
       .select()
