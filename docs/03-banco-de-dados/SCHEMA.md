@@ -1,12 +1,12 @@
 # UPPI - Schema do Banco de Dados
 
 **Ultima Atualizacao:** 02/03/2026
-**Versao:** 15.1
-**Banco:** Supabase PostgreSQL 15+ com PostGIS
+**Versao:** 15.2
+**Banco:** Supabase PostgreSQL 15+ com PostGIS 3.3.7
 **Projeto Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door)
 **Migrations aplicadas:** 4 (001 a 004) — verificadas em 02/03/2026
 **Tabelas totais:** 176 (todos os schemas — verificado via SQL em 02/03/2026)
-**Tabelas no schema public (dominio):** 74 (verificadas via supabase_list_tables)
+**Tabelas no schema public (dominio):** 74
 **Tabelas pg_catalog (PostgreSQL interno):** 64
 **Tabelas auth (Supabase):** 21
 **Tabelas storage (Supabase):** 8
@@ -14,6 +14,12 @@
 **Tabelas realtime (Supabase):** 3
 **Tabelas supabase_migrations:** 1
 **Tabelas vault:** 1
+**RLS policies ativas:** 145 (em 73 tabelas — verificado via SQL)
+**Triggers ativos:** 20 (schema public)
+**Funcoes RPC callable:** 15
+**Tabelas com Realtime:** 8 (supabase_realtime publication)
+**Extensoes instaladas:** 7 (postgis, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql)
+**Analise detalhada:** docs/03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md
 
 ---
 

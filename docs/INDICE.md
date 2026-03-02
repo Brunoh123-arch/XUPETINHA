@@ -1,9 +1,9 @@
 # UPPI - Indice Completo do Projeto
 
 **Ultima atualizacao:** 02/03/2026
-**Versao:** 14.2
-**Arquitetura:** Frontend + Backend + Banco de Dados (74 tabelas public / 176 total todos schemas) + API (57 routes) + Auth + Realtime + Admin
-**Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door) — 4 migrations aplicadas — schema ativo
+**Versao:** 14.3
+**Arquitetura:** Frontend + Backend + Banco (74 tabelas public / 176 total / 145 RLS policies / 20 triggers / 15 RPCs) + API (57 routes) + Auth + Realtime (8 tabelas) + Admin
+**Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door) — 4 migrations — 7 extensoes — analise completa: docs/03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md
 
 ---
 
