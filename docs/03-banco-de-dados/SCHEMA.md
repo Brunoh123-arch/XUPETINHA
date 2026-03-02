@@ -1,14 +1,16 @@
 # UPPI - Schema do Banco de Dados
 
 **Ultima Atualizacao:** 02/03/2026
-**Versao:** 14.0
+**Versao:** 15.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
-**Tabelas totais:** 111 (todos os schemas)
-**Tabelas no schema public (dominio):** 72
+**Projeto Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door)
+**Migrations aplicadas:** 4 (001 a 004) — verificadas em 02/03/2026
+**Tabelas totais:** 113+ (todos os schemas)
+**Tabelas no schema public (dominio):** 74 (verificadas via supabase_list_tables)
 **Tabelas auth (Supabase):** 21
 **Tabelas realtime (Supabase):** 8
 **Tabelas storage (Supabase):** 8
-**RLS Policies:** 98+ ativas
+**RLS Policies:** 98+ ativas (todas as 74 tabelas)
 **Funcoes RPC:** 15 ativas
 **Indexes:** 60+
 
@@ -18,15 +20,15 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **72** | Dominio da aplicacao (perfis, corridas, pagamentos, etc.) |
+| **public** | **74** | Dominio da aplicacao — criadas via 4 migrations em 02/03/2026 |
 | auth | 21 | Gerenciadas pelo Supabase Auth (users, sessions, tokens, etc.) |
 | realtime | 8 | Gerenciadas pelo Supabase Realtime |
 | storage | 8 | Gerenciadas pelo Supabase Storage (objects, buckets, etc.) |
-| supabase_migrations | 1 | Controle interno de migracoes |
+| supabase_migrations | 1 | Controle interno de migracoes (4 migrations aplicadas) |
 | vault | 1 | Segredos criptografados |
-| **Total geral** | **111** | |
+| **Total geral** | **113+** | |
 
-### Schema public — tabelas por grupo (72 total)
+### Schema public — tabelas por grupo (74 total)
 
 | Grupo | Tabelas |
 |-------|---------|
@@ -424,4 +426,4 @@ profiles (passenger)
 
 ---
 
-**Atualizado em 02/03/2026** — 111 tabelas totais verificadas via Supabase SQL (72 public + 39 sistema)
+**Atualizado em 02/03/2026** — Supabase pjlbixnzjndezoscbhej: 4 migrations aplicadas, 74 tabelas public verificadas, 15 RPCs, seeds executados
