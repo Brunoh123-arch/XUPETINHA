@@ -1,7 +1,7 @@
 # UPPI - Status de Funcionalidades
 
 **Ultima Atualizacao:** 02/03/2026
-**Versao:** 17.0
+**Versao:** 18.0
 **Status Geral:** 100% Operacional
 
 ---
@@ -13,7 +13,8 @@
 | Paginas (total) | 152 | 152 | 100% |
 | Paginas Admin | 33 | 33 | 100% |
 | API route.ts | 57 | 57 | 100% |
-| Tabelas no Banco | 73 | 73 | 100% |
+| Tabelas no Banco (public) | 72 | 72 | 100% |
+| Tabelas totais (todos schemas) | 111 | 111 | 100% |
 | Funcoes SQL (RPC) | 15 | 15 | 100% |
 | Realtime (tabelas) | 8 | 8 | 100% |
 | Components Custom | 48 | 48 | 100% |
@@ -226,9 +227,19 @@
 
 ---
 
-## 3. Banco de Dados — 73 tabelas (02/03/2026)
+## 3. Banco de Dados — 111 tabelas totais / 72 no schema public
 
-### Nucleo (8)
+| Schema | Tabelas |
+|--------|---------|
+| public | 72 |
+| auth | 21 |
+| realtime | 8 |
+| storage | 8 |
+| supabase_migrations | 1 |
+| vault | 1 |
+| **Total** | **111** |
+
+### Schema public — 72 tabelas
 - [x] profiles — +rating, +total_rides, +preferences
 - [x] driver_profiles — +last_verification_at, +verification_status, +total_trips, +acceptance_rate
 - [x] rides — +vehicle_type, +notes, +accepted_at, +arrived_at, +has_rated
@@ -446,4 +457,4 @@
 
 ---
 
-**Atualizado em 02/03/2026** — 73 tabelas, 152 paginas, 57 APIs, 15 RPCs, build limpo
+**Atualizado em 02/03/2026** — 111 tabelas totais (72 public + 21 auth + 8 realtime + 8 storage + 2 outras), 152 paginas, 57 APIs, 15 RPCs, build limpo

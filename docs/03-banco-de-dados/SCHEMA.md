@@ -1,18 +1,32 @@
 # UPPI - Schema do Banco de Dados
 
 **Ultima Atualizacao:** 02/03/2026
-**Versao:** 13.0
+**Versao:** 14.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
-**Tabelas ativas (verificadas em 02/03/2026):** 73 tabelas no schema public
+**Tabelas totais:** 111 (todos os schemas)
+**Tabelas no schema public (dominio):** 72
+**Tabelas auth (Supabase):** 21
+**Tabelas realtime (Supabase):** 8
+**Tabelas storage (Supabase):** 8
 **RLS Policies:** 98+ ativas
 **Funcoes RPC:** 15 ativas
 **Indexes:** 60+
 
 ---
 
-## 0. Estado Real do Banco em 02/03/2026
+## 0. Distribuicao de Tabelas por Schema
 
-### Tabelas por grupo (73 no total)
+| Schema | Tabelas | Descricao |
+|--------|---------|-----------|
+| **public** | **72** | Dominio da aplicacao (perfis, corridas, pagamentos, etc.) |
+| auth | 21 | Gerenciadas pelo Supabase Auth (users, sessions, tokens, etc.) |
+| realtime | 8 | Gerenciadas pelo Supabase Realtime |
+| storage | 8 | Gerenciadas pelo Supabase Storage (objects, buckets, etc.) |
+| supabase_migrations | 1 | Controle interno de migracoes |
+| vault | 1 | Segredos criptografados |
+| **Total geral** | **111** | |
+
+### Schema public — tabelas por grupo (72 total)
 
 | Grupo | Tabelas |
 |-------|---------|
@@ -410,4 +424,4 @@ profiles (passenger)
 
 ---
 
-**Atualizado em 02/03/2026** — 73 tabelas verificadas via Supabase SQL
+**Atualizado em 02/03/2026** — 111 tabelas totais verificadas via Supabase SQL (72 public + 39 sistema)

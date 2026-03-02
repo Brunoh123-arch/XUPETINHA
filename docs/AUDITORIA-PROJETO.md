@@ -1,8 +1,8 @@
 # AUDITORIA COMPLETA - PROJETO UPPI
 
 **Data:** 02/03/2026
-**Versao:** 12.0
-**Status Geral:** 100% Operacional — 73 tabelas, 152 paginas, 57 rotas API, 15 funcoes RPC
+**Versao:** 13.0
+**Status Geral:** 100% Operacional — 111 tabelas totais (72 public), 152 paginas, 57 rotas API, 15 funcoes RPC
 
 ---
 
@@ -12,7 +12,7 @@
 |-----------|--------|----------|
 | **Frontend** | 100% | 152 paginas (70 uppi + 9 auth + 33 admin + outros) |
 | **Backend API** | 100% | 57 route.ts, 92+ handlers em /api/v1/ |
-| **Banco de Dados** | 100% | 73 tabelas ativas, 98+ RLS, 15 RPC functions |
+| **Banco de Dados** | 100% | 111 tabelas totais: 72 public + 21 auth + 8 realtime + 8 storage + 2 outras, 98+ RLS, 15 RPC |
 | **Versionamento** | 100% | /api/v1/* ativo, middleware implementado |
 | **Componentes** | 100% | 48 custom + 85 ui (54 shadcn + 31 iOS) = 133 total |
 | **Services** | 100% | 13 services de dominio |
@@ -232,10 +232,20 @@
 
 ---
 
-## 3. BANCO DE DADOS — 73 tabelas (02/03/2026)
+## 3. BANCO DE DADOS — 111 tabelas totais (02/03/2026)
 
-- **73 tabelas** ativas (verificadas via Supabase SQL)
-- **98+ RLS policies** nas tabelas criticas
+| Schema | Tabelas | Descricao |
+|--------|---------|-----------|
+| public | 72 | Todas as tabelas do dominio da aplicacao |
+| auth | 21 | Gerenciadas automaticamente pelo Supabase Auth |
+| realtime | 8 | Gerenciadas automaticamente pelo Supabase Realtime |
+| storage | 8 | Gerenciadas automaticamente pelo Supabase Storage |
+| supabase_migrations | 1 | Controle de migracoes |
+| vault | 1 | Segredos criptografados |
+| **Total** | **111** | |
+
+- **72 tabelas public** ativas (verificadas via Supabase SQL)
+- **98+ RLS policies** nas tabelas criticas do schema public
 - **15 funcoes RPC** ativas
 - **60+ indexes** de performance
 - **8 tabelas Realtime** publicadas
@@ -387,4 +397,4 @@ search-bar, segmented-control, sheet, skeleton, slider, switch, tabs, toast-adva
 
 ---
 
-**Ultima atualizacao:** 02/03/2026 — banco verificado via Supabase SQL, build 152 paginas
+**Ultima atualizacao:** 02/03/2026 — banco verificado via Supabase SQL: 111 tabelas totais (72 public), build 152 paginas
