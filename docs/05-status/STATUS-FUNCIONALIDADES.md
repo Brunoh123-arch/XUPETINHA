@@ -1,8 +1,8 @@
 # UPPI - Status de Funcionalidades
 
 **Ultima Atualizacao:** 02/03/2026
-**Versao:** 19.0
-**Status Geral:** 100% Operacional — Supabase conectado e schema aplicado (74 tabelas public)
+**Versao:** 19.1
+**Status Geral:** 100% Operacional — Supabase conectado e schema aplicado (74 tabelas public / 176 total todos schemas)
 
 ---
 
@@ -14,7 +14,7 @@
 | Paginas Admin | 33 | 33 | 100% |
 | API route.ts | 57 | 57 | 100% |
 | Tabelas no Banco (public) | 74 | 74 | 100% |
-| Tabelas totais (todos schemas) | 113+ | 113+ | 100% |
+| Tabelas totais (todos schemas) | 176 | 176 | 100% |
 | Funcoes SQL (RPC) | 15 | 15 | 100% |
 | Realtime (tabelas) | 8 | 8 | 100% |
 | Components Custom | 48 | 48 | 100% |

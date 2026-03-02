@@ -1,8 +1,8 @@
 # UPPI - Indice Completo do Projeto
 
 **Ultima atualizacao:** 02/03/2026
-**Versao:** 14.0
-**Arquitetura:** Frontend + Backend + Banco de Dados (74 tabelas public / 113+ total) + API (57 routes) + Auth + Realtime + Admin
+**Versao:** 14.2
+**Arquitetura:** Frontend + Backend + Banco de Dados (74 tabelas public / 176 total todos schemas) + API (57 routes) + Auth + Realtime + Admin
 **Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door) — 4 migrations aplicadas — schema ativo
 
 ---
@@ -392,15 +392,17 @@ package.json                                 Dependencias completas
 
 ## 5. Banco de Dados - Estado Real (02/03/2026)
 
-| Categoria              | Quantidade | Observacao                                           |
-|------------------------|-----------|------------------------------------------------------|
-| Tabelas (schema public)| 74        | Criadas via 4 migrations no Supabase (02/03/2026)    |
-| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth                       |
-| Tabelas (realtime)     | 8         | Gerenciadas pelo Supabase Realtime                   |
-| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage                    |
-| Tabelas (migrations)   | 1         | supabase_migrations                                  |
-| Tabelas (vault)        | 1         | Segredos criptografados                              |
-| **Total geral**        | **113+**  | Todos os schemas                                     |
+| Categoria              | Quantidade | Observacao                                              |
+|------------------------|-----------|--------------------------------------------------------------|
+| Tabelas (schema public)| 74        | Criadas via 4 migrations no Supabase (02/03/2026)           |
+| Tabelas (pg_catalog)   | 64        | Catalog interno do PostgreSQL                               |
+| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth                              |
+| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage                           |
+| Tabelas (information_schema) | 4   | Views do sistema PostgreSQL                                 |
+| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime                          |
+| Tabelas (migrations)   | 1         | supabase_migrations                                         |
+| Tabelas (vault)        | 1         | Segredos criptografados                                     |
+| **Total geral**        | **176**   | Todos os schemas — verificado via SQL em 02/03/2026         |
 | RLS Policies           | 98+       | Todas as 74 tabelas com RLS habilitado               |
 | Funcoes SQL (RPC)      | 15        | find_nearby_drivers, calculate_wallet_balance, etc.  |
 | Triggers               | 24+       | updated_at, rating, streaks, etc.                    |
@@ -442,4 +444,4 @@ package.json                                 Dependencias completas
 
 ---
 
-**Ultima atualizacao:** 02/03/2026 — Supabase conectado (pjlbixnzjndezoscbhej), 74 tabelas public, 4 migrations aplicadas, 152 paginas, 57 APIs, 15 funcoes RPC
+**Ultima atualizacao:** 02/03/2026 — Supabase conectado (pjlbixnzjndezoscbhej), 74 tabelas public / 176 tabelas total (todos schemas), 4 migrations aplicadas, 152 paginas, 57 APIs, 15 funcoes RPC

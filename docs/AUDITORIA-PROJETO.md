@@ -1,8 +1,8 @@
 # AUDITORIA COMPLETA - PROJETO UPPI
 
 **Data:** 02/03/2026
-**Versao:** 14.0
-**Status Geral:** 100% Operacional — Supabase conectado (pjlbixnzjndezoscbhej / supabase-amber-door), 74 tabelas public criadas via 4 migrations, 152 paginas, 57 rotas API, 15 funcoes RPC
+**Versao:** 14.1
+**Status Geral:** 100% Operacional — Supabase conectado (pjlbixnzjndezoscbhej / supabase-amber-door), 74 tabelas public / 176 tabelas total (verificado via SQL), 152 paginas, 57 rotas API, 15 funcoes RPC
 
 ---
 
@@ -38,7 +38,7 @@
 | **Documentacao** | 100% | 17 docs em docs/ |
 | **Build** | 100% | 152 paginas geradas, 0 erros TypeScript |
 
-**Score Geral: 100/100** — Banco com 73 tabelas, APIs corrigidas, build limpo
+**Score Geral: 100/100** — 74 tabelas public / 176 total (todos schemas), APIs corrigidas, build limpo
 
 ---
 
