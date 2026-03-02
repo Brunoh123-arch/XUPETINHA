@@ -7,10 +7,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  env: {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://fpnkasmeguuejmfjeowo.supabase.co',
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwbmthc21lZ3V1ZWptZmplb3dvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk0MDcwMzEsImV4cCI6MjA1NDk4MzAzMX0.YCVqXDHhWW0ggRGmCh5Y4qlTy8HYZNb2SXLR2wVHKco',
-  },
   async headers() {
     return [
       {
