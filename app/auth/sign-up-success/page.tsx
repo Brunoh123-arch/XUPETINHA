@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { UppiLogo } from "@/components/revolut-logo"
 import { ArrowLeft, Mail } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
@@ -48,16 +47,6 @@ export default function SignUpSuccessPage() {
         >
           <ArrowLeft className="w-4 h-4 text-white" />
         </button>
-      </div>
-
-      {/* Logo + title */}
-      <div className="relative z-10 px-5 pt-6 pb-8">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-7 h-7 rounded-md bg-white flex items-center justify-center flex-shrink-0">
-            <UppiLogo className="w-4 h-4 text-black" />
-          </div>
-          <span className="text-sm font-medium text-white/80">Uppi</span>
-        </div>
       </div>
 
       {/* Content */}
