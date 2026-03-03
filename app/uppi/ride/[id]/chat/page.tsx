@@ -30,7 +30,17 @@ export default function ChatPage() {
 
   useEffect(() => {
     loadChat()
-    subscribeToMessages()
+    const channel = realtimeService.subscribeToMessages(
+      params.id as string,
+      (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setMessages(prev => [...prev, payload.new as Message])
+        }
+      }
+    )
+    return () => {
+      realtimeService.unsubscribe(channel)
+    }
   }, [])
 
   const loadChat = async () => {
@@ -61,29 +71,9 @@ export default function ChatPage() {
 
       if (error) throw error
       setMessages(data || [])
-    } catch (error) {
-      console.error('[v0] Error loading chat:', error)
+    } catch {
     } finally {
       setLoading(false)
-    }
-  }
-
-  const subscribeToMessages = () => {
-    console.log('[v0] Setting up realtime subscription for chat')
-    
-    const channelId = realtimeService.subscribeToMessages(
-      params.id as string,
-      (payload) => {
-        if (payload.eventType === 'INSERT') {
-          console.log('[v0] New message received:', payload.new)
-          setMessages(prev => [...prev, payload.new as Message])
-        }
-      }
-    )
-
-    return () => {
-      console.log('[v0] Cleaning up chat subscription')
-      realtimeService.unsubscribe(channelId)
     }
   }
 
@@ -105,8 +95,7 @@ export default function ChatPage() {
 
       if (error) throw error
       setNewMessage('')
-    } catch (error) {
-      console.error('[v0] Error sending message:', error)
+    } catch {
       iosToast.error('Erro ao enviar mensagem')
     } finally {
       setSending(false)
