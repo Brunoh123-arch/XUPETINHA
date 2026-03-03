@@ -483,7 +483,7 @@ export default function RideOffersPage() {
       const timeRemaining = Math.max(0, Math.floor((new Date(o.expires_at).getTime() - Date.now()) / 1000))
       return {
         ...o,
-        estimatedMinutes: est ?? Math.floor(Math.random() * 12) + 2,
+        estimatedMinutes: est ?? 5,
         timeRemaining,
       }
     }).filter(o => o.timeRemaining > 0)

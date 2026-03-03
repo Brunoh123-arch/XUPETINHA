@@ -28,9 +28,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Photo required' }, { status: 400 })
     }
 
-    // In production, this would call a facial recognition API
-    // For now, we'll simulate verification with a high confidence score
-    const confidence_score = 0.95 + Math.random() * 0.05 // 0.95-1.00
+    // TODO: em producao, enviar photo_url para API de reconhecimento facial (ex: AWS Rekognition, Face++ )
+    // Por enquanto, aprovamos qualquer foto enviada com score fixo de 1.0 (manual review)
+    const confidence_score = 1.0
 
     // Create verification record
     const { data: verification, error: verifyError } = await supabase

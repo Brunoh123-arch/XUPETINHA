@@ -157,7 +157,8 @@ export default function SearchingDriverPage() {
         const dp = drv?.driver_profile?.[0] as DriverProfileInfo | undefined
         const loc = dp?.current_location?.coordinates
         const est = estimateArrival(loc?.[1], loc?.[0], route.pickupCoords?.lat, route.pickupCoords?.lng)
-        setOffers(prev => [...prev, { ...o as OfferWithDriver, driver: drv || undefined, estimatedMinutes: est ?? Math.floor(Math.random() * 10) + 2 }])
+        // Se nao temos coords do motorista, usamos 5 min como estimativa conservadora
+        setOffers(prev => [...prev, { ...o as OfferWithDriver, driver: drv || undefined, estimatedMinutes: est ?? 5 }])
         setStatus('offers'); setSheetUp(true)
         try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
       })

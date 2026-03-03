@@ -81,12 +81,29 @@ export default function HomePage() {
     // Generate price alert for current time
     setPriceAlert(generatePriceAlert(hour, new Date().getDay()))
 
-    // Load favorite addresses from localStorage
-    const savedFavorites = localStorage.getItem('uppi_favorite_addresses')
-    if (savedFavorites) {
-      setFavoriteAddresses(JSON.parse(savedFavorites))
-    }
   }, [])
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data } = await supabase
+            .from('favorites')
+            .select('address')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+          if (data) setFavoriteAddresses(data.map((f: { address: string }) => f.address))
+        } else {
+          // Fallback para usuarios nao autenticados
+          const saved = localStorage.getItem('uppi_favorite_addresses')
+          if (saved) setFavoriteAddresses(JSON.parse(saved))
+        }
+      } catch {}
+    }
+    loadFavorites()
+  }, [supabase])
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -139,8 +156,7 @@ export default function HomePage() {
             })
           }
         }
-      } catch (error) {
-        console.log('[v0] Error loading profile:', error)
+      } catch {
       } finally {
         setLoading(false)
       }
@@ -191,9 +207,7 @@ export default function HomePage() {
           setInsights(contextInsights)
         }
       }
-    } catch (error) {
-      console.log('[v0] Error loading frequent rides:', error)
-    }
+    } catch {}
   }
 
   const handleRefresh = useCallback(async () => {
@@ -296,10 +310,15 @@ export default function HomePage() {
                       {favoriteAddresses.length > 0 && (
                         <button
                           type="button"
-                          onClick={() => {
-                            localStorage.removeItem('uppi_favorite_addresses')
-                            setFavoriteAddresses([])
+                          onClick={async () => {
                             triggerHaptic('impact')
+                            const { data: { user } } = await supabase.auth.getUser()
+                            if (user) {
+                              await supabase.from('favorites').delete().eq('user_id', user.id)
+                            } else {
+                              localStorage.removeItem('uppi_favorite_addresses')
+                            }
+                            setFavoriteAddresses([])
                           }}
                           className="text-[13px] text-[#FF3B30] font-medium ios-press"
                         >
