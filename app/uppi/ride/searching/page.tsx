@@ -357,13 +357,14 @@ export default function SearchingDriverPage() {
           qrCodeImage={pixModal.qrCodeImage}
           amountLabel={pixModal.amountLabel}
           onClose={() => {
-            // Fechar modal sem pagar ainda: ir para tracking de qualquer forma
+            const rid = pixModal.rideId
             setPixModal(null)
-            router.push(`/uppi/ride/${pixModal.rideId}/tracking`)
+            router.push(`/uppi/ride/${rid}/tracking`)
           }}
           onPaid={() => {
+            const rid = pixModal.rideId
             setPixModal(null)
-            router.push(`/uppi/ride/${pixModal.rideId}/tracking`)
+            router.push(`/uppi/ride/${rid}/tracking`)
           }}
         />
       )}
