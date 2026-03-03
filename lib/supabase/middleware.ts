@@ -2,73 +2,73 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  // Create default response
-  const defaultResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({ request })
 
-  try {
-    // Safely extract environment variables
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // Return early if environment variables are not available
-    if (!url || !key) {
-      return defaultResponse
-    }
-
-    // Initialize Supabase client with environment variables
-    const supabase = createServerClient(url, key, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          const response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    })
-
-    // Refresh session if it exists
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    // Protected routes - require authentication OR onboarding completion
-    const protectedPaths = ['/uppi']
-    const isProtectedRoute = protectedPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    )
-
-    if (isProtectedRoute && !user) {
-      // Permitir acesso se completou o onboarding
-      const onboardingDone = request.cookies.get('onboarding_done')
-      if (!onboardingDone) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/onboarding/splash'
-        return NextResponse.redirect(url)
-      }
-    }
-
-    // Auth routes - redirect to home if already logged in
-    const authPaths = ['/auth/login', '/auth/signup']
-    const isAuthRoute = authPaths.some((path) =>
-      request.nextUrl.pathname.startsWith(path)
-    )
-
-    if (isAuthRoute && user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/uppi/home'
-      return NextResponse.redirect(url)
-    }
-
-    return defaultResponse
-  } catch (error) {
-    console.error('[v0] Middleware error:', error)
-    return defaultResponse
+  if (!supabaseUrl || !supabaseKey) {
+    return supabaseResponse
   }
+
+  // Do NOT put code between createServerClient and supabase.auth.getUser()
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        )
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        )
+      },
+    },
+  })
+
+  // IMPORTANT: Do not run code between createServerClient and getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protected routes - require authentication OR onboarding completion
+  const protectedPaths = ['/uppi']
+  const isProtectedRoute = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  if (isProtectedRoute && !user) {
+    const onboardingDone = request.cookies.get('onboarding_done')
+    if (!onboardingDone) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/onboarding/splash'
+      const redirectResponse = NextResponse.redirect(redirectUrl)
+      supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+        redirectResponse.cookies.set(name, value)
+      })
+      return redirectResponse
+    }
+  }
+
+  // Auth routes - redirect to home if already logged in
+  const authPaths = ['/auth/login', '/auth/signup']
+  const isAuthRoute = authPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  if (isAuthRoute && user) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = '/uppi/home'
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+      redirectResponse.cookies.set(name, value)
+    })
+    return redirectResponse
+  }
+
+  // IMPORTANT: return supabaseResponse to preserve cookies correctly
+  return supabaseResponse
 }
