@@ -167,10 +167,7 @@ class RealtimeService {
     payload: any
   ): Promise<void> {
     const channel = this.channels.get(channelName)
-    if (!channel) {
-      console.warn(`[v0] Channel ${channelName} not found`)
-      return
-    }
+    if (!channel) return
 
     await channel.send({
       type: 'broadcast',

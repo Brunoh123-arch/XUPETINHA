@@ -37,40 +37,32 @@ export default function WalletPage() {
 
   useEffect(() => {
     loadWalletData()
-    
-    // Subscribe to real-time wallet transactions
-    const { data: { user } } = supabase.auth.getUser().then((res) => {
-      if (res.data.user) {
-        console.log('[v0] Setting up wallet realtime subscription')
-        
-        const channelId = realtimeService.subscribeToTable(
-          'wallet_transactions',
-          (payload) => {
-            if (payload.eventType === 'INSERT' && payload.new.user_id === res.data.user.id) {
-              console.log('[v0] New wallet transaction:', payload.new)
-              
-              // Add to transactions list
-              setTransactions(prev => [payload.new as Payment, ...prev])
-              
-              // Update balance
-              if (payload.new.type === 'credit') {
-                setBalance(prev => prev + parseFloat(payload.new.amount))
-                iosToast.success(`+R$ ${parseFloat(payload.new.amount).toFixed(2)}`)
-                haptics.notification('success')
-              } else if (payload.new.type === 'debit') {
-                setBalance(prev => prev - parseFloat(payload.new.amount))
-              }
+
+    let channel: ReturnType<typeof realtimeService.subscribeToTable> | null = null
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      channel = realtimeService.subscribeToTable(
+        'wallet_transactions',
+        (payload) => {
+          if (payload.eventType === 'INSERT' && payload.new.user_id === user.id) {
+            setTransactions(prev => [payload.new as Payment, ...prev])
+            if (payload.new.type === 'credit') {
+              setBalance(prev => prev + parseFloat(payload.new.amount))
+              iosToast.success(`+R$ ${parseFloat(payload.new.amount).toFixed(2)}`)
+              haptics.notification('success')
+            } else if (payload.new.type === 'debit') {
+              setBalance(prev => prev - parseFloat(payload.new.amount))
             }
-          },
-          `user_id=eq.${res.data.user.id}`
-        )
-        
-        return () => {
-          console.log('[v0] Cleaning up wallet subscription')
-          realtimeService.unsubscribe(channelId)
-        }
-      }
+          }
+        },
+        { filter: `user_id=eq.${user.id}`, event: 'INSERT' }
+      )
     })
+
+    return () => {
+      if (channel) realtimeService.unsubscribe(channel)
+    }
   }, [])
 
   const loadWalletData = async () => {
