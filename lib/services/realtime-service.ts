@@ -7,6 +7,7 @@ export type TableName =
   | 'messages'
   | 'notifications'
   | 'driver_profiles'
+  | 'driver_locations'
 
 export type ChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 
@@ -41,13 +42,10 @@ class RealtimeService {
           filter: options?.filter,
         },
         (payload) => {
-          console.log(`[v0] Realtime event on ${table}:`, payload.eventType)
           callback(payload as RealtimePostgresChangesPayload<T>)
         }
       )
-      .subscribe((status) => {
-        console.log(`[v0] Realtime subscription status for ${table}:`, status)
-      })
+      .subscribe()
 
     this.channels.set(channelName, channel)
     return channel
@@ -109,8 +107,8 @@ class RealtimeService {
     driverId: string,
     callback: (payload: RealtimePostgresChangesPayload<any>) => void
   ): RealtimeChannel {
-    return this.subscribeToTable('driver_profiles', callback, {
-      filter: `user_id=eq.${driverId}`,
+    return this.subscribeToTable('driver_locations', callback, {
+      filter: `driver_id=eq.${driverId}`,
       event: 'UPDATE',
     })
   }
@@ -133,7 +131,6 @@ class RealtimeService {
     const channelName = channel.topic
     await this.supabase.removeChannel(channel)
     this.channels.delete(channelName)
-    console.log(`[v0] Unsubscribed from ${channelName}`)
   }
 
   /**
@@ -145,7 +142,6 @@ class RealtimeService {
     )
     await Promise.all(promises)
     this.channels.clear()
-    console.log('[v0] Unsubscribed from all channels')
   }
 
   /**
@@ -171,10 +167,7 @@ class RealtimeService {
     payload: any
   ): Promise<void> {
     const channel = this.channels.get(channelName)
-    if (!channel) {
-      console.warn(`[v0] Channel ${channelName} not found`)
-      return
-    }
+    if (!channel) return
 
     await channel.send({
       type: 'broadcast',
@@ -200,16 +193,9 @@ class RealtimeService {
     })
 
     channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState()
-        console.log('[v0] Presence sync:', Object.keys(state).length, 'users')
-      })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('[v0] User joined:', key)
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('[v0] User left:', key)
-      })
+      .on('presence', { event: 'sync' }, () => {})
+      .on('presence', { event: 'join' }, () => {})
+      .on('presence', { event: 'leave' }, () => {})
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel.track(userData)

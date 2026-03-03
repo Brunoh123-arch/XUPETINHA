@@ -13,6 +13,7 @@ import { IOSBadge } from '@/components/ui/ios-badge'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Car, DollarSign, Gift, Megaphone, CheckCheck } from 'lucide-react'
 import { notificationService } from '@/lib/services/notification-service'
+import { realtimeService } from '@/lib/services/realtime-service'
 
 interface Notification {
   id: string
@@ -33,21 +34,24 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     loadNotifications()
-    
-    // Subscribe to real-time notifications
-    const { data: { user } } = supabase.auth.getUser().then((res) => {
-      if (res.data.user) {
-        const unsubscribe = notificationService.subscribeToNotifications(
-          res.data.user.id,
-          (newNotification) => {
-            setNotifications((prev) => [newNotification, ...prev])
-            haptics.notification('success')
-            iosToast.info(newNotification.title, newNotification.body)
-          }
-        )
-        return () => unsubscribe()
-      }
+
+    let channel: ReturnType<typeof realtimeService.subscribeToNotifications> | null = null
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      channel = realtimeService.subscribeToNotifications(user.id, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const n = payload.new as Notification
+          setNotifications((prev) => [n, ...prev])
+          haptics.notification('success')
+          iosToast.info(n.title, n.message)
+        }
+      })
     })
+
+    return () => {
+      if (channel) realtimeService.unsubscribe(channel)
+    }
   }, [])
 
   const loadNotifications = async () => {
@@ -65,8 +69,7 @@ export default function NotificationsPage() {
       if (result.success && result.notifications) {
         setNotifications(result.notifications)
       }
-    } catch (error) {
-      console.error('[v0] Error loading notifications:', error)
+    } catch {
     } finally {
       setLoading(false)
     }
@@ -98,9 +101,7 @@ export default function NotificationsPage() {
         .eq('is_read', false)
 
       setNotifications(notifications.map((n) => ({ ...n, is_read: true })))
-    } catch (error) {
-      console.error('[v0] Error marking all as read:', error)
-    }
+    } catch {}
   }
 
   const getNotificationIcon = (type: string) => {

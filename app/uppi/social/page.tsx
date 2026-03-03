@@ -36,21 +36,16 @@ export default function SocialFeedPage() {
   useEffect(() => {
     loadFeed()
     
-    // Subscribe to new posts in real-time
-    console.log('[v0] Setting up social feed realtime subscription')
-    
     const postsChannel = realtimeService.subscribeToTable(
       'social_posts',
       (payload) => {
         if (payload.eventType === 'INSERT') {
-          console.log('[v0] New social post:', payload.new)
-          loadFeed() // Reload feed to get the new post with all data
+          loadFeed()
         }
       }
     )
     
     return () => {
-      console.log('[v0] Cleaning up social feed subscription')
       realtimeService.unsubscribe(postsChannel)
     }
   }, [])
@@ -61,8 +56,7 @@ export default function SocialFeedPage() {
       if (!res.ok) throw new Error('Failed to load feed')
       const data = await res.json()
       setPosts(data.posts || [])
-    } catch (error) {
-      console.error('[v0] Error loading feed:', error)
+    } catch {
       iosToast.error('Erro ao carregar feed')
     } finally {
       setLoading(false)
