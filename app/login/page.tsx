@@ -39,7 +39,18 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/uppi/home")
+    // Verificar tipo de usuário para redirecionar corretamente
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
+      .single()
+
+    if (profile?.user_type === 'driver') {
+      router.push('/uppi/driver-mode')
+    } else {
+      router.push('/uppi/home')
+    }
     router.refresh()
   }
 

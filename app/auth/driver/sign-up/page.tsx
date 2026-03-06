@@ -21,31 +21,41 @@ export default function DriverSignUpPage() {
     setIsLoading(true)
 
     try {
-      const { user, error } = await authService.signUp({
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        name,
-        phone,
+        options: {
+          data: {
+            full_name: name,
+            phone,
+            role: 'driver',
+          },
+        },
       })
 
       if (error) {
-        iosToast.error(error)
+        iosToast.error(error.message)
         return
       }
 
-      if (user) {
-        // Definir como motorista
-        const supabase = createClient()
+      if (data.user) {
+        // Criar/atualizar perfil como motorista imediatamente
         await supabase
           .from('profiles')
-          .update({ user_type: 'driver' })
-          .eq('id', user.id)
+          .upsert({
+            id: data.user.id,
+            email,
+            full_name: name,
+            phone,
+            user_type: 'driver',
+            created_at: new Date().toISOString(),
+          })
 
         iosToast.success('Conta criada! Complete seu cadastro.')
         router.push('/uppi/driver/register')
       }
     } catch (error) {
-      console.error('[v0] Sign up exception:', error)
       iosToast.error('Erro ao criar conta')
     } finally {
       setIsLoading(false)
