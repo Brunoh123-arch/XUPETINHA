@@ -63,8 +63,10 @@ export default function UserTypePage() {
           .eq('id', user.id)
           .single()
         
-        if (profile?.user_type && profile.user_type !== 'passenger') {
+        if (profile?.user_type === 'passenger') {
           router.push('/uppi/home')
+        } else if (profile?.user_type === 'driver') {
+          router.push('/auth/driver/welcome')
         }
       }
     }
