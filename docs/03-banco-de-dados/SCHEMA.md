@@ -1,12 +1,12 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 02/03/2026
-**Versao:** 15.2
+**Ultima Atualizacao:** 06/03/2026
+**Versao:** 16.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS 3.3.7
-**Projeto Supabase:** pjlbixnzjndezoscbhej (supabase-amber-door)
-**Migrations aplicadas:** 4 (001 a 004) — verificadas em 02/03/2026
-**Tabelas totais:** 176 (todos os schemas — verificado via SQL em 02/03/2026)
-**Tabelas no schema public (dominio):** 74
+**Projeto Supabase:** mstnqzgsdnlsajuaezhs (projeto ativo em 06/03/2026)
+**Migrations aplicadas:** 4 (001 a 004) + correcoes manuais em 06/03/2026
+**Tabelas totais:** 182 (todos os schemas)
+**Tabelas no schema public (dominio):** 80 (6 novas criadas em 06/03/2026)
 **Tabelas pg_catalog (PostgreSQL interno):** 64
 **Tabelas auth (Supabase):** 21
 **Tabelas storage (Supabase):** 8
@@ -111,18 +111,18 @@
 | created_at | timestamptz | now() | |
 | updated_at | timestamptz | now() | |
 
-### rides (27 colunas)
+### rides (29 colunas) — colunas renomeadas em 06/03/2026
 | Coluna | Tipo | Default | Notas |
 |--------|------|---------|-------|
 | id | uuid | gen_random_uuid() | PK |
 | passenger_id | uuid | — | FK profiles |
 | driver_id | uuid | — | FK profiles |
-| pickup_address | text | — | |
-| dropoff_address | text | — | |
-| pickup_lat | float8 | — | |
-| pickup_lng | float8 | — | |
-| dropoff_lat | float8 | — | |
-| dropoff_lng | float8 | — | |
+| pickup_address | text | — | (era origin_address) |
+| dropoff_address | text | — | (era destination_address) |
+| pickup_lat | float8 | — | (era origin_lat) |
+| pickup_lng | float8 | — | (era origin_lng) |
+| dropoff_lat | float8 | — | (era destination_lat) |
+| dropoff_lng | float8 | — | (era destination_lng) |
 | distance_km | numeric | — | |
 | estimated_duration_minutes | integer | — | |
 | passenger_price_offer | numeric | — | |
