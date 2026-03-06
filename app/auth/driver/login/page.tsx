@@ -51,11 +51,13 @@ export default function DriverLoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     try {
-      const { error } = await authService.signInWithGoogle()
-      if (error) {
-        iosToast.error(error)
-      }
-    } catch (error) {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=/uppi/driver-mode` },
+      })
+      if (error) iosToast.error(error.message)
+    } catch {
       iosToast.error('Erro ao fazer login com Google')
     } finally {
       setIsLoading(false)
@@ -65,11 +67,13 @@ export default function DriverLoginPage() {
   const handleAppleLogin = async () => {
     setIsLoading(true)
     try {
-      const { error } = await authService.signInWithApple()
-      if (error) {
-        iosToast.error(error)
-      }
-    } catch (error) {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: { redirectTo: `${window.location.origin}/auth/callback?next=/uppi/driver-mode` },
+      })
+      if (error) iosToast.error(error.message)
+    } catch {
       iosToast.error('Erro ao fazer login com Apple')
     } finally {
       setIsLoading(false)
