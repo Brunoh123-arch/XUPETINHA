@@ -34,14 +34,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes - require real authentication
-  const protectedPaths = ['/uppi', '/admin']
-  const isProtectedRoute = protectedPaths.some((path) =>
+  // Public admin routes — never redirect these (avoid infinite loop)
+  const adminPublicPaths = ['/admin/login', '/admin/forgot-password']
+  const isAdminPublicRoute = adminPublicPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   )
 
+  // Protected routes - require real authentication
+  const protectedPaths = ['/uppi', '/admin']
+  const isProtectedRoute =
+    !isAdminPublicRoute &&
+    protectedPaths.some((path) =>
+      request.nextUrl.pathname.startsWith(path)
+    )
+
   if (isProtectedRoute && !user) {
-    // /admin has its own login page
+    // /admin (exceto /admin/login) redireciona para a tela de login admin
     if (request.nextUrl.pathname.startsWith('/admin')) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/admin/login'
