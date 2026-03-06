@@ -1,11 +1,12 @@
 # UPPI - API Endpoints (92 handlers em 56 route.ts)
 
-**Ultima Atualizacao:** 24/02/2026  
-**Versao:** 11.0  
+**Ultima Atualizacao:** 06/03/2026  
+**Versao:** 12.0  
 **Base URL:** `/api/v1` (versionamento obrigatorio)  
 **Auth:** Supabase Auth (Bearer Token via cookie)  
 **Rate Limiting:** Sliding window em todas as rotas  
-**Status:** Supabase conectado, 73 tabelas ativas, 56 route.ts 100% implementados
+**Status:** Supabase mstnqzgsdnlsajuaezhs conectado, 80 tabelas ativas, 57 route.ts 100% implementados  
+**Correcao 06/03/2026:** api/v1/driver/location agora sincroniza is_available em driver_profiles
 
 ---
 
