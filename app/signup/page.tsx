@@ -71,7 +71,7 @@ export default function SignupPage() {
     }
 
     if (role === "driver") {
-      router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}&role=driver`)
+      router.push(`/auth/driver/welcome`)
     } else {
       router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
     }

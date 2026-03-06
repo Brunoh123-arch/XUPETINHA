@@ -160,7 +160,7 @@ export default function SettingsPage() {
           <div className="bg-white/90 dark:bg-[#1C1C1E]/90 ios-blur rounded-[20px] overflow-hidden shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04),0_2px_12px_rgba(0,0,0,0.3)] border-[0.5px] border-black/[0.06] dark:border-white/[0.08]">
             <button
               type="button"
-              onClick={() => router.push('/uppi/driver/register')}
+              onClick={() => router.push('/auth/driver/welcome')}
               className="w-full px-4 py-4 flex items-center gap-4 ios-press"
             >
               <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0">
