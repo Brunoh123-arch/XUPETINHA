@@ -77,7 +77,7 @@ export default function DriverModePage() {
             type="button"
             onClick={() => {
               haptics.impactMedium()
-              router.push('/uppi/driver-mode/active')
+              router.push('/uppi/driver')
             }}
             className="
               w-full group relative overflow-hidden

@@ -18,8 +18,11 @@ export async function GET(request: Request) {
         .eq('id', data.user.id)
         .single()
 
+      const roleFromMeta = data.user.user_metadata?.role as string | undefined
+
       if (!profile) {
-        // Create profile for OAuth users
+        // Create profile respecting the role chosen at signup
+        const userType = roleFromMeta === 'driver' ? 'driver' : 'passenger'
         await supabase
           .from('profiles')
           .insert({
@@ -27,15 +30,20 @@ export async function GET(request: Request) {
             email: data.user.email,
             full_name: data.user.user_metadata?.full_name || data.user.user_metadata?.name,
             avatar_url: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture,
-            user_type: 'passenger',
+            user_type: userType,
             created_at: new Date().toISOString(),
           })
-        
-        // Redirect to user type selection for new users
-        return NextResponse.redirect(`${origin}/auth/user-type`)
+
+        if (userType === 'driver') {
+          return NextResponse.redirect(`${origin}/uppi/driver/register`)
+        }
+        return NextResponse.redirect(`${origin}/uppi/home`)
       }
 
-      // Existing user, go to home
+      // Existing user — redirect based on profile type
+      if (profile.user_type === 'driver') {
+        return NextResponse.redirect(`${origin}/driver/home`)
+      }
       return NextResponse.redirect(`${origin}/uppi/home`)
     }
   }
