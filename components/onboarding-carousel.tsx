@@ -302,6 +302,19 @@ export function OnboardingCarousel() {
             >
               Entrar
             </button>
+            <button
+              type="button"
+              onClick={() => router.push("/auth/driver/welcome")}
+              className="w-full py-[14px] rounded-full font-semibold text-[14px] tracking-wide active:scale-[0.98] transition-transform duration-100 flex items-center justify-center gap-2"
+              style={{
+                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+              }}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+              </svg>
+              Quero ser motorista
+            </button>
           </div>
         </div>
 

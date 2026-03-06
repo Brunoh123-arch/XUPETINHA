@@ -37,7 +37,7 @@ const USER_TYPES = [
       { icon: Clock, text: 'Trabalhe quando quiser', color: 'text-green-500' },
       { icon: TrendingUp, text: 'Maximize seus ganhos', color: 'text-green-500' }
     ],
-    redirectTo: '/uppi/driver'
+    redirectTo: '/auth/driver/welcome'
   }
 ]
 
