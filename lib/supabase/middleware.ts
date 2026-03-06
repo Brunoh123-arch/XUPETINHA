@@ -34,23 +34,32 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes - require authentication OR onboarding completion
-  const protectedPaths = ['/uppi']
+  // Protected routes - require real authentication
+  const protectedPaths = ['/uppi', '/admin']
   const isProtectedRoute = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   )
 
   if (isProtectedRoute && !user) {
-    const onboardingDone = request.cookies.get('onboarding_done')
-    if (!onboardingDone) {
+    // /admin has its own login page
+    if (request.nextUrl.pathname.startsWith('/admin')) {
       const redirectUrl = request.nextUrl.clone()
-      redirectUrl.pathname = '/onboarding/splash'
+      redirectUrl.pathname = '/admin/login'
       const redirectResponse = NextResponse.redirect(redirectUrl)
       supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
         redirectResponse.cookies.set(name, value)
       })
       return redirectResponse
     }
+
+    // /uppi requires a real authenticated session — cookie bypass removed
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = '/onboarding/splash'
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+      redirectResponse.cookies.set(name, value)
+    })
+    return redirectResponse
   }
 
   // Auth routes - redirect to home if already logged in
