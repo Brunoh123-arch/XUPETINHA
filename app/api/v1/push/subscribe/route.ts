@@ -3,82 +3,87 @@ import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-// POST /api/v1/push/subscribe
-// Salva a subscription Web Push do navegador para o usuario autenticado
+/**
+ * POST /api/v1/push/subscribe
+ * Registra ou atualiza um token FCM para o usuário autenticado.
+ * Body: { token, platform?, device_id?, app_version? }
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Nao autorizado' }, { status: 401 })
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { endpoint, keys } = body
+    const { token, platform = 'android', device_id, app_version } = body
 
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Subscription invalida: endpoint, keys.p256dh e keys.auth sao obrigatorios' },
+        { error: 'token FCM é obrigatório' },
         { status: 400 }
       )
     }
 
-    const userAgent = request.headers.get('user-agent') ?? undefined
-
-    // Upsert: se ja existir para esse endpoint, reativa e atualiza as chaves
+    // Upsert pelo token — se o mesmo dispositivo reenviar, apenas atualiza
     const { error } = await supabase
-      .from('push_subscriptions')
+      .from('fcm_tokens')
       .upsert(
         {
-          user_id: user.id,
-          endpoint,
-          p256dh: keys.p256dh,
-          auth: keys.auth,
-          user_agent: userAgent,
-          is_active: true,
+          user_id:     user.id,
+          token,
+          platform,
+          device_id:   device_id ?? null,
+          app_version: app_version ?? null,
+          is_active:   true,
+          updated_at:  new Date().toISOString(),
         },
-        { onConflict: 'user_id,endpoint' }
+        { onConflict: 'token' }
       )
 
     if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] push/subscribe error:', error)
+    console.error('[push/subscribe] error:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
 
-// DELETE /api/v1/push/subscribe
-// Desativa a subscription quando o usuario revoga permissao
+/**
+ * DELETE /api/v1/push/subscribe
+ * Desativa um token FCM quando o usuário revoga notificações.
+ * Body: { token }
+ */
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Nao autorizado' }, { status: 401 })
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { endpoint } = body
+    const { token } = body
 
-    if (!endpoint) {
-      return NextResponse.json({ error: 'endpoint e obrigatorio' }, { status: 400 })
+    if (!token) {
+      return NextResponse.json({ error: 'token é obrigatório' }, { status: 400 })
     }
 
     const { error } = await supabase
-      .from('push_subscriptions')
-      .update({ is_active: false })
+      .from('fcm_tokens')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('user_id', user.id)
-      .eq('endpoint', endpoint)
+      .eq('token', token)
 
     if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] push/unsubscribe error:', error)
+    console.error('[push/subscribe] delete error:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

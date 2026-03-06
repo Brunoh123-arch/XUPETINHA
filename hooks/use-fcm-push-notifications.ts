@@ -205,13 +205,7 @@ export function useFcmPushNotifications(): UseFcmPushNotificationsReturn {
       // 5. Salva no banco
       return await saveToken(token)
     } catch (err) {
-      // Capacitor nao disponivel — browser/web
-      if (err instanceof Error && err.message.includes('Cannot find module')) {
-        // Fallback: Web Push VAPID (redireciona para o hook VAPID)
-        console.warn('[useFcmPushNotifications] Capacitor nao disponivel, use usePushNotifications para VAPID')
-      } else {
-        console.error('[useFcmPushNotifications] register error:', err)
-      }
+      console.error('[useFcmPushNotifications] register error:', err)
       return false
     } finally {
       setIsLoading(false)

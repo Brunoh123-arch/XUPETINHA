@@ -1,31 +1,26 @@
 // @ts-nocheck
 // Supabase Edge Function: notify-push
-// Ponte entre o banco de dados e o FCM/VAPID.
-// Chamada diretamente via HTTP (pg_net, API interna ou webhook).
+// Envia notificacoes push via Firebase FCM (100% FCM, sem VAPID).
+// Pode ser chamada via pg_net, API interna ou diretamente.
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL       = Deno.env.get('SUPABASE_URL')!
-const SUPABASE_SERVICE   = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const FCM_SERVER_KEY     = Deno.env.get('FIREBASE_SERVER_KEY')
-const VAPID_PUBLIC_KEY   = Deno.env.get('VAPID_PUBLIC_KEY')
-const VAPID_PRIVATE_KEY  = Deno.env.get('VAPID_PRIVATE_KEY')
-const VAPID_EMAIL        = Deno.env.get('VAPID_EMAIL') ?? 'mailto:noreply@uppi.app'
+const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!
+const SUPABASE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const FCM_SERVER_KEY   = Deno.env.get('FIREBASE_SERVER_KEY')
 
 // ---------------------------------------------------------------
-// Helpers
+// Envia FCM para um lote de tokens (maximo 500 por request)
 // ---------------------------------------------------------------
-
-async function sendFcm(tokens: string[], title: string, body: string, data: Record<string, string>) {
-  if (!FCM_SERVER_KEY || tokens.length === 0) return { sent: 0, failed: 0 }
-
-  const payload = {
-    registration_ids: tokens,
-    notification: { title, body, sound: 'default', click_action: 'FLUTTER_NOTIFICATION_CLICK' },
-    data: { ...data, title, body },
-    priority: 'high',
-    content_available: true,
+async function sendFcmBatch(
+  tokens: string[],
+  title: string,
+  body: string,
+  data: Record<string, string>
+): Promise<{ sent: number; failed: number; expiredTokens: string[] }> {
+  if (!FCM_SERVER_KEY || tokens.length === 0) {
+    return { sent: 0, failed: tokens.length, expiredTokens: [] }
   }
 
   const res = await fetch('https://fcm.googleapis.com/fcm/send', {
@@ -34,133 +29,121 @@ async function sendFcm(tokens: string[], title: string, body: string, data: Reco
       'Content-Type': 'application/json',
       Authorization:  `key=${FCM_SERVER_KEY}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      registration_ids: tokens,
+      notification: {
+        title,
+        body,
+        sound:        'default',
+        click_action: 'FLUTTER_NOTIFICATION_CLICK',
+      },
+      data:              { ...data, title, body },
+      priority:          'high',
+      content_available: true,
+    }),
   })
 
-  const json = await res.json()
-  return {
-    sent:   json.success   ?? 0,
-    failed: json.failure   ?? 0,
-    results: json.results  ?? [],
+  if (!res.ok) {
+    return { sent: 0, failed: tokens.length, expiredTokens: [] }
   }
-}
 
-async function sendVapid(endpoint: string, p256dh: string, auth: string, title: string, body: string, data: object) {
-  // Web push via VAPID - usa a lib web-push compilada para Deno
-  // Importacao dinamica para evitar falha se VAPID nao estiver configurado
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return false
+  const json = await res.json()
 
-  try {
-    const { default: webpush } = await import('npm:web-push@3')
-    webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
-    await webpush.sendNotification(
-      { endpoint, keys: { p256dh, auth } },
-      JSON.stringify({ title, body, data }),
-      { TTL: 86400 }
+  const expiredTokens: string[] = (json.results ?? [])
+    .map((r: { error?: string }, i: number) =>
+      r.error === 'NotRegistered' || r.error === 'InvalidRegistration' ? tokens[i] : null
     )
-    return true
-  } catch {
-    return false
+    .filter(Boolean)
+
+  return {
+    sent:   json.success ?? 0,
+    failed: json.failure ?? 0,
+    expiredTokens,
   }
 }
 
 // ---------------------------------------------------------------
 // Handler principal
 // ---------------------------------------------------------------
-
 serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 })
   }
 
-  let body: { user_id?: string; user_ids?: string[]; title: string; body?: string; data?: Record<string, string> }
+  let payload: {
+    user_id?: string
+    user_ids?: string[]
+    title: string
+    body?: string
+    data?: Record<string, string>
+  }
 
   try {
-    body = await req.json()
+    payload = await req.json()
   } catch {
     return new Response(JSON.stringify({ error: 'JSON invalido' }), { status: 400 })
   }
 
-  const { title, body: msgBody = '', data = {} } = body
-  const userIds: string[] = body.user_ids ?? (body.user_id ? [body.user_id] : [])
+  const { title, body: msgBody = '', data = {} } = payload
+  const userIds: string[] = payload.user_ids ?? (payload.user_id ? [payload.user_id] : [])
 
   if (!title || userIds.length === 0) {
-    return new Response(JSON.stringify({ error: 'title e user_id sao obrigatorios' }), { status: 400 })
+    return new Response(
+      JSON.stringify({ error: 'title e user_id sao obrigatorios' }),
+      { status: 400 }
+    )
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE)
 
-  // Busca FCM tokens
+  // Busca todos os tokens FCM ativos dos usuarios
   const { data: fcmRows } = await supabase
     .from('fcm_tokens')
     .select('token, user_id')
     .in('user_id', userIds)
     .eq('is_active', true)
 
-  // Busca VAPID subscriptions
-  const { data: vapidRows } = await supabase
-    .from('push_subscriptions')
-    .select('endpoint, p256dh, auth, user_id')
-    .in('user_id', userIds)
-    .eq('is_active', true)
-
-  const fcmTokens = (fcmRows ?? []).map((r) => r.token)
+  const allTokens = (fcmRows ?? []).map((r) => r.token)
   const dataStr   = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)]))
 
-  // Envia FCM
-  const fcmResult = await sendFcm(fcmTokens, title, msgBody, dataStr)
+  let totalSent    = 0
+  let totalFailed  = 0
+  const allExpired: string[] = []
 
-  // Invalida tokens FCM expirados
-  if (fcmResult.results && fcmRows) {
-    const expiredTokens = fcmResult.results
-      .map((r: { error?: string }, i: number) => (r.error === 'NotRegistered' ? fcmRows[i]?.token : null))
-      .filter(Boolean)
-
-    if (expiredTokens.length > 0) {
-      await supabase.from('fcm_tokens').update({ is_active: false }).in('token', expiredTokens)
-    }
+  // Envia em lotes de 500 (limite FCM)
+  const BATCH = 500
+  for (let i = 0; i < allTokens.length; i += BATCH) {
+    const batch  = allTokens.slice(i, i + BATCH)
+    const result = await sendFcmBatch(batch, title, msgBody, dataStr)
+    totalSent   += result.sent
+    totalFailed += result.failed
+    allExpired.push(...result.expiredTokens)
   }
 
-  // Envia VAPID em paralelo
-  const vapidResults = await Promise.allSettled(
-    (vapidRows ?? []).map((sub) =>
-      sendVapid(sub.endpoint, sub.p256dh, sub.auth, title, msgBody, data)
-    )
-  )
-
-  const vapidSent   = vapidResults.filter((r) => r.status === 'fulfilled' && r.value).length
-  const vapidFailed = vapidResults.length - vapidSent
-
-  // Invalida VAPID expiradas (status 410)
-  const expiredEndpoints: string[] = []
-  vapidResults.forEach((r, i) => {
-    if (r.status === 'rejected') {
-      const err = r.reason as { statusCode?: number }
-      if (err?.statusCode === 410 && vapidRows?.[i]) {
-        expiredEndpoints.push(vapidRows[i].endpoint)
-      }
-    }
-  })
-  if (expiredEndpoints.length > 0) {
-    await supabase.from('push_subscriptions').update({ is_active: false }).in('endpoint', expiredEndpoints)
+  // Desativa tokens expirados/invalidos
+  if (allExpired.length > 0) {
+    await supabase
+      .from('fcm_tokens')
+      .update({ is_active: false })
+      .in('token', allExpired)
   }
 
-  // Registra no log
+  // Registra no log para cada usuario
   for (const uid of userIds) {
     await supabase.from('push_log').insert({
       user_id: uid,
-      channel: fcmTokens.length > 0 ? 'fcm' : 'vapid',
+      channel: 'fcm',
       title,
-      body: msgBody,
-      status: 'sent',
+      body:    msgBody,
+      status:  totalSent > 0 ? 'sent' : allTokens.length === 0 ? 'skipped' : 'failed',
     })
   }
 
   return new Response(
     JSON.stringify({
       success: true,
-      fcm:  { sent: fcmResult.sent,  failed: fcmResult.failed },
-      vapid: { sent: vapidSent, failed: vapidFailed },
+      fcm: { sent: totalSent, failed: totalFailed },
+      tokens: allTokens.length,
     }),
     { headers: { 'Content-Type': 'application/json' } }
   )
