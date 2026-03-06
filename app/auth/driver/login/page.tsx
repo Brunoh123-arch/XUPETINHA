@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authService } from '@/lib/services/auth-service'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { FcGoogle } from 'react-icons/fc'
 import { FaApple } from 'react-icons/fa'
@@ -19,20 +18,19 @@ export default function DriverLoginPage() {
     setIsLoading(true)
 
     try {
-      const { user, error } = await authService.signIn({ email, password })
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
-        iosToast.error(error)
+        iosToast.error(error.message)
         return
       }
 
-      if (user) {
-        // Verificar se é motorista
-        const supabase = createClient()
+      if (data.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('user_type')
-          .eq('id', user.id)
+          .eq('id', data.user.id)
           .single()
 
         if (profile?.user_type === 'driver') {
@@ -40,11 +38,10 @@ export default function DriverLoginPage() {
           router.push('/uppi/driver-mode')
         } else {
           iosToast.error('Esta conta não é de motorista')
-          await authService.signOut()
+          await supabase.auth.signOut()
         }
       }
     } catch (error) {
-      console.error('[v0] Login exception:', error)
       iosToast.error('Erro ao fazer login')
     } finally {
       setIsLoading(false)

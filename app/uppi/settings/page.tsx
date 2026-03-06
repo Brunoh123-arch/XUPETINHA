@@ -172,8 +172,8 @@ export default function SettingsPage() {
           </div>
         ))}
 
-        {/* Tornar-se motorista — só para passageiros */}
-        {userType === 'passenger' && <div>
+        {/* Tornar-se motorista — só para passageiros (ou quando perfil não carregou) */}
+        {userType !== 'driver' && <div>
           <p className="text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wider mb-2.5 px-1">Motorista</p>
           <div className="bg-white/90 dark:bg-[#1C1C1E]/90 ios-blur rounded-[20px] overflow-hidden shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04),0_2px_12px_rgba(0,0,0,0.3)] border-[0.5px] border-black/[0.06] dark:border-white/[0.08]">
             <button
