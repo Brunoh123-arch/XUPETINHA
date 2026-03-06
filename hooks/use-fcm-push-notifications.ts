@@ -37,7 +37,7 @@ function detectPlatform(): Platform {
 
 /**
  * Hook principal para FCM via Capacitor + PushNotifications plugin.
- * No browser (web) faz fallback para o hook VAPID existente.
+ * No browser (web) solicita permissao via Notification API e salva o token FCM no Supabase.
  *
  * Dependencia Capacitor (nao importada estaticamente para nao quebrar SSR):
  *   @capacitor/push-notifications  (instalado no projeto mobile)

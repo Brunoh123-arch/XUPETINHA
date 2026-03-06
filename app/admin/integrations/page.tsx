@@ -41,7 +41,6 @@ const PROVIDER_LABELS: Record<string, string> = {
   stripe:      'Stripe',
   twilio:      'Twilio',
   firebase:    'Firebase',
-  vapid:       'VAPID (Web Push)',
   resend:      'Resend',
   sendgrid:    'SendGrid',
   google:      'Google OAuth',
