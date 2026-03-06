@@ -16,6 +16,30 @@ const tabs: TabItem[] = [
 
 const tabRoutes = ['/uppi/home', '/uppi/history', null, '/uppi/settings', '/uppi/profile']
 
+const passengerRoutes = [
+  '/uppi/home',
+  '/uppi/history',
+  '/uppi/settings',
+  '/uppi/profile',
+  '/uppi/wallet',
+  '/uppi/notifications',
+  '/uppi/achievements',
+  '/uppi/favorites',
+  '/uppi/ride',
+  '/uppi/tracking',
+  '/uppi/suporte',
+  '/uppi/seguranca',
+  '/uppi/emergency',
+  '/uppi/emergency-contacts',
+  '/uppi/promotions',
+  '/uppi/referral',
+  '/uppi/social',
+  '/uppi/club',
+  '/uppi/payments',
+  '/uppi/help',
+  '/uppi/leaderboard',
+]
+
 function getActiveIndex(pathname: string | null): number | null {
   if (!pathname) return null
   for (let i = 0; i < tabRoutes.length; i++) {
@@ -31,8 +55,9 @@ export function BottomNavigation() {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Only show on home page
-  if (pathname !== '/uppi/home') return null
+  // Mostrar em todas as rotas do passageiro
+  const isPassengerRoute = passengerRoutes.some(r => pathname === r || pathname?.startsWith(`${r}/`))
+  if (!isPassengerRoute) return null
 
   const activeIndex = getActiveIndex(pathname)
 
