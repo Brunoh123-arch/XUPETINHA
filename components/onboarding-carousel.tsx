@@ -206,50 +206,17 @@ export function OnboardingCarousel() {
           </div>
         )}
 
-        {/* Header with logo and progress bars */}
-        <div className="relative z-10 px-5 pt-4 space-y-3">
-          {/* Logo row */}
-          <div className="flex items-center gap-2">
-            <div
-              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: slide.logoBg }}
-            >
-              <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
-            </div>
-            <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
-              Uppi — Mobilidade
-            </span>
+        {/* Header with logo */}
+        <div className="relative z-10 flex items-center gap-2 px-5 pt-4">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: slide.logoBg }}
+          >
+            <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
           </div>
-
-          {/* Progress bars */}
-          <div className="flex items-center gap-[5px]">
-            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Ir para slide ${i + 1}`}
-                onClick={() => goTo(i)}
-                className="flex-1 h-[2px] rounded-full overflow-hidden"
-                style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
-              >
-                {i < current && (
-                  <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
-                )}
-                {i === current && (
-                  <div
-                    key={`bar-${animKey}`}
-                    className="h-full w-full rounded-full"
-                    style={{
-                      transformOrigin: "left center",
-                      animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
-                      animationPlayState: paused ? "paused" : "running",
-                      backgroundColor: isDark ? "white" : "#111",
-                    }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
+          <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
+            Uppi — Mobilidade
+          </span>
         </div>
 
         {/* Illustration — takes up the center portion */}
@@ -267,8 +234,38 @@ export function OnboardingCarousel() {
           </div>
         </div>
 
+        {/* Progress bars — below illustration */}
+        <div className="relative z-10 flex items-center gap-[5px] px-5 py-3">
+          {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Ir para slide ${i + 1}`}
+              onClick={() => goTo(i)}
+              className="flex-1 h-[2px] rounded-full overflow-hidden"
+              style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
+            >
+              {i < current && (
+                <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
+              )}
+              {i === current && (
+                <div
+                  key={`bar-${animKey}`}
+                  className="h-full w-full rounded-full"
+                  style={{
+                    transformOrigin: "left center",
+                    animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
+                    animationPlayState: paused ? "paused" : "running",
+                    backgroundColor: isDark ? "white" : "#111",
+                  }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Headline */}
-        <div className="relative z-10 px-6 pt-4 pb-2">
+        <div className="relative z-10 px-6 pb-2">
           <h1
             className="font-bold text-[1.75rem] leading-[1.2] text-balance"
             style={{ color: isDark ? "white" : "#111" }}
