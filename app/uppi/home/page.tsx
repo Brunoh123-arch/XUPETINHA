@@ -305,42 +305,55 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1c1c1e]/95 backdrop-blur-xl border-t border-white/5 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around py-2">
-          <button 
+      {/* Bottom Navigation - Floating pill style iOS */}
+      <nav
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        aria-label="Navegacao principal"
+      >
+        <div className="flex items-center gap-1 bg-[#1c1c1e]/95 backdrop-blur-xl rounded-full px-2 py-2 shadow-2xl shadow-black/50 border border-white/8">
+          {/* Inicio - active */}
+          <button
             type="button"
-            className="flex flex-col items-center gap-1 px-6 py-2"
+            aria-label="Inicio"
+            className="flex items-center justify-center w-11 h-9 rounded-full"
             onClick={() => { triggerHaptic('selection') }}
           >
-            <div className="w-10 h-8 bg-[#007AFF]/20 rounded-full flex items-center justify-center">
-              <Home className="w-5 h-5 text-[#007AFF]" />
-            </div>
-            <span className="text-[#007AFF] text-[10px] font-medium">Inicio</span>
+            <Home className="w-5 h-5 text-[#8E8E93]" />
           </button>
-          <button 
+
+          {/* Viagens - inactive example (not active here) */}
+          <button
             type="button"
-            className="flex flex-col items-center gap-1 px-6 py-2"
+            aria-label="Viagens"
+            className="flex items-center gap-2 bg-[#007AFF] rounded-full px-4 h-9"
             onClick={() => { triggerHaptic('selection'); router.push('/uppi/history') }}
           >
-            <Map className="w-5 h-5 text-[#8E8E93]" />
-            <span className="text-[#8E8E93] text-[10px]">Viagens</span>
+            <Map className="w-4 h-4 text-white flex-shrink-0" />
+            <span className="text-white text-[13px] font-semibold">Viagens</span>
           </button>
-          <button 
+
+          {/* Divider */}
+          <div className="w-px h-5 bg-white/10 mx-1" aria-hidden="true" />
+
+          {/* Config */}
+          <button
             type="button"
-            className="flex flex-col items-center gap-1 px-6 py-2"
+            aria-label="Configuracoes"
+            className="flex items-center justify-center w-11 h-9 rounded-full"
             onClick={() => { triggerHaptic('selection'); router.push('/uppi/settings') }}
           >
             <Settings className="w-5 h-5 text-[#8E8E93]" />
-            <span className="text-[#8E8E93] text-[10px]">Config</span>
           </button>
-          <button 
+
+          {/* Perfil */}
+          <button
             type="button"
-            className="flex flex-col items-center gap-1 px-6 py-2"
+            aria-label="Perfil"
+            className="flex items-center justify-center w-11 h-9 rounded-full"
             onClick={() => { triggerHaptic('selection'); router.push('/uppi/profile') }}
           >
             <User className="w-5 h-5 text-[#8E8E93]" />
-            <span className="text-[#8E8E93] text-[10px]">Perfil</span>
           </button>
         </div>
       </nav>
