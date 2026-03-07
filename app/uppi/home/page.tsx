@@ -11,7 +11,7 @@ import { NearbyDrivers } from '@/components/nearby-drivers'
 import { CouponNotificationModal, useCouponNotification } from '@/components/coupon-notification-modal'
 import { triggerHaptic } from '@/hooks/use-haptic'
 import { PermissionOnboarding } from '@/components/permission-onboarding'
-import { Car, Package, Globe, Calendar, Bell, CalendarDays, ChevronRight, Mic, Plus, Gift, Home, Map, Settings, User } from 'lucide-react'
+import { Car, Package, Globe, Calendar, Bell, CalendarDays, ChevronRight, Mic, Gift, Home, Map, Settings, User, TrendingUp, Trophy } from 'lucide-react'
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -132,15 +132,12 @@ export default function HomePage() {
                   <circle fill="#B31412" cx="12" cy="9" r="2.5"/>
                 </svg>
               </div>
-              <span className="flex-1 text-[#8E8E93] text-[15px] text-left font-normal">Search location...</span>
-              
-              {/* User Avatar */}
-              <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#3a3a3c] flex-shrink-0">
-                <img 
-                  src={profile?.avatar_url || '/images/default-avatar.jpg'} 
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+              <span className="flex-1 text-[#8E8E93] text-[15px] text-left font-normal">Para onde?</span>
+
+              {/* City Indicator */}
+              <div className="flex items-center gap-1.5 bg-[#2c2c2e] rounded-full px-3 py-1 flex-shrink-0">
+                <div className="w-2 h-2 rounded-full bg-[#34C759] flex-shrink-0" />
+                <span className="text-white text-[12px] font-medium">Castanhal</span>
               </div>
             </button>
             
@@ -214,7 +211,7 @@ export default function HomePage() {
       {/* Bottom Sheet - Lower section */}
       <div className="bg-[#0d0d0d] rounded-t-3xl -mt-4 relative z-20 pb-24">
         {/* Header with greeting */}
-        <div className="px-5 pt-5 pb-4">
+        <div className="px-5 pt-5 pb-3">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[#8E8E93] text-sm">{greeting}</p>
@@ -236,6 +233,20 @@ export default function HomePage() {
               >
                 <CalendarDays className="w-5 h-5 text-white" />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Peak Hour Banner */}
+        <div className="px-5 pb-3">
+          <div className="w-full bg-[#e8751a] rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-semibold text-sm">Horario de pico</p>
+              <p className="text-white/90 text-xs mt-0.5">Precos ~15% acima do normal agora</p>
+              <p className="text-white/70 text-[10px] mt-0.5 italic">Ofereca um valor mais baixo - motoristas costumam aceitar negociacao</p>
             </div>
           </div>
         </div>
@@ -269,7 +280,7 @@ export default function HomePage() {
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#FFD700]/20 rounded-xl flex items-center justify-center">
-                <Gift className="w-5 h-5 text-[#FFD700]" />
+                <Trophy className="w-5 h-5 text-[#FFD700]" />
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-2">
@@ -316,21 +327,21 @@ export default function HomePage() {
           <button
             type="button"
             aria-label="Inicio"
-            className="flex items-center justify-center w-11 h-9 rounded-full"
+            className="flex items-center gap-2 bg-[#007AFF] rounded-full px-4 h-9"
             onClick={() => { triggerHaptic('selection'); router.push('/uppi/home') }}
           >
-            <Home className="w-5 h-5 text-[#007AFF]" />
+            <Home className="w-4 h-4 text-white flex-shrink-0" />
+            <span className="text-white text-[13px] font-semibold">Inicio</span>
           </button>
 
-          {/* Viagens - inactive example (not active here) */}
+          {/* Mapa - inactive */}
           <button
             type="button"
-            aria-label="Viagens"
-            className="flex items-center gap-2 bg-[#007AFF] rounded-full px-4 h-9"
+            aria-label="Mapa"
+            className="flex items-center justify-center w-11 h-9 rounded-full"
             onClick={() => { triggerHaptic('selection'); router.push('/uppi/history') }}
           >
-            <Map className="w-4 h-4 text-white flex-shrink-0" />
-            <span className="text-white text-[13px] font-semibold">Viagens</span>
+            <Map className="w-5 h-5 text-[#8E8E93]" />
           </button>
 
           {/* Divider */}
