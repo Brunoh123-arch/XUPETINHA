@@ -27,7 +27,7 @@ export default function HomePage() {
   const { notification: couponNotification, showNotification: showCouponModal, closeNotification: closeCouponModal } = useCouponNotification()
 
   const quickServices = [
-    { label: 'Corrida', sub: 'Mais rapido', icon: Car, bgColor: 'bg-[#1a1a2e]', href: '/uppi/ride/route-input' },
+    { label: 'Corrida', sub: 'Mais rapido', icon: Car, bgColor: 'bg-[#007AFF]', href: '/uppi/ride/route-input' },
     { label: 'Entregas', sub: 'Envie pacotes', icon: Package, bgColor: 'bg-[#e8751a]', href: '/uppi/entregas' },
     { label: 'Intercidade', sub: 'Viaje longe', icon: Globe, bgColor: 'bg-[#0d7377]', href: '/uppi/cidade-a-cidade' },
     { label: 'Agendar', sub: 'Para depois', icon: Calendar, bgColor: 'bg-[#6c5ce7]', href: '/uppi/ride/route-input' },
