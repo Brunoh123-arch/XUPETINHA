@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { MapPin, Car, Package, Globe, Calendar, Bell, Zap } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function Page() {
   const [isLoading, setIsLoading] = useState(true)
   const [greeting, setGreeting] = useState('Boa tarde')
+  const [userName, setUserName] = useState('Usuário')
 
   useEffect(() => {
     const hour = new Date().getHours()
@@ -13,9 +15,44 @@ export default function Page() {
     else if (hour < 18) setGreeting('Boa tarde')
     else setGreeting('Boa noite')
 
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 2000)
-    return () => clearTimeout(timer)
+    const fetchUserData = async () => {
+      try {
+        const supabase = createClient()
+        
+        // Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        
+        if (userError || !user) {
+          console.log('[v0] No user authenticated')
+          setIsLoading(false)
+          return
+        }
+
+        // Fetch user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          console.log('[v0] Profile fetch error:', profileError)
+          setIsLoading(false)
+          return
+        }
+
+        if (profile?.full_name) {
+          setUserName(profile.full_name)
+        }
+        
+        setIsLoading(false)
+      } catch (error) {
+        console.log('[v0] Error fetching user:', error)
+        setIsLoading(false)
+      }
+    }
+
+    fetchUserData()
   }, [])
 
   const services = [
@@ -80,7 +117,7 @@ export default function Page() {
           {/* Greeting Section */}
           <div className="mt-6 mb-6">
             <p className="text-[#999] text-sm mb-2">{greeting},</p>
-            <h2 className="text-2xl font-bold">Usuário</h2>
+            <h2 className="text-2xl font-bold">{userName}</h2>
           </div>
 
           {/* Service Cards Grid */}
