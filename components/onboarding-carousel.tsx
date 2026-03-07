@@ -206,20 +206,53 @@ export function OnboardingCarousel() {
           </div>
         )}
 
-        {/* Header logo */}
-        <div className="relative z-10 flex items-center gap-2 px-5 pt-4 pb-1">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: slide.logoBg }}
-          >
-            <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
+        {/* Header with logo and progress bars */}
+        <div className="relative z-10 px-5 pt-4 space-y-3">
+          {/* Logo row */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: slide.logoBg }}
+            >
+              <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
+            </div>
+            <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
+              Uppi — Mobilidade
+            </span>
           </div>
-          <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
-            Uppi — Mobilidade
-          </span>
+
+          {/* Progress bars */}
+          <div className="flex items-center gap-[5px]">
+            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir para slide ${i + 1}`}
+                onClick={() => goTo(i)}
+                className="flex-1 h-[2px] rounded-full overflow-hidden"
+                style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
+              >
+                {i < current && (
+                  <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
+                )}
+                {i === current && (
+                  <div
+                    key={`bar-${animKey}`}
+                    className="h-full w-full rounded-full"
+                    style={{
+                      transformOrigin: "left center",
+                      animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
+                      animationPlayState: paused ? "paused" : "running",
+                      backgroundColor: isDark ? "white" : "#111",
+                    }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Illustration — takes up the top portion */}
+        {/* Illustration — takes up the center portion */}
         <div className="relative z-10 flex-1 min-h-0">
           <div className="relative w-full h-full" style={{ minHeight: 260 }}>
             <Image
@@ -244,13 +277,13 @@ export function OnboardingCarousel() {
           </h1>
         </div>
 
-        {/* Bottom bar: Pular · dots · Próximo */}
-        <div className="relative z-10 flex items-center justify-between px-6 pb-10 pt-4 gap-4">
+        {/* Bottom bar: Pular and Próximo buttons only */}
+        <div className="relative z-10 flex items-center gap-3 px-6 pb-10 pt-4">
           {/* Skip button */}
           <button
             type="button"
             onClick={() => router.push("/auth/selection")}
-            className="px-7 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150"
+            className="flex-1 px-6 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150"
             style={{
               backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
               color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.75)",
@@ -258,27 +291,6 @@ export function OnboardingCarousel() {
           >
             Pular
           </button>
-
-          {/* Dot indicators */}
-          <div className="flex items-center gap-[6px]">
-            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Ir para slide ${i + 1}`}
-                onClick={() => goTo(i)}
-                className="rounded-full transition-all duration-300"
-                style={{
-                  width: i === current ? 20 : 6,
-                  height: 6,
-                  backgroundColor:
-                    i === current
-                      ? isDark ? "white" : "#111"
-                      : isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)",
-                }}
-              />
-            ))}
-          </div>
 
           {/* Next button */}
           <button
@@ -290,7 +302,7 @@ export function OnboardingCarousel() {
                 goNext()
               }
             }}
-            className="px-7 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
+            className="flex-1 px-6 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
             style={{
               backgroundColor: isDark ? "white" : "#111",
               color: isDark ? "#111" : "white",
