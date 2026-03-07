@@ -317,9 +317,9 @@ export default function HomePage() {
             type="button"
             aria-label="Inicio"
             className="flex items-center justify-center w-11 h-9 rounded-full"
-            onClick={() => { triggerHaptic('selection') }}
+            onClick={() => { triggerHaptic('selection'); router.push('/uppi/home') }}
           >
-            <Home className="w-5 h-5 text-[#8E8E93]" />
+            <Home className="w-5 h-5 text-[#007AFF]" />
           </button>
 
           {/* Viagens - inactive example (not active here) */}
