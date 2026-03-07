@@ -11,7 +11,7 @@ import { NearbyDrivers } from '@/components/nearby-drivers'
 import { CouponNotificationModal, useCouponNotification } from '@/components/coupon-notification-modal'
 import { triggerHaptic } from '@/hooks/use-haptic'
 import { PermissionOnboarding } from '@/components/permission-onboarding'
-import { Car, Package, Globe, Calendar, Bell, CalendarDays, ChevronRight, Mic, Gift, Home, Map, Settings, User, TrendingUp, Trophy } from 'lucide-react'
+import { Car, Package, Globe, Calendar, Bell, CalendarDays, ChevronRight, Mic, Gift, Home, Map, Settings, User } from 'lucide-react'
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -237,20 +237,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Peak Hour Banner */}
-        <div className="px-5 pb-3">
-          <div className="w-full bg-[#e8751a] rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-semibold text-sm">Horario de pico</p>
-              <p className="text-white/90 text-xs mt-0.5">Precos ~15% acima do normal agora</p>
-              <p className="text-white/70 text-[10px] mt-0.5 italic">Ofereca um valor mais baixo - motoristas costumam aceitar negociacao</p>
-            </div>
-          </div>
-        </div>
-
         {/* Quick Services */}
         <div className="px-5 pb-4">
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
@@ -280,7 +266,7 @@ export default function HomePage() {
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#FFD700]/20 rounded-xl flex items-center justify-center">
-                <Trophy className="w-5 h-5 text-[#FFD700]" />
+                <Gift className="w-5 h-5 text-[#FFD700]" />
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-2">
