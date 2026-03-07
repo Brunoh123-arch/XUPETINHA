@@ -206,34 +206,69 @@ export function OnboardingCarousel() {
           </div>
         )}
 
-        {/* Progress bars */}
-        <div className="relative z-10 flex gap-[5px] px-5 pt-4">
-          {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Ir para slide ${i + 1}`}
-              onClick={() => goTo(i)}
-              className="flex-1 h-[2px] rounded-full overflow-hidden"
-              style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
-            >
-              {i < current && (
-                <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
-              )}
-              {i === current && (
-                <div
-                  key={`bar-${animKey}`}
-                  className="h-full w-full rounded-full"
-                  style={{
-                    transformOrigin: "left center",
-                    animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
-                    animationPlayState: paused ? "paused" : "running",
-                    backgroundColor: isDark ? "white" : "#111",
-                  }}
-                />
-              )}
-            </button>
-          ))}
+        {/* Top navigation: Skip button + Progress bars + Next button */}
+        <div className="relative z-10 flex items-center gap-3 px-5 pt-4">
+          {/* Skip button - iOS style */}
+          <button
+            type="button"
+            onClick={() => router.push("/auth/selection")}
+            className="px-5 py-2.5 rounded-full font-medium text-sm tracking-wide active:scale-[0.97] transition-all duration-150"
+            style={{
+              backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+              color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
+            }}
+          >
+            Pular
+          </button>
+
+          {/* Progress bars */}
+          <div className="flex-1 flex gap-[5px]">
+            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir para slide ${i + 1}`}
+                onClick={() => goTo(i)}
+                className="flex-1 h-[2px] rounded-full overflow-hidden"
+                style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
+              >
+                {i < current && (
+                  <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
+                )}
+                {i === current && (
+                  <div
+                    key={`bar-${animKey}`}
+                    className="h-full w-full rounded-full"
+                    style={{
+                      transformOrigin: "left center",
+                      animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
+                      animationPlayState: paused ? "paused" : "running",
+                      backgroundColor: isDark ? "white" : "#111",
+                    }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Next button - iOS style (dark/filled) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (current === TOTAL_SLIDES - 1) {
+                router.push("/auth/selection")
+              } else {
+                goNext()
+              }
+            }}
+            className="px-5 py-2.5 rounded-full font-semibold text-sm tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
+            style={{
+              backgroundColor: isDark ? "white" : "#111",
+              color: isDark ? "#111" : "white",
+            }}
+          >
+            {current === TOTAL_SLIDES - 1 ? "Continuar" : "Próximo"}
+          </button>
         </div>
 
         {/* Header */}
@@ -274,36 +309,14 @@ export function OnboardingCarousel() {
           </div>
         </div>
 
-        {/* Bottom gradient + CTAs */}
+        {/* Bottom gradient overlay */}
         <div className="relative z-10 px-5 pb-8 pt-0">
-          {/* Gradient fade over illustration bottom */}
           <div
             className="absolute inset-x-0 bottom-0 h-52 pointer-events-none"
             style={{
               background: `linear-gradient(to top, ${slide.bg} 55%, transparent)`,
             }}
           />
-          <div className="relative flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/selection")}
-              className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 shadow-md"
-            >
-              Criar conta
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100"
-              style={{
-                backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-                color: isDark ? "white" : "#111",
-              }}
-            >
-              Entrar
-            </button>
-
-          </div>
         </div>
 
         {/* Tap zones */}
