@@ -206,72 +206,7 @@ export function OnboardingCarousel() {
           </div>
         )}
 
-        {/* Top navigation: Skip button + Progress bars + Next button */}
-        <div className="relative z-10 flex items-center gap-3 px-5 pt-4">
-          {/* Skip button - iOS style */}
-          <button
-            type="button"
-            onClick={() => router.push("/auth/selection")}
-            className="px-5 py-2.5 rounded-full font-medium text-sm tracking-wide active:scale-[0.97] transition-all duration-150"
-            style={{
-              backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
-              color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
-            }}
-          >
-            Pular
-          </button>
-
-          {/* Progress bars */}
-          <div className="flex-1 flex gap-[5px]">
-            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Ir para slide ${i + 1}`}
-                onClick={() => goTo(i)}
-                className="flex-1 h-[2px] rounded-full overflow-hidden"
-                style={{ backgroundColor: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)" }}
-              >
-                {i < current && (
-                  <div className="h-full w-full rounded-full" style={{ backgroundColor: isDark ? "white" : "#111" }} />
-                )}
-                {i === current && (
-                  <div
-                    key={`bar-${animKey}`}
-                    className="h-full w-full rounded-full"
-                    style={{
-                      transformOrigin: "left center",
-                      animation: `scaleX-fill ${SLIDE_DURATION}ms linear forwards`,
-                      animationPlayState: paused ? "paused" : "running",
-                      backgroundColor: isDark ? "white" : "#111",
-                    }}
-                  />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Next button - iOS style (dark/filled) */}
-          <button
-            type="button"
-            onClick={() => {
-              if (current === TOTAL_SLIDES - 1) {
-                router.push("/auth/selection")
-              } else {
-                goNext()
-              }
-            }}
-            className="px-5 py-2.5 rounded-full font-semibold text-sm tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
-            style={{
-              backgroundColor: isDark ? "white" : "#111",
-              color: isDark ? "#111" : "white",
-            }}
-          >
-            {current === TOTAL_SLIDES - 1 ? "Continuar" : "Próximo"}
-          </button>
-        </div>
-
-        {/* Header */}
+        {/* Header logo */}
         <div className="relative z-10 flex items-center gap-2 px-5 pt-4 pb-1">
           <div
             className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
@@ -284,19 +219,9 @@ export function OnboardingCarousel() {
           </span>
         </div>
 
-        {/* Headline */}
-        <div className="relative z-10 px-5 pt-3">
-          <h1
-            className="font-bold text-[1.85rem] leading-[1.15] text-balance"
-            style={{ color: isDark ? "white" : "#111" }}
-          >
-            {slide.title}
-          </h1>
-        </div>
-
-        {/* Illustration */}
+        {/* Illustration — takes up the top portion */}
         <div className="relative z-10 flex-1 min-h-0">
-          <div className="relative w-full h-full" style={{ minHeight: 280 }}>
+          <div className="relative w-full h-full" style={{ minHeight: 260 }}>
             <Image
               key={slide.id}
               src={slide.image}
@@ -309,14 +234,70 @@ export function OnboardingCarousel() {
           </div>
         </div>
 
-        {/* Bottom gradient overlay */}
-        <div className="relative z-10 px-5 pb-8 pt-0">
-          <div
-            className="absolute inset-x-0 bottom-0 h-52 pointer-events-none"
+        {/* Headline */}
+        <div className="relative z-10 px-6 pt-4 pb-2">
+          <h1
+            className="font-bold text-[1.75rem] leading-[1.2] text-balance"
+            style={{ color: isDark ? "white" : "#111" }}
+          >
+            {slide.title}
+          </h1>
+        </div>
+
+        {/* Bottom bar: Pular · dots · Próximo */}
+        <div className="relative z-10 flex items-center justify-between px-6 pb-10 pt-4 gap-4">
+          {/* Skip button */}
+          <button
+            type="button"
+            onClick={() => router.push("/auth/selection")}
+            className="px-7 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150"
             style={{
-              background: `linear-gradient(to top, ${slide.bg} 55%, transparent)`,
+              backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+              color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.75)",
             }}
-          />
+          >
+            Pular
+          </button>
+
+          {/* Dot indicators */}
+          <div className="flex items-center gap-[6px]">
+            {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir para slide ${i + 1}`}
+                onClick={() => goTo(i)}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: i === current ? 20 : 6,
+                  height: 6,
+                  backgroundColor:
+                    i === current
+                      ? isDark ? "white" : "#111"
+                      : isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Next button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (current === TOTAL_SLIDES - 1) {
+                router.push("/auth/selection")
+              } else {
+                goNext()
+              }
+            }}
+            className="px-7 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
+            style={{
+              backgroundColor: isDark ? "white" : "#111",
+              color: isDark ? "#111" : "white",
+            }}
+          >
+            {current === TOTAL_SLIDES - 1 ? "Continuar" : "Próximo"}
+          </button>
         </div>
 
         {/* Tap zones */}
