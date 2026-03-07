@@ -206,8 +206,36 @@ export function OnboardingCarousel() {
           </div>
         )}
 
-        {/* Progress bars */}
-        <div className="relative z-10 flex gap-[5px] px-5 pt-4">
+        {/* Header with logo */}
+        <div className="relative z-10 flex items-center gap-2 px-5 pt-4">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: slide.logoBg }}
+          >
+            <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
+          </div>
+          <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
+            Uppi — Mobilidade
+          </span>
+        </div>
+
+        {/* Illustration — takes up the center portion */}
+        <div className="relative z-10 flex-1 min-h-0">
+          <div className="relative w-full h-full" style={{ minHeight: 260 }}>
+            <Image
+              key={slide.id}
+              src={slide.image}
+              alt={slide.imageAlt}
+              fill
+              className="object-contain"
+              priority
+              loading="eager"
+            />
+          </div>
+        </div>
+
+        {/* Progress bars — below illustration */}
+        <div className="relative z-10 flex items-center gap-[5px] px-5 py-3">
           {Array.from({ length: TOTAL_SLIDES }).map((_, i) => (
             <button
               key={i}
@@ -236,74 +264,49 @@ export function OnboardingCarousel() {
           ))}
         </div>
 
-        {/* Header */}
-        <div className="relative z-10 flex items-center gap-2 px-5 pt-4 pb-1">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: slide.logoBg }}
-          >
-            <UppiLogo className="w-4 h-4" style={{ color: slide.logoColor }} />
-          </div>
-          <span className="text-sm font-medium tracking-wide" style={{ color: slide.headerTextColor }}>
-            Uppi — Mobilidade
-          </span>
-        </div>
-
         {/* Headline */}
-        <div className="relative z-10 px-5 pt-3">
+        <div className="relative z-10 px-6 pb-2">
           <h1
-            className="font-bold text-[1.85rem] leading-[1.15] text-balance"
+            className="font-bold text-[1.75rem] leading-[1.2] text-balance"
             style={{ color: isDark ? "white" : "#111" }}
           >
             {slide.title}
           </h1>
         </div>
 
-        {/* Illustration */}
-        <div className="relative z-10 flex-1 min-h-0">
-          <div className="relative w-full h-full" style={{ minHeight: 280 }}>
-            <Image
-              key={slide.id}
-              src={slide.image}
-              alt={slide.imageAlt}
-              fill
-              className="object-contain"
-              priority
-              loading="eager"
-            />
-          </div>
-        </div>
-
-        {/* Bottom gradient + CTAs */}
-        <div className="relative z-10 px-5 pb-8 pt-0">
-          {/* Gradient fade over illustration bottom */}
-          <div
-            className="absolute inset-x-0 bottom-0 h-52 pointer-events-none"
+        {/* Bottom bar: Pular and Próximo buttons only */}
+        <div className="relative z-10 flex items-center gap-3 px-6 pb-10 pt-4">
+          {/* Skip button */}
+          <button
+            type="button"
+            onClick={() => router.push("/auth/selection")}
+            className="flex-1 px-6 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150"
             style={{
-              background: `linear-gradient(to top, ${slide.bg} 55%, transparent)`,
+              backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+              color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.75)",
             }}
-          />
-          <div className="relative flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => router.push("/auth/selection")}
-              className="w-full py-[17px] rounded-full bg-white text-black font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100 shadow-md"
-            >
-              Criar conta
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/login")}
-              className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-transform duration-100"
-              style={{
-                backgroundColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-                color: isDark ? "white" : "#111",
-              }}
-            >
-              Entrar
-            </button>
+          >
+            Pular
+          </button>
 
-          </div>
+          {/* Next button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (current === TOTAL_SLIDES - 1) {
+                router.push("/auth/selection")
+              } else {
+                goNext()
+              }
+            }}
+            className="flex-1 px-6 py-3.5 rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.97] transition-all duration-150 shadow-sm"
+            style={{
+              backgroundColor: isDark ? "white" : "#111",
+              color: isDark ? "#111" : "white",
+            }}
+          >
+            {current === TOTAL_SLIDES - 1 ? "Continuar" : "Próximo"}
+          </button>
         </div>
 
         {/* Tap zones */}

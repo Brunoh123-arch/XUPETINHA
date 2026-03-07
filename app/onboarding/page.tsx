@@ -1,6 +1,9 @@
-import { redirect } from 'next/navigation'
+import { OnboardingCarousel } from "@/components/onboarding-carousel"
 
-// /onboarding -> /login
-export default function OnboardingRedirect() {
-  redirect('/login')
+export default function OnboardingPage() {
+  return (
+    <main className="h-dvh w-full">
+      <OnboardingCarousel />
+    </main>
+  )
 }
