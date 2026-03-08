@@ -15,8 +15,8 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-// Credenciais do novo motorista
-const driverEmail = 'motorista' + Math.random().toString(36).substring(7) + '@uppi.com';
+// Credenciais fixas do motorista
+const driverEmail = 'motorista@uppi.com';
 const driverPassword = 'Motorista@123456';
 const driverFullName = 'Teste Motorista';
 const driverPhone = '(11) 99999-9999';
@@ -107,6 +107,7 @@ async function createDriver() {
         email: driverEmail,
         full_name: driverFullName,
         phone: driverPhone,
+        user_type: 'driver',
         created_at: new Date().toISOString(),
       }
     );
