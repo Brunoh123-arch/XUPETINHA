@@ -16,7 +16,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // Credenciais do novo motorista
-const driverEmail = 'motorista@uppi.com';
+const driverEmail = 'motorista' + Math.random().toString(36).substring(7) + '@uppi.com';
 const driverPassword = 'Motorista@123456';
 const driverFullName = 'Teste Motorista';
 const driverPhone = '(11) 99999-9999';
@@ -35,6 +35,7 @@ function makeRequest(method, path, body = null) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
       },
     };
 
@@ -88,7 +89,7 @@ async function createDriver() {
       }
     );
 
-    if (authResponse.statusCode !== 201) {
+    if (authResponse.statusCode !== 201 && authResponse.statusCode !== 200) {
       console.error('❌ Erro ao criar usuário:', authResponse.body);
       process.exit(1);
     }
