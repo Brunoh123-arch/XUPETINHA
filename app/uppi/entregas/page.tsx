@@ -1,12 +1,43 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { BottomNavigation } from '@/components/bottom-navigation'
+
+interface DeliveryOrder {
+  id: string
+  tracking_code: string
+  pickup_address: string
+  dropoff_address: string
+  status: string
+  package_size: string
+  estimated_price: number
+  created_at: string
+}
 
 export default function EntregasPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [selectedType, setSelectedType] = useState<string | null>(null)
+  const [recentOrders, setRecentOrders] = useState<DeliveryOrder[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setLoadingOrders(false); return }
+      const { data } = await supabase
+        .from('delivery_orders')
+        .select('id, tracking_code, pickup_address, dropoff_address, status, package_size, estimated_price, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+      setRecentOrders(data || [])
+      setLoadingOrders(false)
+    }
+    loadOrders()
+  }, [])
 
   const deliveryTypes = [
     {
@@ -137,6 +168,40 @@ export default function EntregasPage() {
             >
               Informar enderecos
             </button>
+          </div>
+        )}
+
+        {/* Recent Orders */}
+        {!loadingOrders && recentOrders.length > 0 && (
+          <div>
+            <p className="ios-section-header">Pedidos Recentes</p>
+            <div className="space-y-2.5">
+              {recentOrders.map((order) => {
+                const statusLabels: Record<string, { text: string; color: string }> = {
+                  pending: { text: 'Pendente', color: 'text-amber-600' },
+                  accepted: { text: 'Aceito', color: 'text-blue-600' },
+                  pickup: { text: 'Coleta', color: 'text-purple-600' },
+                  in_transit: { text: 'Em transito', color: 'text-blue-500' },
+                  delivered: { text: 'Entregue', color: 'text-green-600' },
+                  cancelled: { text: 'Cancelado', color: 'text-red-500' },
+                }
+                const s = statusLabels[order.status] || statusLabels.pending
+                return (
+                  <div key={order.id} className="ios-card p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[13px] font-mono font-bold text-muted-foreground">#{order.tracking_code}</span>
+                      <span className={`text-[12px] font-bold ${s.color}`}>{s.text}</span>
+                    </div>
+                    <p className="text-[13px] text-foreground truncate">{order.pickup_address}</p>
+                    <p className="text-[13px] text-muted-foreground truncate">{order.dropoff_address}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[12px] text-muted-foreground capitalize">{order.package_size}</span>
+                      <span className="text-[14px] font-bold text-foreground">R$ {order.estimated_price?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
