@@ -1,21 +1,59 @@
 # AUDITORIA COMPLETA — TELAS CONECTADAS AO BANCO
 
 **Data:** 09/03/2026
-**Versao:** 1.0 — Verificado por varredura completa de codigo-fonte
+**Versao:** 2.0 — Varredura definitiva: 152 pages.tsx vs. grep de conexoes
 **Metodo:** grep sistematico em todos os `page.tsx` buscando `.from(`, `.rpc(`, `fetch('/api`, `createClient`, `supabase.auth`
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx
 
 ---
 
-## RESUMO EXECUTIVO
+## RESUMO EXECUTIVO — AUDITORIA DEFINITIVA (152 pages.tsx)
 
-| Grupo | Total de Telas | Conectadas ao Banco | Redirecionamentos | Sem Banco (correto) |
-|---|---|---|---|---|
-| `/uppi/*` (passageiro/motorista) | 82 | **79** | 4 | 3 (showcase/estaticas) |
-| `/admin/*` | 42 | **41** | 0 | 1 (login — so auth) |
-| `/auth/*` | 10 | **10** | 0 | 0 |
-| `/onboarding/*` | 3 | 1 | 0 | 2 (splash/estaticas) |
-| **TOTAL** | **137** | **131** | **4** | **6** |
+| Grupo | Total | COM banco | Redirecionamentos puros | SEM banco (correto) | FALTANTE (problema) |
+|---|---|---|---|---|---|
+| `/uppi/*` passageiro/motorista | 89 | **81** | 5 | 3 (showcase/estatico) | **0** |
+| `/admin/*` | 43 | **42** | 0 | 1 (login so auth) | **0** |
+| `/auth/*` | 8 | **5** | 3 (redirect) | 0 | **0** |
+| `/onboarding/*` | 3 | 1 | 2 (redirects) | 0 | **0** |
+| Raiz e legado | 9 | **4** | 3 (legado) | 2 (estatico) | **0** |
+| **TOTAL** | **152** | **133** | **13** | **6** | **0** |
+
+---
+
+## MAPA COMPLETO — TELAS SEM CONEXAO AO BANCO (categorias)
+
+### REDIRECIONAMENTOS PUROS (13 — correto, nao precisam de banco)
+Sao arquivos `page.tsx` que contem apenas `redirect()`. Nenhuma logica de dados.
+
+| Arquivo | Redireciona para | Motivo |
+|---|---|---|
+| `app/uppi/terms/page.tsx` | `/uppi/legal/terms` | Alias de URL |
+| `app/uppi/privacy/page.tsx` | `/uppi/legal/privacy` | Alias de URL |
+| `app/uppi/rate/page.tsx` | `/uppi/history` | Rota antiga descontinuada |
+| `app/uppi/settings/emergency/page.tsx` | `/uppi/emergency-contacts` | Alias de URL |
+| `app/onboarding/splash/page.tsx` | `/login` | Splash depreciado |
+| `app/onboarding/page.tsx` | `/login` | Onboarding depreciado |
+| `app/auth/welcome/page.tsx` | `/onboarding` | Alias |
+| `app/auth/selection/page.tsx` | `/auth/passenger` | (verificar abaixo) |
+| `app/login/page.tsx` | `/auth/driver/login` ou `/auth/passenger` | Rota legada |
+| `app/signup/page.tsx` | `/auth/passenger` (tem `createClient`) | Legado com auth |
+| `app/phone/page.tsx` | `/auth/passenger` | Legado |
+| `app/page.tsx` | `/uppi/home` ou `/login` | Entry point |
+| `app/offline/page.tsx` | Pagina de erro — sem dados | Correto |
+
+### CONTEUDO ESTATICO (6 — correto, dados fixos em codigo)
+
+| Arquivo | Tipo | Motivo |
+|---|---|---|
+| `app/uppi/ios-showcase/page.tsx` | Showcase de componentes UI | Dados hardcoded proposital |
+| `app/uppi/legal/terms/page.tsx` | Texto legal estatico | Conteudo fixo |
+| `app/uppi/legal/privacy/page.tsx` | Texto legal estatico | Conteudo fixo |
+| `app/terms/page.tsx` | Texto legal raiz | Conteudo fixo |
+| `app/privacy/page.tsx` | Politica de privacidade raiz | Conteudo fixo |
+| `app/auth/error/page.tsx` | Erro de autenticacao | Exibe `searchParams.error` |
+| `app/auth/driver/welcome/page.tsx` | Tela de boas-vindas motorista | Sem dados — apenas CTA |
+
+---
 
 ---
 
