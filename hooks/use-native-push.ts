@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { PushNotifications, type Token, type ActionPerformed, type PushNotificationSchema } from '@capacitor/push-notifications'
 
 interface PushState {
   token: string | null
@@ -11,8 +10,8 @@ interface PushState {
   loading: boolean
 }
 
-type NotificationHandler = (notification: PushNotificationSchema) => void
-type ActionHandler = (action: ActionPerformed) => void
+type NotificationHandler = (notification: any) => void
+type ActionHandler = (action: any) => void
 
 /**
  * Hook para Push Notifications nativas via Capacitor (FCM)
@@ -41,6 +40,9 @@ export function useNativePush(options?: {
     setState(prev => ({ ...prev, loading: true, error: null }))
 
     try {
+      // Import dinamico so em plataforma nativa
+      const { PushNotifications } = await import('@capacitor/push-notifications')
+
       // Solicitar permissao
       const permission = await PushNotifications.requestPermissions()
       
@@ -58,7 +60,7 @@ export function useNativePush(options?: {
 
       return new Promise<string>((resolve, reject) => {
         // Listener para token
-        PushNotifications.addListener('registration', (token: Token) => {
+        PushNotifications.addListener('registration', (token: any) => {
           setState({
             token: token.value,
             isRegistered: true,
@@ -72,7 +74,7 @@ export function useNativePush(options?: {
         })
 
         // Listener para erro
-        PushNotifications.addListener('registrationError', (error) => {
+        PushNotifications.addListener('registrationError', (error: any) => {
           setState(prev => ({
             ...prev,
             loading: false,
@@ -110,6 +112,8 @@ export function useNativePush(options?: {
     if (!isNative) return
 
     try {
+      const { PushNotifications } = await import('@capacitor/push-notifications')
+
       // Remover token do backend
       if (state.token) {
         await fetch('/api/v1/push/fcm-register', {
@@ -137,27 +141,47 @@ export function useNativePush(options?: {
   useEffect(() => {
     if (!isNative) return
 
-    // Notificacao recebida com app em foreground
-    const notificationListener = PushNotifications.addListener(
-      'pushNotificationReceived',
-      (notification) => {
-        console.log('[Push] Notificacao recebida:', notification)
-        options?.onNotification?.(notification)
-      }
-    )
+    let ignore = false
 
-    // Usuario tocou na notificacao
-    const actionListener = PushNotifications.addListener(
-      'pushNotificationActionPerformed',
-      (action) => {
-        console.log('[Push] Acao executada:', action)
-        options?.onAction?.(action)
+    async function setupListeners() {
+      try {
+        const { PushNotifications } = await import('@capacitor/push-notifications')
+
+        // Notificacao recebida com app em foreground
+        const notificationListener = await PushNotifications.addListener(
+          'pushNotificationReceived',
+          (notification: any) => {
+            if (!ignore) {
+              console.log('[Push] Notificacao recebida:', notification)
+              options?.onNotification?.(notification)
+            }
+          }
+        )
+
+        // Usuario tocou na notificacao
+        const actionListener = await PushNotifications.addListener(
+          'pushNotificationActionPerformed',
+          (action: any) => {
+            if (!ignore) {
+              console.log('[Push] Acao executada:', action)
+              options?.onAction?.(action)
+            }
+          }
+        )
+
+        return () => {
+          notificationListener.remove()
+          actionListener.remove()
+        }
+      } catch (err) {
+        console.error('[Push] Erro ao setup listeners:', err)
       }
-    )
+    }
+
+    setupListeners()
 
     return () => {
-      notificationListener.then(l => l.remove())
-      actionListener.then(l => l.remove())
+      ignore = true
     }
   }, [isNative, options])
 
