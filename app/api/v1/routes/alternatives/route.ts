@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       count: alternatives.length,
     })
   } catch (error) {
-    console.error('[v0] Error fetching alternative routes:', error)
+    console.error('Error fetching alternative routes:', error)
     return NextResponse.json({ error: 'Failed to calculate routes' }, { status: 500 })
   }
 }

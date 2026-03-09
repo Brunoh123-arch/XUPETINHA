@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error('[v0] Email OTP verify error:', error)
+      console.error('Email OTP verify error:', error)
       return NextResponse.json({ error: 'Código inválido ou expirado' }, { status: 400 })
     }
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       session: data.session,
     })
   } catch (error) {
-    console.error('[v0] Email OTP verify unexpected error:', error)
+    console.error('Email OTP verify unexpected error:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

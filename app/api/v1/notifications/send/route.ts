@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Notificacao enviada' })
   } catch (error) {
-    console.error('[v0] Error sending notification:', error)
+    console.error('Error sending notification:', error)
     return NextResponse.json(
       { error: 'Falha ao enviar notificacao' },
       { status: 500 }

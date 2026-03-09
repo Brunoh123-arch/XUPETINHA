@@ -59,13 +59,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) {
-      console.error('[v0] Enhanced reviews fetch error:', error)
+      console.error('Enhanced reviews fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     return NextResponse.json({ reviews: data || [] })
   } catch (error: any) {
-    console.error('[v0] Enhanced reviews API error:', error)
+    console.error('Enhanced reviews API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

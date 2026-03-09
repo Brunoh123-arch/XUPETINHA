@@ -90,7 +90,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, rating: newRating })
   } catch (error) {
-    console.error('[v0] Error creating rating:', error)
+    console.error('Error creating rating:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -129,7 +129,7 @@ export async function GET(request: Request) {
       count: ratings?.length || 0,
     })
   } catch (error) {
-    console.error('[v0] Error fetching ratings:', error)
+    console.error('Error fetching ratings:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

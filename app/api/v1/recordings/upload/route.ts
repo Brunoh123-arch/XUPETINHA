@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       })
 
     if (uploadError) {
-      console.error('[v0] Storage upload error:', uploadError)
+      console.error('Storage upload error:', uploadError)
       return NextResponse.json({ error: 'Failed to upload recording' }, { status: 500 })
     }
 
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
       .single()
 
     if (dbError) {
-      console.error('[v0] Database insert error:', dbError)
+      console.error('Database insert error:', dbError)
       // Clean up uploaded file
       await supabase.storage.from('ride-recordings').remove([fileName])
       return NextResponse.json({ error: 'Failed to save recording metadata' }, { status: 500 })
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       encrypted: true,
     })
   } catch (error) {
-    console.error('[v0] Recording upload error:', error)
+    console.error('Recording upload error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

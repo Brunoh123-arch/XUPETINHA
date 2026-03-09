@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, favorite })
   } catch (error) {
-    console.error('[v0] Error creating favorite:', error)
+    console.error('Error creating favorite:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -92,7 +92,7 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] Error deleting favorite:', error)
+    console.error('Error deleting favorite:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

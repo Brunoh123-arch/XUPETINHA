@@ -23,7 +23,7 @@ export async function GET() {
 
     return NextResponse.json(data || {})
   } catch (error) {
-    console.error('[v0] Error fetching documents:', error)
+    console.error('Error fetching documents:', error)
     return NextResponse.json({ error: 'Erro ao buscar documentos' }, { status: 500 })
   }
 }
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('[v0] Error updating documents:', error)
+    console.error('Error updating documents:', error)
     return NextResponse.json({ error: 'Erro ao atualizar documentos' }, { status: 500 })
   }
 }
