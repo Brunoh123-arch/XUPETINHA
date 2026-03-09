@@ -30,13 +30,10 @@ async function handleRequest(request: NextRequest) {
   return supabaseResponse
 }
 
-// Next.js 16: proxy export (novo nome)
-export const proxy = handleRequest
-
-// Next.js 15 backwards compatibility
-export const middleware = handleRequest
-
-export default handleRequest
+// Next.js 16: proxy e o unico export esperado
+export async function proxy(request: NextRequest) {
+  return handleRequest(request)
+}
 
 export const config = {
   matcher: [
