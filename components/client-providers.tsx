@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { GoogleMapsProvider } from '@/lib/google-maps/provider'
 import { useFcmPushNotifications } from '@/hooks/use-fcm-push-notifications'
+import { CapacitorProvider } from '@/components/capacitor-provider'
 
 // Lazy-loaded providers that are not needed during SSR prerendering
 function LazyProviders({ children }: { children: ReactNode }) {
@@ -22,9 +23,11 @@ function LazyProviders({ children }: { children: ReactNode }) {
   // Once mounted on client, dynamically import heavy providers
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <GoogleMapsProvider>
-        {children}
-      </GoogleMapsProvider>
+      <CapacitorProvider>
+        <GoogleMapsProvider>
+          {children}
+        </GoogleMapsProvider>
+      </CapacitorProvider>
       <Toaster
         theme="dark"
         position="top-center"

@@ -1,164 +1,357 @@
-# Publicar Uppi na Play Store (Android)
+# Publicar Uppi na Play Store (Capacitor Nativo)
 
-O Uppi usa **TWA (Trusted Web Activity)** para rodar como app nativo no Android.
-TWA empacota o PWA como APK/AAB sem precisar reescrever codigo.
-
----
-
-## Requisitos
-
-1. Conta de desenvolvedor Google Play ($25 taxa unica)
-2. Dominio verificado com HTTPS (ja temos: uppi.app ou vercel.app)
-3. Keystore para assinar o app
+O Uppi usa **Capacitor** para rodar como app nativo no Android com acesso completo a APIs nativas (GPS background, Push FCM, Camera, etc).
 
 ---
 
-## Passo a Passo
+## Pre-requisitos
 
-### 1. Gerar o APK/AAB com PWABuilder
+1. **Android Studio** instalado — https://developer.android.com/studio
+2. **Java JDK 17+** — `java -version` para verificar
+3. **Node.js 18+** — `node -v` para verificar
+4. **Conta Google Play Console** — $25 taxa unica
+5. **Firebase Project** — para Push Notifications (FCM)
 
-1. Acesse [pwabuilder.com](https://www.pwabuilder.com)
-2. Cole a URL do app: `https://seu-dominio.vercel.app`
-3. Clique em "Start" e aguarde a analise
-4. Clique em "Package for stores" > "Android"
-5. Configure:
-   - **Package ID**: `app.uppi.twa`
-   - **App name**: `Uppi`
-   - **Launcher name**: `Uppi`
-   - **App version**: `1.0.0`
-   - **App version code**: `1`
-   - **Host**: `seu-dominio.vercel.app`
-   - **Start URL**: `/uppi/home`
-   - **Theme color**: `#FF6B00`
-   - **Background color**: `#000000`
-   - **Navigation color**: `#000000`
-   - **Icon**: Upload o `/public/icons/icon-512x512.jpg`
-   - **Signing key**: "Create new" (guarde bem o keystore!)
-6. Clique em "Generate" e baixe o ZIP
-7. Dentro do ZIP voce tera:
-   - `app-release-signed.aab` (para Play Store)
-   - `assetlinks.json` (copie o SHA256)
+---
 
-### 2. Configurar Digital Asset Links
+## Passo 1: Instalar Dependencias
 
-1. Copie o `sha256_cert_fingerprints` do `assetlinks.json` gerado
-2. Edite `/public/.well-known/assetlinks.json` no projeto:
+```bash
+# Clonar o projeto
+git clone https://github.com/uppiapp/XUPETINHA.git
+cd XUPETINHA
 
-```json
-[
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "app.uppi.twa",
-      "sha256_cert_fingerprints": [
-        "SEU_SHA256_AQUI"
-      ]
-    }
-  }
-]
+# Instalar dependencias
+pnpm install
+
+# Adicionar plataforma Android
+npx cap add android
 ```
 
-3. Faca deploy para o Vercel
-4. Verifique em: `https://seu-dominio/.well-known/assetlinks.json`
+---
 
-### 3. Criar Listing na Play Console
+## Passo 2: Configurar Firebase (FCM)
+
+1. Acesse [Firebase Console](https://console.firebase.google.com)
+2. Crie projeto ou use existente
+3. Clique em "Adicionar app" > Android
+4. Package name: `app.uppi.mobile`
+5. Baixe `google-services.json`
+6. Copie para `android/app/google-services.json`
+
+---
+
+## Passo 3: Configurar URL do Servidor
+
+Edite `capacitor.config.ts`:
+
+```ts
+server: {
+  url: 'https://SEU-PROJETO.vercel.app', // URL do deploy Vercel
+  androidScheme: 'https',
+}
+```
+
+---
+
+## Passo 4: Sincronizar e Abrir Android Studio
+
+```bash
+# Sincronizar arquivos
+npx cap sync android
+
+# Abrir no Android Studio
+npx cap open android
+```
+
+---
+
+## Passo 5: Configurar Icones
+
+No Android Studio:
+
+1. Clique direito em `app/res` > **New** > **Image Asset**
+2. Icon Type: **Launcher Icons (Adaptive and Legacy)**
+3. Path: selecione `/public/icons/icon-512x512.jpg`
+4. Clique **Next** > **Finish**
+
+---
+
+## Passo 6: Configurar Splash Screen
+
+Crie `android/app/src/main/res/drawable/splash.xml`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_color"/>
+</layer-list>
+```
+
+Adicione em `android/app/src/main/res/values/colors.xml`:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="splash_color">#FF6B00</color>
+</resources>
+```
+
+---
+
+## Passo 7: Verificar Permissoes
+
+Confira `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.VIBRATE" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+```
+
+---
+
+## Passo 8: Criar Keystore (primeira vez)
+
+```bash
+keytool -genkey -v -keystore uppi-release.keystore -alias uppi -keyalg RSA -keysize 2048 -validity 10000
+```
+
+**IMPORTANTE:** Guarde a senha e o arquivo em local seguro! Voce precisara para TODAS as atualizacoes futuras.
+
+---
+
+## Passo 9: Configurar Assinatura
+
+Crie `android/keystore.properties`:
+
+```properties
+storePassword=SUA_SENHA_AQUI
+keyPassword=SUA_SENHA_AQUI
+keyAlias=uppi
+storeFile=../uppi-release.keystore
+```
+
+Edite `android/app/build.gradle` e adicione ANTES de `android {`:
+
+```gradle
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+```
+
+Dentro de `android { ... }` adicione:
+
+```gradle
+signingConfigs {
+    release {
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+        storePassword keystoreProperties['storePassword']
+    }
+}
+
+buildTypes {
+    release {
+        signingConfig signingConfigs.release
+        minifyEnabled true
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+}
+```
+
+---
+
+## Passo 10: Gerar AAB (Android App Bundle)
+
+### Opcao A: Via Android Studio
+
+1. **Build** > **Generate Signed Bundle / APK**
+2. Selecione **Android App Bundle**
+3. Selecione o keystore e preencha as senhas
+4. Build variant: **release**
+5. Clique **Create**
+
+### Opcao B: Via Terminal
+
+```bash
+cd android
+./gradlew bundleRelease
+```
+
+O arquivo estara em:
+`android/app/build/outputs/bundle/release/app-release.aab`
+
+---
+
+## Passo 11: Criar Listing na Play Console
 
 1. Acesse [play.google.com/console](https://play.google.com/console)
-2. Clique em "Criar app"
+2. Clique **Criar app**
 3. Preencha:
-   - **Nome**: Uppi - Viagens com Preco Justo
-   - **Idioma**: Portugues (Brasil)
-   - **Tipo**: App
-   - **Gratuito/Pago**: Gratuito
-4. Complete as secoes obrigatorias:
+   - Nome: **Uppi**
+   - Idioma: Portugues (Brasil)
+   - Tipo: App
+   - Categoria: Viagens e local
+   - Gratuito
 
-#### Detalhes do app
-- **Descricao curta** (80 chars):
-  > Peca corridas e negocie o preco direto com motoristas. Economize!
+### Informacoes do App
 
-- **Descricao completa** (4000 chars):
-  > Uppi e o app de mobilidade urbana que coloca voce no controle...
+**Descricao curta (80 chars):**
+```
+Corridas rapidas, seguras e com preco justo. Peca agora!
+```
 
-#### Graficos
-- **Icone**: 512x512 PNG (use icon-512x512.jpg convertido)
-- **Graficos de recursos**: 1024x500 (banner promocional)
-- **Screenshots**: Minimo 2 (use /screenshots/home.jpg e ride.jpg)
+**Descricao completa:**
+```
+Uppi e o app de corridas que voce merece. Rapido, seguro e com precos justos.
 
-#### Classificacao de conteudo
-- Preencha o questionario IARC (app de transporte, sem violencia)
+PARA PASSAGEIROS:
+• Solicite corridas em segundos
+• Acompanhe seu motorista em tempo real
+• Pague com PIX, cartao ou saldo
+• Avalie e seja avaliado
+• Compartilhe sua viagem com amigos e familia
+• Botao de emergencia SOS
 
-#### Preco e distribuicao
-- Gratuito
-- Paises: Brasil (ou todos)
+PARA MOTORISTAS:
+• Ganhe dinheiro no seu horario
+• Receba pagamentos instantaneos via PIX
+• Veja zonas de alta demanda
+• Acompanhe seus ganhos diarios e semanais
 
-### 4. Upload do AAB
+CLUB UPPI:
+• Descontos exclusivos em todas as corridas
+• Suporte prioritario 24h
+• Cashback em cada viagem
 
-1. Va em "Producao" > "Criar nova versao"
-2. Faca upload do `app-release-signed.aab`
-3. Adicione notas da versao:
-   > Versao inicial do Uppi. Peca corridas, negocie precos, pague com PIX.
-4. Clique em "Revisar versao" > "Iniciar lancamento"
+Baixe agora e experimente uma nova forma de se locomover!
+```
 
-### 5. Aguardar Revisao
+### Graficos Obrigatorios
 
-- A revisao do Google leva 1-7 dias uteis
-- Voce recebera email quando aprovado
+| Item | Tamanho | Arquivo |
+|------|---------|---------|
+| Icone | 512x512 | `/public/icons/icon-512x512.jpg` |
+| Feature Graphic | 1024x500 | Criar no Canva |
+| Screenshots | Min 2 | `/public/screenshots/home.jpg`, `ride.jpg` |
+
+---
+
+## Passo 12: Upload e Publicacao
+
+1. Va em **Producao** > **Criar nova versao**
+2. Faca upload do `app-release.aab`
+3. Notas da versao:
+   ```
+   Versao 1.0.0
+   - Lancamento inicial
+   - Solicitar corridas
+   - Pagamento via PIX
+   - Acompanhamento em tempo real
+   ```
+4. **Revisar versao** > **Iniciar lancamento para producao**
+
+---
+
+## Comandos Uteis
+
+```bash
+# Sincronizar apos mudancas no codigo
+npx cap sync android
+
+# Abrir Android Studio
+npx cap open android
+
+# Rodar em dispositivo conectado (debug)
+npx cap run android
+
+# Rodar com live reload (desenvolvimento)
+npx cap run android --livereload --external
+
+# Gerar APK debug (para testes)
+cd android && ./gradlew assembleDebug
+
+# Gerar AAB release (para Play Store)
+cd android && ./gradlew bundleRelease
+```
 
 ---
 
 ## Atualizacoes Futuras
 
-Para atualizar o app:
+### Mudancas apenas no codigo web:
+1. Faca deploy no Vercel
+2. O app carrega automaticamente a nova versao
 
-1. **Mudancas no PWA** (codigo web): Apenas faca deploy no Vercel. O TWA carrega a versao mais recente automaticamente.
-
-2. **Mudancas no manifest/icones**: Gere novo AAB no PWABuilder, incremente o version code, e faca upload na Play Console.
+### Mudancas no app nativo (permissoes, plugins, etc):
+1. Incremente `versionCode` e `versionName` em `android/app/build.gradle`
+2. `npx cap sync android`
+3. Gere novo AAB
+4. Upload na Play Console
 
 ---
 
 ## Checklist Final
 
-- [x] Icones PWA gerados (8 tamanhos)
-- [x] manifest.json configurado
-- [x] Service Worker funcionando
-- [x] Pagina /offline criada
-- [x] Screenshots gerados
-- [x] assetlinks.json no lugar certo
-- [ ] SHA256 do keystore adicionado ao assetlinks.json
-- [ ] Deploy feito no Vercel
-- [ ] AAB gerado no PWABuilder
+- [ ] Android Studio instalado
+- [ ] `google-services.json` em `android/app/`
+- [ ] URL do Vercel configurada em `capacitor.config.ts`
+- [ ] Keystore criado e guardado em local seguro
+- [ ] `keystore.properties` configurado
+- [ ] Icones gerados via Android Studio
+- [ ] Permissoes configuradas no AndroidManifest
+- [ ] AAB gerado e assinado
+- [ ] Screenshots prontos (min 2)
 - [ ] Listing criado na Play Console
-- [ ] App publicado
+- [ ] Politica de privacidade publicada
+- [ ] App enviado para revisao
+
+---
+
+## Tempo de Revisao
+
+- Apps novos: **3-7 dias uteis**
+- Apps de ride-sharing: podem levar mais devido a verificacoes de seguranca
+- Atualizacoes: **1-3 dias uteis**
+
+Voce recebera email quando aprovado!
 
 ---
 
 ## Solucao de Problemas
 
-### "Untrusted web activity" (barra de navegador aparece)
+### Build falha com erro de Java
+```bash
+# Verificar versao do Java (precisa ser 17+)
+java -version
 
-O assetlinks.json nao esta configurado corretamente:
-1. Verifique se o SHA256 esta correto
-2. Verifique se o package_name bate com o do APK
-3. Aguarde ate 24h para o cache do Chrome atualizar
-4. Teste em: https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://seu-dominio
-
-### App nao instala
-
-1. Verifique se o AAB foi assinado corretamente
-2. Verifique se o version code e maior que a versao anterior
+# No Mac, configurar JAVA_HOME
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+```
 
 ### Push notifications nao funcionam
+1. Verifique se `google-services.json` esta em `android/app/`
+2. Verifique se o package name bate: `app.uppi.mobile`
+3. Teste no dispositivo fisico (emulador nem sempre funciona)
 
-1. Verifique se o Firebase Server Key esta configurado
-2. Verifique se o gcm_sender_id no manifest.json esta correto
-3. Teste primeiro no navegador antes de testar no TWA
+### GPS nao funciona em background
+Adicione ao AndroidManifest:
+```xml
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+```
 
----
-
-## Links Uteis
-
-- [PWABuilder](https://pwabuilder.com)
-- [Google Play Console](https://play.google.com/console)
-- [TWA Documentation](https://developer.chrome.com/docs/android/trusted-web-activity)
-- [Digital Asset Links Tester](https://developers.google.com/digital-asset-links/tools/generator)
+### App fecha ao abrir
+1. Verifique se a URL do Vercel esta correta
+2. Verifique se o deploy foi feito
+3. Teste a URL no navegador primeiro
