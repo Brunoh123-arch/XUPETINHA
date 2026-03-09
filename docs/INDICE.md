@@ -3,7 +3,7 @@
 **Ultima atualizacao:** 09/03/2026
 **Versao:** 16.0
 **Arquitetura:** Frontend + Backend + Banco (87 tabelas public / 86 com RLS / 51 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
-**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — **87 tabelas, 51 com Realtime, 75 RPCs, 162 politicas RLS, 235 indices, 35 triggers, migrations 001-034**
+**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations — 0 FK quebradas / 0 RPCs faltando**
 
 ---
 

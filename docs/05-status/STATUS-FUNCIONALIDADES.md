@@ -2,7 +2,7 @@
 
 **Ultima Atualizacao:** 09/03/2026
 **Versao:** 22.0 — NUMEROS FINAIS DEFINITIVOS
-**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas, 51 com Realtime, 75 RPCs, 162 politicas RLS, 235 indices, 34 triggers
+**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas, 51 Realtime, 75 RPCs, 162 politicas, 260 indices, 34 triggers, 49 migrations
 
 ---
 
@@ -16,9 +16,10 @@
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
 | Politicas RLS | **162** |
-| Indices de performance | **235** |
-| Triggers customizados | **35** |
-| Views | **1** (ride_offers) |
+| Indices de performance | **260** |
+| Triggers customizados | **34** |
+| Views | **3** (ride_offers + 2 PostGIS sistema) |
+| Migrations aplicadas | **49** |
 | Paginas (page.tsx) | 152 |
 | API route.ts | 57+ |
 | Endpoints HTTP | 92+ |
@@ -234,14 +235,15 @@
 | Item | Status |
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | **87** (migrations 001-034) |
+| Tabelas public | **87** (migrations 001-035) |
 | Tabelas com RLS | **86** (exceto spatial_ref_sys) |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
 | Politicas RLS | **162** |
-| Indices | **235** |
-| Triggers customizados | **35** |
-| Views | **1** (ride_offers) |
+| Indices | **260** |
+| Triggers customizados | **34** |
+| Views | **3** (ride_offers + geometry_columns + geography_columns) |
+| Migrations aplicadas | **49** |
 | Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
 ### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 09/03/2026)
@@ -249,82 +251,109 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-## 4. RPCs de Negocio (42 funcoes — verificadas em 09/03/2026)
+## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 09/03/2026)
 
-### Corridas e Motorista (18)
-- [x] find_nearby_drivers
-- [x] create_ride
-- [x] accept_ride
-- [x] start_ride
-- [x] complete_ride (x2)
-- [x] cancel_ride
-- [x] submit_price_offer
+### Corridas e Motorista (20)
 - [x] accept_price_offer
-- [x] upsert_driver_location (x2)
-- [x] get_driver_active_ride
-- [x] get_available_scheduled_rides
+- [x] accept_ride
+- [x] book_intercity_seat
+- [x] cancel_ride
+- [x] complete_ride
+- [x] create_ride
 - [x] driver_accept_scheduled_ride
-- [x] handle_driver_cancellation
 - [x] estimate_ride_price
+- [x] find_nearby_drivers
+- [x] get_available_scheduled_rides
+- [x] get_driver_active_ride
+- [x] get_driver_home_data
+- [x] get_nearby_drivers
+- [x] get_popular_routes_nearby
 - [x] get_surge_multiplier
+- [x] handle_driver_cancellation
+- [x] search_drivers_nearby
+- [x] start_ride
+- [x] submit_price_offer
+- [x] upsert_driver_location
 
-### Financeiro (17)
-- [x] calculate_wallet_balance
-- [x] get_wallet_balance
-- [x] get_full_wallet_statement
-- [x] request_withdrawal (x2)
-- [x] request_withdrawal_v2
+### Financeiro (18)
 - [x] admin_approve_withdrawal
-- [x] admin_reject_withdrawal
 - [x] admin_process_withdrawal
-- [x] get_pending_withdrawals
-- [x] get_user_payment_summary
+- [x] admin_reject_withdrawal
 - [x] apply_coupon
 - [x] apply_coupon_to_ride
-- [x] redeem_coupon
+- [x] approve_withdrawal
+- [x] calculate_wallet_balance
 - [x] get_admin_financial_summary
-- [x] get_rides_revenue_by_day
 - [x] get_driver_wallet_balance
+- [x] get_full_wallet_statement
+- [x] get_pending_withdrawals
+- [x] get_rides_revenue_by_day
+- [x] get_user_payment_summary
+- [x] get_wallet_balance
+- [x] redeem_coupon
+- [x] reject_withdrawal
+- [x] request_withdrawal
+- [x] request_withdrawal_v2
 
-### Perfil e Usuario (9)
-- [x] get_full_profile
-- [x] get_driver_stats
-- [x] get_driver_dashboard_stats
-- [x] get_driver_home_data
-- [x] get_passenger_home_data
-- [x] get_referral_stats
-- [x] generate_referral_code
-- [x] submit_rating
+### Perfil e Usuario (16)
+- [x] calculate_ride_price
 - [x] check_ride_reviewed
+- [x] generate_referral_code
+- [x] get_driver_dashboard_stats
+- [x] get_driver_earnings_stats
+- [x] get_driver_stats
+- [x] get_frequent_destinations
+- [x] get_full_profile
+- [x] get_passenger_home_data
 - [x] get_pending_reviews
+- [x] get_referral_stats
+- [x] get_user_stats
+- [x] needs_facial_verification
+- [x] submit_rating
+- [x] submit_ride_rating
+- [x] update_trust_score
 
-### Social e Gamificacao (10)
-- [x] get_social_feed
-- [x] get_leaderboard (x3)
-- [x] get_leaderboard_full
-- [x] refresh_leaderboard
+### Social e Gamificacao (8)
 - [x] check_and_award_achievements
 - [x] check_and_grant_achievements
 - [x] check_and_grant_referral_achievements
+- [x] get_leaderboard
+- [x] get_leaderboard_full
+- [x] get_social_feed
 - [x] process_referral_reward
-- [x] check_referral_on_complete
+- [x] refresh_leaderboard
 
-### Admin e Plataforma (15)
+### Notificacoes (4)
+- [x] create_notification
+- [x] get_notifications_summary
+- [x] mark_all_notifications_read
+- [x] send_notification
+
+### Suporte (3)
+- [x] create_support_ticket
+- [x] get_support_ticket_with_messages
+- [x] reply_support_ticket
+
+### Admin e Plataforma (11)
 - [x] admin_ban_user
 - [x] admin_verify_driver
 - [x] create_emergency_alert
-- [x] create_support_ticket
 - [x] get_app_config
 - [x] get_popular_routes
 - [x] get_ride_history
 - [x] get_ride_history_paginated
 - [x] get_ride_with_details
-- [x] mark_all_notifications_read
 - [x] record_address_search
-- [x] reply_support_ticket
 - [x] search_address_history
-- [x] send_notification
 - [x] snapshot_platform_metrics
+
+### Webhooks (2)
+- [x] get_pending_webhooks
+- [x] update_webhook_delivery
+
+### Utilitarios adicionais (verificados via SQL)
+- [x] get_active_hot_zones
+- [x] get_driver_earnings_stats
 
 ---
 
@@ -368,4 +397,4 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 09/03/2026** — NUMEROS FINAIS DEFINITIVOS — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 policies / 235 indices / 35 triggers — migrations 001-034 — dados verificados via SQL direto
+**Atualizado em 09/03/2026** — NUMEROS FINAIS DEFINITIVOS — Supabase jpnwxqjrhzaobnugjnyx — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — dados verificados via SQL direto

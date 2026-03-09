@@ -20,13 +20,16 @@
 
 ## Banco de Dados (verificado via SQL em 09/03/2026 — VALORES FINAIS DEFINITIVOS)
 
-- [x] **87 tabelas no schema public** (migrations 001-034)
+- [x] **87 tabelas no schema public** (migrations 001-035 / 49 entradas)
 - [x] **86 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
 - [x] **51 tabelas com Realtime publicado** (verificado via pg_publication_tables em 09/03/2026)
 - [x] **162 politicas RLS**
-- [x] **235 indices de performance**
-- [x] **35 triggers customizados**
-- [x] **1 View** (ride_offers — alias de price_offers)
+- [x] **260 indices de performance** (migrations 001-035)
+- [x] **34 triggers customizados**
+- [x] **3 Views** (ride_offers + 2 PostGIS sistema)
+- [x] **0 FK quebradas** — integridade referencial 100%
+- [x] **0 tabelas sem politicas** — nenhuma tabela com RLS bloqueado sem politicas
+- [x] **0 RPCs criticas faltando** — todas as 75 RPCs do codigo existem no banco
 
 ### Tabelas COM Realtime (51 — verificadas via pg_publication_tables em 09/03/2026)
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats

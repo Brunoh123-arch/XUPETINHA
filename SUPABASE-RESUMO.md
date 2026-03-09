@@ -10,15 +10,15 @@
 
 ```
 PROJETO:    jpnwxqjrhzaobnugjnyx
-MIGRATIONS: 034 aplicadas
+MIGRATIONS: 49 entradas (migrations 001-035)
 TABELAS:    87 (schema public)
 RLS:        86 tabelas ativas (exceto spatial_ref_sys)
 REALTIME:   51 tabelas (verificado via pg_publication_tables em 09/03/2026)
 RPCs:       75 funcoes de negocio callable (excluindo PostGIS/triggers internos)
 POLICIES:   162 politicas RLS
-INDEXES:    235 indices de performance
+INDEXES:    260 indices de performance
 TRIGGERS:   34 customizados
-VIEWS:      1 (ride_offers)
+VIEWS:      3 (ride_offers + 2 PostGIS do sistema)
 ```
 
 ---

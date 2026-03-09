@@ -1102,13 +1102,14 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 | Tabelas com Realtime | **51** | via pg_publication_tables |
 | RPCs de negocio | **75** | via information_schema.routines |
 | Politicas RLS | **162** | via pg_policies |
-| Indices | **235** | via pg_indexes |
+| Indices | **260** | migrations 001-035 |
 | Triggers customizados | **34** | via information_schema.triggers |
-| Views | **1** | ride_offers (alias price_offers) |
+| Views | **3** | ride_offers + 2 PostGIS (geometry_columns, geography_columns) |
+| Migrations aplicadas | **49** | via supabase_migrations.schema_migrations |
 | Extensoes instaladas | 7 | PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql |
 
 ---
 
 **NOTA:** Estes sao os numeros DEFINITIVOS verificados via consulta SQL direta no Supabase jpnwxqjrhzaobnugjnyx em 09/03/2026. Nao usar numeros de versoes anteriores da documentacao.
 
-**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-034
+**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-035 (49 entradas)
