@@ -2,8 +2,8 @@
 
 **Ultima atualizacao:** 09/03/2026
 **Versao:** 16.0
-**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 79 com RLS / 43 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
-**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — 80 tabelas, 43 com Realtime, 58 RPCs callable, 150 politicas RLS, 211 indices
+**Arquitetura:** Frontend + Backend + Banco (87 tabelas public / 86 com RLS / 51 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
+**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — **87 tabelas, 51 com Realtime, 75 RPCs, 162 politicas RLS, 235 indices, 35 triggers, migrations 001-034**
 
 ---
 
@@ -28,8 +28,8 @@ docs/
     VERSIONAMENTO.md                         Padrao /api/v1/, middleware, headers de versao
 
   03-banco-de-dados/
-    AUDITORIA-COMPLETA.md                    Schema real completo (80 tabelas, 43 Realtime, 58 RPCs)
-    SCHEMA.md                                Estado real (80 tabelas — verificado 09/03/2026) +
+    AUDITORIA-COMPLETA.md                    Schema real completo (87 tabelas, 51 Realtime, 75 RPCs, 35 triggers)
+    SCHEMA.md                                Estado real (87 tabelas — verificado 09/03/2026, migrations 001-034) +
                                              campos detalhados, RLS, indexes, funcoes SQL
 
   04-infraestrutura/
@@ -38,8 +38,8 @@ docs/
     TESTE-REALTIME.md                        Guia de teste Supabase Realtime (passo a passo)
 
   05-status/
-    STATUS-FUNCIONALIDADES.md                Checklist completo: 73 tabelas, 15 funcoes RPC,
-                                             152 paginas, 57 APIs, 8 tabelas Realtime (02/03/2026)
+    STATUS-FUNCIONALIDADES.md                Checklist completo: 87 tabelas, 75 RPCs,
+                                             152 paginas, 57 APIs, 51 tabelas Realtime (09/03/2026)
 
   06-deploy/
     PLAY-STORE.md                            Guia de publicacao (TWA/Capacitor/FCM)
@@ -400,11 +400,14 @@ package.json                                 Dependencias completas
 
 | Categoria              | Quantidade | Observacao |
 |------------------------|-----------|------------|
-| Tabelas (schema public)| **80**    | Verificadas via SQL em 09/03/2026 |
-| Tabelas com RLS ativo  | **79**    | Exceto spatial_ref_sys (PostGIS sistema) |
-| Tabelas com Realtime   | **35**    | Verificadas via pg_publication_tables |
-| RPCs callable          | **42**    | Excluindo funcoes PostGIS internas |
-| Trigger functions      | 25+       | Incluindo triggers de corrida, gamificacao e cascata |
+| Tabelas (schema public)| **87**    | Verificadas via SQL em 09/03/2026 — migrations 001-034 |
+| Tabelas com RLS ativo  | **86**    | Exceto spatial_ref_sys (PostGIS sistema) |
+| Tabelas com Realtime   | **51**    | Verificadas via pg_publication_tables |
+| RPCs callable          | **75**    | Excluindo funcoes PostGIS internas |
+| Politicas RLS          | **162**   | Verificadas via pg_policies |
+| Indices                | **235**   | Verificados via pg_indexes |
+| Trigger functions      | **35**    | Incluindo triggers de corrida, gamificacao e cascata |
+| Views                  | **1**     | ride_offers (alias price_offers) |
 | Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth |
 | Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage |
 | Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime |

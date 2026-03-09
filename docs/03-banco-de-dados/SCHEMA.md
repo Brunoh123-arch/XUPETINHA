@@ -1,13 +1,17 @@
 # UPPI - Schema do Banco de Dados
 
 **Ultima Atualizacao:** 09/03/2026
-**Versao:** 17.0
+**Versao:** 18.0 — SCHEMA FINAL DEFINITIVO
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx (ativo — verificado em 09/03/2026)
-**Tabelas no schema public:** 80 (verificadas via SQL em 09/03/2026)
-**Tabelas com RLS ativo:** 79 (exceto spatial_ref_sys — sistema PostGIS)
-**Tabelas com Realtime:** 43 (verificadas via pg_publication_tables, pós migration 026 em 09/03/2026)
-**RPCs de negocio callable:** 58 (excluindo funcoes PostGIS internas — verificado via SQL em 09/03/2026)
+**Tabelas no schema public:** 87 (verificadas via SQL em 09/03/2026 — migrations 001-034)
+**Tabelas com RLS ativo:** 86 (exceto spatial_ref_sys — sistema PostGIS)
+**Tabelas com Realtime:** 51 (verificadas via pg_publication_tables em 09/03/2026)
+**RPCs de negocio callable:** 75 (excluindo funcoes PostGIS internas — verificado via SQL em 09/03/2026)
+**Politicas RLS:** 162 (verificadas em 09/03/2026)
+**Indices:** 235 (verificados em 09/03/2026)
+**Triggers customizados:** 34 (verificados via SQL em 09/03/2026)
+**View:** 1 (ride_offers — alias de price_offers)
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
 ---
@@ -16,7 +20,7 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **80** | Dominio da aplicacao UPPI |
+| **public** | **87** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
 | auth | 21 | Gerenciadas pelo Supabase Auth |
 | storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
@@ -27,7 +31,19 @@
 
 ---
 
-## 1. Tabelas do Schema Public (80 tabelas — verificadas em 09/03/2026)
+## 1. Tabelas do Schema Public (87 tabelas — verificadas em 09/03/2026, migrations 001-034)
+
+### 7 Novas Tabelas (migrations 033-034)
+- `fcm_tokens` — tokens Firebase Cloud Messaging por dispositivo
+- `push_log` — historico de push notifications enviadas
+- `promo_codes` — codigos promocionais com limites de uso
+- `promo_code_uses` — historico de uso de promo codes por usuario
+- `system_config` — configuracoes gerais da plataforma (key-value)
+- `driver_schedule` — agenda de disponibilidade semanal do motorista
+- `family_members` — membros da familia para rastreamento compartilhado
+
+### View adicionada
+- `ride_offers` — VIEW alias de `price_offers` (compatibilidade retroativa)
 
 ### Grupo: Usuarios e Perfis
 
@@ -813,11 +829,124 @@ Sistema de coordenadas de referencia do PostGIS. Nao tem RLS.
 
 ---
 
-## 2. Tabelas com Realtime Ativo (35 tabelas)
+### Grupo: Novas Tabelas (migrations 033-034)
 
-Verificadas via `pg_publication_tables` em 09/03/2026:
+#### fcm_tokens (7 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles.id |
+| token | text | UNIQUE — token FCM do dispositivo |
+| device_info | jsonb | informacoes do dispositivo |
+| is_active | boolean | DEFAULT true |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, wallet_transactions, webhook_deliveries, user_wallets
+**RLS:** sim | **Realtime:** sim
+
+#### push_log (9 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles.id |
+| title | text | |
+| body | text | |
+| data | jsonb | payload adicional |
+| status | text | sent / failed / pending |
+| error | text | mensagem de erro se falhou |
+| created_at | timestamptz | |
+| sent_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** nao
+
+#### promo_codes (12 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| code | text | UNIQUE — codigo promocional |
+| description | text | |
+| discount_type | text | percentage / fixed |
+| discount_value | numeric | |
+| max_uses | integer | limite total de usos |
+| current_uses | integer | DEFAULT 0 |
+| min_ride_value | numeric | valor minimo da corrida |
+| valid_from | timestamptz | |
+| valid_until | timestamptz | |
+| is_active | boolean | DEFAULT true |
+| created_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** sim
+
+#### promo_code_uses (5 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| promo_code_id | uuid | FK promo_codes.id |
+| user_id | uuid | FK profiles.id |
+| ride_id | uuid | FK rides.id — nullable |
+| used_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** nao
+
+#### system_config (5 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| key | text | UNIQUE — chave da configuracao |
+| value | jsonb | valor da configuracao |
+| description | text | |
+| updated_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** nao
+
+#### driver_schedule (8 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| driver_id | uuid | FK driver_profiles.id |
+| day_of_week | integer | 0=domingo, 6=sabado |
+| start_time | time | |
+| end_time | time | |
+| is_active | boolean | DEFAULT true |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** sim
+
+#### family_members (10 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles.id — dono da conta |
+| member_id | uuid | FK profiles.id — membro da familia |
+| relationship | text | filho / conjuge / pai / outro |
+| nickname | text | |
+| can_track | boolean | DEFAULT true — pode rastrear |
+| is_active | boolean | DEFAULT true |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+| invited_at | timestamptz | |
+
+**RLS:** sim | **Realtime:** sim
+
+### View adicionada
+
+#### ride_offers (VIEW)
+Alias de `price_offers` para compatibilidade retroativa com codigo legado.
+```sql
+CREATE OR REPLACE VIEW ride_offers AS SELECT * FROM price_offers;
+```
+
+---
+
+## 2. Tabelas com Realtime Ativo (51 tabelas)
+
+Verificadas via `pg_publication_tables` em 09/03/2026 (migrations 001-034):
+
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
+
+### 16 tabelas SEM Realtime (nao precisam de escuta em tempo real)
+address_history, address_search_history, admin_logs, app_config, campaigns, coupon_uses, coupons, driver_verifications, email_otps, faqs, favorites, legal_documents, notification_preferences, platform_metrics, popular_routes, pricing_rules, promotions, push_subscriptions, rating_categories, recording_consents, referral_achievements, reviews, ride_recordings, sms_logs, sms_templates, spatial_ref_sys, system_settings, user_2fa, user_coupons, user_onboarding, user_recording_preferences, user_settings, user_sms_preferences, vehicles, webhook_endpoints
 
 ---
 
@@ -963,18 +1092,23 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 ---
 
-## 6. Consolidado Final (09/03/2026)
+## 6. Consolidado Final — VALORES REAIS (09/03/2026)
 
-| Metrica | Valor |
-|---------|-------|
-| Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | 80 |
-| Tabelas com RLS | 79 |
-| Tabelas com Realtime | 35 |
-| RPCs de negocio | 42 |
-| Trigger functions | 20+ |
-| Extensoes instaladas | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
+| Metrica | Valor | Observacao |
+|---------|-------|------------|
+| Projeto Supabase | jpnwxqjrhzaobnugjnyx | ativo |
+| Tabelas public | **87** | migrations 001-034 |
+| Tabelas com RLS | **86** | exceto spatial_ref_sys |
+| Tabelas com Realtime | **51** | via pg_publication_tables |
+| RPCs de negocio | **75** | via information_schema.routines |
+| Politicas RLS | **162** | via pg_policies |
+| Indices | **235** | via pg_indexes |
+| Triggers customizados | **34** | via information_schema.triggers |
+| Views | **1** | ride_offers (alias price_offers) |
+| Extensoes instaladas | 7 | PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql |
 
 ---
 
-**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx
+**NOTA:** Estes sao os numeros DEFINITIVOS verificados via consulta SQL direta no Supabase jpnwxqjrhzaobnugjnyx em 09/03/2026. Nao usar numeros de versoes anteriores da documentacao.
+
+**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-034

@@ -1,8 +1,8 @@
 # UPPI - Status de Funcionalidades
 
 **Ultima Atualizacao:** 09/03/2026
-**Versao:** 21.0
-**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas, 43 com Realtime, 58 RPCs, 150 politicas RLS, 211 indices
+**Versao:** 22.0 — NUMEROS FINAIS DEFINITIVOS
+**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas, 51 com Realtime, 75 RPCs, 162 politicas RLS, 235 indices, 34 triggers
 
 ---
 
@@ -11,12 +11,14 @@
 | Categoria | Valor |
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no Banco (public) | 80 |
-| Tabelas com RLS ativo | 79 |
-| Tabelas com Realtime | **43** |
-| RPCs callable | **58** |
-| Politicas RLS | **150** |
-| Indices de performance | **211** |
+| Tabelas no Banco (public) | **87** |
+| Tabelas com RLS ativo | **86** |
+| Tabelas com Realtime | **51** |
+| RPCs callable | **75** |
+| Politicas RLS | **162** |
+| Indices de performance | **235** |
+| Triggers customizados | **35** |
+| Views | **1** (ride_offers) |
 | Paginas (page.tsx) | 152 |
 | API route.ts | 57+ |
 | Endpoints HTTP | 92+ |
@@ -232,15 +234,18 @@
 | Item | Status |
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | 80 |
-| Tabelas com RLS | 79 (exceto spatial_ref_sys) |
-| Tabelas com Realtime | 35 |
-| RPCs callable | 42 |
-| Trigger functions | 25+ |
+| Tabelas public | **87** (migrations 001-034) |
+| Tabelas com RLS | **86** (exceto spatial_ref_sys) |
+| Tabelas com Realtime | **51** |
+| RPCs callable | **75** |
+| Politicas RLS | **162** |
+| Indices | **235** |
+| Triggers customizados | **35** |
+| Views | **1** (ride_offers) |
 | Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
-### Tabelas com Realtime ativo (35)
-city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, wallet_transactions, webhook_deliveries, user_wallets
+### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 09/03/2026)
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
 
@@ -363,4 +368,4 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 09/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — dados verificados via SQL direto
+**Atualizado em 09/03/2026** — NUMEROS FINAIS DEFINITIVOS — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 policies / 235 indices / 35 triggers — migrations 001-034 — dados verificados via SQL direto

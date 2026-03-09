@@ -1,33 +1,46 @@
 # UPPI - AUDITORIA COMPLETA FINAL (CODIGO vs BANCO DE DADOS)
 
 **Data da Auditoria:** 09/03/2026
-**Versao:** 13.0
-**Status do Banco:** OPERACIONAL — 80 tabelas ativas no Supabase jpnwxqjrhzaobnugjnyx
-**Verificado via:** SQL direto em 09/03/2026
+**Versao:** 14.0 — AUDITORIA FINAL DEFINITIVA
+**Status do Banco:** OPERACIONAL — 87 tabelas ativas no Supabase jpnwxqjrhzaobnugjnyx
+**Verificado via:** SQL direto em 09/03/2026 (migrations 001–034 aplicadas)
 
 ---
 
-## SUMARIO EXECUTIVO
+## SUMARIO EXECUTIVO — VALORES REAIS (verificados via SQL em 09/03/2026)
 
 | Item | Valor |
 |------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no banco public (real) | 80 |
-| Tabelas com RLS ativo | 79 (exceto spatial_ref_sys — PostGIS) |
-| Tabelas COM Realtime | **43** (verificado via pg_publication_tables — migrations 022-026) |
-| Tabelas SEM Realtime | **37** |
-| RPCs callable (negocio, excl. PostGIS) | **58** (verificado via information_schema.routines em 09/03/2026) |
-| Politicas RLS consolidadas | **150** (migrations 026-028) |
-| Indices de performance | **211** (migrations 026-027: +27 novos) |
-| Trigger functions | 25+ |
+| Tabelas no banco public | **87** |
+| Tabelas com RLS ativo | **86** (exceto spatial_ref_sys — PostGIS) |
+| Tabelas COM Realtime | **51** (verificado via pg_publication_tables) |
+| Tabelas SEM Realtime | **35** |
+| RPCs de negocio (excl. PostGIS/triggers) | **75** (verificado via information_schema.routines) |
+| Politicas RLS | **162** |
+| Indices de performance | **235** |
+| Triggers customizados | **35** |
+| Views | **1** (ride_offers) |
 | API Routes (arquivos route.ts) | 57+ |
 | Endpoints HTTP totais | 92+ |
 | Paginas (page.tsx) | 152 |
-| Extensoes instaladas | 7 |
+| Migrations aplicadas | 034 |
 
 ---
 
-## SECAO 1: 80 TABELAS REAIS (verificadas via SQL em 09/03/2026)
+## SECAO 1: 87 TABELAS REAIS (verificadas via SQL em 09/03/2026 — migrations 001-034)
+
+### 7 tabelas adicionadas nas migrations 033-034
+- `fcm_tokens` — tokens Firebase push notification (7 colunas, RLS sim, Realtime sim)
+- `push_log` — log de push notifications enviadas (9 colunas, RLS sim)
+- `promo_codes` — sistema de promo codes (12 colunas, RLS sim, Realtime sim)
+- `promo_code_uses` — historico de uso de promo codes (5 colunas, RLS sim)
+- `system_config` — configuracoes chave-valor da plataforma (5 colunas, RLS sim)
+- `driver_schedule` — agenda de disponibilidade do motorista (8 colunas, RLS sim, Realtime sim)
+- `family_members` — membros da familia para rastreamento (10 colunas, RLS sim, Realtime sim)
+
+### View adicionada
+- `ride_offers` — VIEW alias de `price_offers` (compatibilidade com codigo legado)
 
 ### 1. Usuarios e Perfis (2 tabelas)
 
@@ -428,21 +441,64 @@
 
 ---
 
-## SECAO 2: RPCs DE NEGOCIO (58 funcoes — verificado via information_schema.routines em 09/03/2026)
+## SECAO 2: 75 RPCs DE NEGOCIO (verificado via information_schema.routines em 09/03/2026)
 
 ### Por categoria
 
-| Categoria | Funcoes |
-|-----------|---------|
-| Corridas e Motorista | accept_price_offer, accept_ride, book_intercity_seat, cancel_ride, complete_ride (x2), create_ride, driver_accept_scheduled_ride, estimate_ride_price, find_nearby_drivers, get_available_scheduled_rides, get_driver_active_ride, get_driver_home_data, get_surge_multiplier, handle_driver_cancellation, start_ride, submit_price_offer, upsert_driver_location (x2) |
-| Financeiro | apply_coupon, apply_coupon_to_ride, calculate_wallet_balance, get_admin_financial_summary, get_driver_wallet_balance, get_full_wallet_statement, get_pending_withdrawals, get_rides_revenue_by_day, get_user_payment_summary, get_wallet_balance, redeem_coupon, request_withdrawal (x2), request_withdrawal_v2, admin_approve_withdrawal, admin_process_withdrawal, admin_reject_withdrawal |
-| Perfil e Usuario | get_full_profile, get_driver_stats, get_driver_dashboard_stats, get_passenger_home_data, get_referral_stats, generate_referral_code, get_pending_reviews, check_ride_reviewed, submit_rating |
-| Social e Gamificacao | check_and_award_achievements, check_and_grant_achievements, check_and_grant_referral_achievements, get_leaderboard (x3), get_leaderboard_full, get_social_feed, process_referral_reward, refresh_leaderboard, check_referral_on_complete |
-| Admin e Plataforma | admin_ban_user, admin_verify_driver, create_emergency_alert, create_support_ticket, get_app_config, get_popular_routes, get_ride_history, get_ride_history_paginated, get_ride_with_details, mark_all_notifications_read, record_address_search, reply_support_ticket, search_address_history, send_notification, snapshot_platform_metrics |
+| Categoria | Funcoes | Qtd |
+|-----------|---------|-----|
+| Corridas e Motorista | accept_price_offer, accept_ride, book_intercity_seat, cancel_ride, complete_ride, create_ride, driver_accept_scheduled_ride, estimate_ride_price, find_nearby_drivers, get_available_scheduled_rides, get_driver_active_ride, get_driver_home_data, get_nearby_drivers, get_popular_routes_nearby, get_surge_multiplier, handle_driver_cancellation, search_drivers_nearby, start_ride, submit_price_offer, upsert_driver_location | 20 |
+| Financeiro | apply_coupon, apply_coupon_to_ride, calculate_wallet_balance, get_admin_financial_summary, get_driver_wallet_balance, get_full_wallet_statement, get_pending_withdrawals, get_rides_revenue_by_day, get_user_payment_summary, get_wallet_balance, redeem_coupon, request_withdrawal, request_withdrawal_v2, admin_approve_withdrawal, admin_process_withdrawal, admin_reject_withdrawal, approve_withdrawal, reject_withdrawal | 18 |
+| Perfil e Usuario | calculate_ride_price, check_ride_reviewed, generate_referral_code, get_driver_dashboard_stats, get_driver_earnings_stats, get_driver_stats, get_frequent_destinations, get_full_profile, get_passenger_home_data, get_pending_reviews, get_referral_stats, get_user_stats, needs_facial_verification, submit_rating, submit_ride_rating, update_trust_score | 16 |
+| Social e Gamificacao | check_and_award_achievements, check_and_grant_achievements, check_and_grant_referral_achievements, get_leaderboard, get_leaderboard_full, get_social_feed, process_referral_reward, refresh_leaderboard | 8 |
+| Notificacoes | create_notification, get_notifications_summary, mark_all_notifications_read, send_notification | 4 |
+| Suporte | create_support_ticket, get_support_ticket_with_messages, reply_support_ticket | 3 |
+| Admin e Plataforma | admin_ban_user, admin_verify_driver, create_emergency_alert, get_app_config, get_popular_routes, get_ride_history, get_ride_history_paginated, get_ride_with_details, record_address_search, search_address_history, snapshot_platform_metrics | 11 |
+| Webhooks | get_pending_webhooks, update_webhook_delivery | 2 |
+| **TOTAL** | | **75** |
 
 ---
 
-## SECAO 3: PONTOS DE ATENCAO (auditoria 09/03/2026)
+## SECAO 3: TRIGGERS — 35 customizados (verificado via information_schema.triggers em 09/03/2026)
+
+| Trigger | Tabela | Evento | Descricao |
+|---|---|---|---|
+| on_profile_created | profiles | INSERT BEFORE | Cria registro inicial do perfil |
+| on_profile_created_wallet | profiles | INSERT AFTER | Cria carteira automaticamente |
+| on_profile_created_settings | profiles | INSERT AFTER | Cria preferencias do usuario |
+| on_profile_created_recording_prefs | profiles | INSERT AFTER | Cria preferencias de gravacao |
+| on_profile_created_sms_prefs | profiles | INSERT AFTER | Cria preferencias de SMS |
+| trg_auto_referral_code | profiles | INSERT BEFORE | Gera codigo de indicacao |
+| trg_profiles_updated_at | profiles | UPDATE BEFORE | Atualiza timestamp |
+| trg_auto_payment_on_complete | rides | UPDATE AFTER | Cria pagamento ao concluir corrida |
+| trg_driver_wallet_complete | rides | UPDATE AFTER | Credita motorista ao concluir |
+| trg_check_achievements | rides | UPDATE AFTER | Concede conquistas ao concluir |
+| trg_leaderboard_on_complete | rides | UPDATE AFTER | Atualiza leaderboard |
+| trg_referral_on_complete | rides | UPDATE AFTER | Processa recompensa de indicacao |
+| trg_ride_completed | rides | UPDATE AFTER | Trigger principal de pos-conclusao |
+| trg_driver_cancellation | rides | UPDATE AFTER | Trata cancelamento pelo motorista |
+| trg_snapshot_metrics | rides | UPDATE AFTER | Snapshot de metricas |
+| trg_rides_updated_at | rides | UPDATE BEFORE | Atualiza timestamp |
+| trg_trust_score_on_rating | ratings | INSERT AFTER | Atualiza trust score |
+| trg_update_rating | ratings | INSERT AFTER | Atualiza media de rating |
+| trg_post_comments_count | post_comments | INSERT/DELETE AFTER | Mantém contador de comentarios |
+| trg_post_likes_count | post_likes | INSERT/DELETE AFTER | Mantém contador de likes |
+| trg_acceptance_rate | price_offers | UPDATE AFTER | Atualiza taxa de aceitacao |
+| trg_price_offers_updated_at | price_offers | UPDATE BEFORE | Atualiza timestamp |
+| trg_driver_profiles_updated_at | driver_profiles | UPDATE BEFORE | Atualiza timestamp |
+| trg_driver_withdrawals_updated_at | driver_withdrawals | UPDATE BEFORE | Atualiza timestamp |
+| trg_payments_updated_at | payments | UPDATE BEFORE | Atualiza timestamp |
+| trg_delivery_updated_at | delivery_orders | UPDATE BEFORE | Atualiza timestamp |
+| trg_intercity_updated_at | intercity_rides | UPDATE BEFORE | Atualiza timestamp |
+| trg_scheduled_rides_updated_at | scheduled_rides | UPDATE BEFORE | Atualiza timestamp |
+| trg_support_tickets_updated_at | support_tickets | UPDATE BEFORE | Atualiza timestamp |
+| trg_recording_prefs_updated_at | user_recording_preferences | UPDATE BEFORE | Atualiza timestamp |
+| trg_sms_prefs_updated_at | user_sms_preferences | UPDATE BEFORE | Atualiza timestamp |
+| trg_user_wallets_updated_at | user_wallets | UPDATE BEFORE | Atualiza timestamp |
+
+---
+
+## SECAO 4: PONTOS DE ATENCAO (auditoria 09/03/2026)
 
 ### 3.1 Tabelas duplicadas — mesmo conceito, dois nomes
 

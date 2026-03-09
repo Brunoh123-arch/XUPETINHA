@@ -18,14 +18,18 @@
 
 ---
 
-## Banco de Dados (verificado via SQL em 09/03/2026)
+## Banco de Dados (verificado via SQL em 09/03/2026 — VALORES FINAIS DEFINITIVOS)
 
-- [x] **80 tabelas no schema public**
-- [x] **79 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
-- [x] **43 tabelas com Realtime publicado** (verificado via pg_publication_tables, pós migration 026)
+- [x] **87 tabelas no schema public** (migrations 001-034)
+- [x] **86 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
+- [x] **51 tabelas com Realtime publicado** (verificado via pg_publication_tables em 09/03/2026)
+- [x] **162 politicas RLS**
+- [x] **235 indices de performance**
+- [x] **35 triggers customizados**
+- [x] **1 View** (ride_offers — alias de price_offers)
 
-### Tabelas COM Realtime (43)
-city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries
+### Tabelas COM Realtime (51 — verificadas via pg_publication_tables em 09/03/2026)
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
 
@@ -108,7 +112,26 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 
 ---
 
-## RPCs Disponiveis (58 funcoes de negocio — verificadas via SELECT em information_schema.routines em 09/03/2026)
+## RPCs Disponiveis (75 funcoes de negocio — verificadas via SELECT em information_schema.routines em 09/03/2026)
+
+### Novas RPCs (migrations 033-034)
+- `get_nearby_drivers` — alias otimizado de find_nearby_drivers
+- `search_drivers_nearby` — busca com filtros adicionais
+- `get_popular_routes_nearby` — rotas populares por localizacao
+- `calculate_ride_price` — calculo detalhado de preco
+- `get_user_stats` — estatisticas gerais do usuario
+- `get_driver_earnings_stats` — estatisticas de ganhos do motorista
+- `get_frequent_destinations` — destinos frequentes do passageiro
+- `needs_facial_verification` — verifica se precisa verificacao facial
+- `submit_ride_rating` — alias de submit_rating com validacoes extras
+- `approve_withdrawal` — alias de admin_approve_withdrawal
+- `reject_withdrawal` — alias de admin_reject_withdrawal
+- `create_notification` — cria notificacao programaticamente
+- `get_notifications_summary` — resumo de notificacoes nao lidas
+- `get_support_ticket_with_messages` — ticket com mensagens em uma RPC
+- `update_trust_score` — atualiza trust score manualmente
+- `get_pending_webhooks` — webhooks com falha pendentes
+- `update_webhook_delivery` — atualiza status de entrega de webhook
 
 ### Corridas e Motorista
 - find_nearby_drivers, create_ride, accept_ride, start_ride, complete_ride, cancel_ride
