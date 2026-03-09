@@ -1,0 +1,23 @@
+# Android build outputs
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Keystore — NUNCA commitar
+*.keystore
+*.jks
+
+# Capacitor generated files (regenerados pelo cap sync)
+capacitor.settings.gradle
+app/capacitor.build.gradle
+capacitor-cordova-android-plugins/
+
+# Google Services (contém chaves — commitar com cuidado)
+# app/google-services.json  <- manter no repo para CI/CD

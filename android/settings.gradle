@@ -1,0 +1,10 @@
+// Uppi — Android Settings
+
+include ':app'
+
+// Inclui o projeto core do Capacitor
+include ':capacitor-android'
+project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
+
+// Inclui plugins Capacitor (auto-gerado pelo `cap sync`)
+apply from: "capacitor.settings.gradle"

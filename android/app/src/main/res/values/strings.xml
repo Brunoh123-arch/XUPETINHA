@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Uppi</string>
+    <string name="title_activity_main">Uppi</string>
+    <string name="package_name">app.uppi.mobile</string>
+    <string name="custom_url_scheme">app.uppi.mobile</string>
+
+    <!-- Google Maps API Key — substitua pela chave real do Google Cloud Console -->
+    <!-- Restricao obrigatoria: Android apps com SHA-1 do keystore de release -->
+    <string name="google_maps_key" translatable="false">AIzaSyCB0JCokMRjMJhtFrtCLLRJY6zFyEnULfs</string>
+</resources>

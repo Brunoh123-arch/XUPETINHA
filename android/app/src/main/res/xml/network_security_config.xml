@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuracao de seguranca de rede do Uppi.
+  - Producao: somente HTTPS (sem cleartext)
+  - Desenvolvimento: permite HTTP apenas para localhost (Capacitor livereload)
+-->
+<network-security-config>
+
+    <!-- Regra padrao: Certificate pinning desabilitado, confiar apenas em CAs do sistema -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Supabase — HTTPS enforced -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">supabase.co</domain>
+        <domain includeSubdomains="true">supabase.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Firebase / FCM — HTTPS enforced -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">firebase.googleapis.com</domain>
+        <domain includeSubdomains="true">fcm.googleapis.com</domain>
+        <domain includeSubdomains="true">firebaseio.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Google Maps — HTTPS enforced -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">maps.googleapis.com</domain>
+        <domain includeSubdomains="true">maps.google.com</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+    <!-- Desenvolvimento local: permite HTTP apenas para localhost (Capacitor livereload) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">192.168.0.0</domain>
+    </domain-config>
+
+</network-security-config>
