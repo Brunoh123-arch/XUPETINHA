@@ -1,34 +1,33 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { triggerHaptic } from '@/lib/utils/haptics'
-import { PixQrCode } from '@/components/pix-qr-code'
-import { paymentService, type PixPaymentResponse } from '@/lib/services/payment-service'
-import type { Ride, Profile } from '@/lib/types/database'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
+import type { Ride } from '@/lib/types/database'
 
 export default function PaymentPage() {
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
-  
+
   const [ride, setRide] = useState<Ride | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'wallet' | null>(null)
-  const [pixPayment, setPixPayment] = useState<PixPaymentResponse | null>(null)
   const [processing, setProcessing] = useState(false)
   const [walletBalance, setWalletBalance] = useState<number>(0)
-  const checkIntervalRef = useRef<NodeJS.Timeout>()
+  const [pixModal, setPixModal] = useState<{
+    externalId: string
+    qrCodeText: string
+    qrCodeImage: string | null
+    amountLabel: string
+  } | null>(null)
 
   useEffect(() => {
     loadData()
 
-    // Real-time: listen for ride payment status updates
     const channel = supabase
       .channel(`ride-payment-${params.id}`)
       .on('postgres_changes', {
@@ -40,6 +39,7 @@ export default function PaymentPage() {
         if (updated.payment_status === 'paid') {
           iosToast.success('Pagamento confirmado!')
           triggerHaptic('heavy')
+          setPixModal(null)
           setTimeout(() => router.push(`/uppi/ride/${params.id}/review`), 1500)
         }
       })
@@ -48,89 +48,51 @@ export default function PaymentPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Verificar pagamento PIX a cada 5 segundos
-  useEffect(() => {
-    if (pixPayment?.payment_id) {
-      checkIntervalRef.current = setInterval(async () => {
-        const status = await paymentService.checkPaymentStatus(pixPayment.payment_id!)
-        
-        if (status?.status === 'paid') {
-          clearInterval(checkIntervalRef.current)
-          handlePaymentSuccess()
-        } else if (status?.status === 'expired') {
-          clearInterval(checkIntervalRef.current)
-          iosToast.error('Pagamento expirado')
-          setPixPayment(null)
-        }
-      }, 5000)
-
-      return () => {
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current)
-        }
-      }
-    }
-  }, [pixPayment])
-
   const loadData = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push('/auth/welcome')
-      return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth/welcome'); return }
+
+      const [{ data: rideData }, walletRes] = await Promise.all([
+        supabase.from('rides').select('*').eq('id', params.id as string).single(),
+        fetch('/api/v1/wallet'),
+      ])
+
+      if (rideData) setRide(rideData)
+
+      if (walletRes.ok) {
+        const { balance } = await walletRes.json()
+        setWalletBalance(typeof balance === 'number' ? balance : 0)
+      }
+    } finally {
+      setLoading(false)
     }
-
-    // Load ride
-    const { data: rideData } = await supabase
-      .from('rides')
-      .select('*')
-      .eq('id', params.id)
-      .single()
-
-    if (rideData) {
-      setRide(rideData)
-    }
-
-    // Load profile
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (profileData) {
-      setProfile(profileData)
-    }
-
-    // Calcular saldo via RPC (fonte única de verdade)
-    const { data: rpcBalance } = await supabase.rpc('calculate_wallet_balance', { p_user_id: user.id })
-    setWalletBalance(typeof rpcBalance === 'number' ? rpcBalance : 0)
-
-    setLoading(false)
   }
 
+  /** Valor final da corrida — usa final_price se existir, senão passenger_price_offer */
+  const rideAmount = (ride?.final_price ?? ride?.passenger_price_offer) || 0
+
   const handlePixPayment = async () => {
-    if (!ride || !profile) return
-
+    if (!ride) return
     setProcessing(true)
-
     try {
       const result = await paymentService.createPixPayment({
-        amount: Math.round(ride.final_price * 100), // Converter para centavos
-        description: `Corrida Uppi - ${ride.pickup_address} até ${ride.dropoff_address}`,
-        payer_name: profile.full_name,
-        payer_cpf: profile.cpf || '', // Assumindo que CPF está no perfil
+        amount: Math.round(rideAmount * 100),
+        description: `Corrida Uppi - ${ride.pickup_address} ate ${ride.dropoff_address}`,
         ride_id: ride.id,
       })
-
-      if (result.success) {
-        setPixPayment(result)
+      if (result.success && result.qr_code_text) {
         triggerHaptic('medium')
+        setPixModal({
+          externalId: result.payment_id!,
+          qrCodeText: result.qr_code_text,
+          qrCodeImage: result.qr_code || null,
+          amountLabel: formatCurrency(rideAmount),
+        })
       } else {
         iosToast.error(result.error || 'Erro ao gerar PIX')
       }
-    } catch (error) {
-      console.error('[v0] PIX error:', error)
+    } catch {
       iosToast.error('Erro ao processar pagamento')
     } finally {
       setProcessing(false)
@@ -138,52 +100,32 @@ export default function PaymentPage() {
   }
 
   const handleWalletPayment = async () => {
-    if (!ride || !profile) return
-
-    const amount = ride.final_price
-
-    if (walletBalance < amount) {
+    if (!ride) return
+    if (walletBalance < rideAmount) {
       iosToast.error('Saldo insuficiente na carteira')
       return
     }
-
     setProcessing(true)
-
     try {
-      const success = await paymentService.processWalletPayment(
-        ride.id,
-        profile.id,
-        amount
-      )
-
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { iosToast.error('Sessao expirada'); return }
+      const success = await paymentService.processWalletPayment(ride.id, user.id, rideAmount)
       if (success) {
-        handlePaymentSuccess()
+        triggerHaptic('success')
+        iosToast.success('Pagamento confirmado!')
+        setTimeout(() => router.push(`/uppi/ride/${params.id}/review`), 1500)
       } else {
-        iosToast.error('Erro ao processar pagamento')
+        iosToast.error('Erro ao debitar da carteira')
       }
-    } catch (error) {
-      console.error('[v0] Wallet payment error:', error)
+    } catch {
       iosToast.error('Erro ao processar pagamento')
     } finally {
       setProcessing(false)
     }
   }
 
-  const handlePaymentSuccess = () => {
-    triggerHaptic('success')
-    iosToast.success('Pagamento confirmado!')
-    
-    setTimeout(() => {
-      router.push(`/uppi/ride/${params.id}/review`)
-    }, 1500)
-  }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value)
-  }
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
   if (loading) {
     return (
@@ -201,145 +143,126 @@ export default function PaymentPage() {
     )
   }
 
-  // Se já mostrou PIX, mostrar o QR Code
-  if (pixPayment && pixPayment.qr_code && pixPayment.qr_code_text) {
-    return (
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 p-4">
-        <div className="max-w-md mx-auto py-8">
-          <Button
-            variant="ghost"
-            onClick={() => setPixPayment(null)}
-            className="mb-4"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </Button>
-
-          <PixQrCode
-            qrCode={pixPayment.qr_code}
-            qrCodeText={pixPayment.qr_code_text}
-            amount={Math.round(ride.final_price * 100)}
-            expiresAt={pixPayment.expires_at || ''}
-            paymentId={pixPayment.payment_id || ''}
-            onPaymentConfirmed={handlePaymentSuccess}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  // Seleção de método de pagamento
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 p-4">
-      <div className="max-w-md mx-auto py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="mb-4"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </Button>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
-            Pagamento
-          </h1>
-        </div>
+    <>
+      {/* PIX Modal — renderizado sobre a tela de seleção */}
+      {pixModal && (
+        <PixModal
+          externalId={pixModal.externalId}
+          qrCodeText={pixModal.qrCodeText}
+          qrCodeImage={pixModal.qrCodeImage}
+          amountLabel={pixModal.amountLabel}
+          onClose={() => setPixModal(null)}
+          onPaid={() => {
+            setPixModal(null)
+            triggerHaptic('success')
+            iosToast.success('Pagamento confirmado!')
+            setTimeout(() => router.push(`/uppi/ride/${params.id}/review`), 1500)
+          }}
+        />
+      )}
 
-        {/* Ride Summary */}
-        <Card className="p-4 mb-6">
-          <div className="space-y-3">
+      <div className="h-dvh bg-[color:var(--background)] overflow-y-auto ios-scroll">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-[color:var(--card)]/90 ios-blur border-b border-[color:var(--border)] px-5 pt-safe-offset-4 pb-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-[color:var(--secondary)] ios-press"
+            >
+              <svg className="w-5 h-5 text-[color:var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
             <div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">De</div>
-              <div className="font-medium text-neutral-900 dark:text-white">{ride.pickup_address}</div>
-            </div>
-            <div>
-              <div className="text-sm text-neutral-600 dark:text-neutral-400">Para</div>
-              <div className="font-medium text-neutral-900 dark:text-white">{ride.dropoff_address}</div>
-            </div>
-            <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold text-neutral-900 dark:text-white">Total</span>
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(ride.final_price)}
-                </span>
-              </div>
+              <h1 className="text-[22px] font-bold text-[color:var(--foreground)] tracking-tight">Pagamento</h1>
+              <p className="text-[13px] text-[color:var(--muted-foreground)]">Escolha como pagar</p>
             </div>
           </div>
-        </Card>
+        </header>
 
-        {/* Payment Methods */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-3">
-            Escolha a forma de pagamento
-          </h2>
-
-          {/* PIX */}
-          <Card
-            className="p-4 cursor-pointer hover:border-blue-500 transition-colors"
-            onClick={() => !processing && handlePixPayment()}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-cyan-600 rounded-xl flex items-center justify-center">
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 2.18l8 4V17c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V8.18l8-4zM12 6L6 9v8c0 3.87 2.39 7.48 6 8.74 3.61-1.26 6-4.87 6-8.74V9l-6-3z"/>
-                </svg>
+        <main className="px-5 py-6 max-w-lg mx-auto space-y-5 pb-safe-offset-8">
+          {/* Resumo da corrida */}
+          <div className="bg-[color:var(--card)] rounded-[20px] p-5 border border-[color:var(--border)]">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex flex-col items-center gap-0.5 mt-1">
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="w-px flex-1 min-h-[20px] bg-[color:var(--border)]" />
+                <div className="w-2 h-2 rounded-full bg-red-500" />
               </div>
-              <div className="flex-1">
-                <div className="font-semibold text-neutral-900 dark:text-white">PIX</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">Pagamento instantâneo</div>
+              <div className="flex-1 space-y-2">
+                <p className="text-[14px] text-[color:var(--foreground)] font-medium leading-snug">{ride?.pickup_address}</p>
+                <p className="text-[14px] text-[color:var(--foreground)] font-medium leading-snug">{ride?.dropoff_address}</p>
               </div>
-              <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
             </div>
-          </Card>
+            <div className="flex items-center justify-between pt-4 border-t border-[color:var(--border)]">
+              <span className="text-[15px] font-semibold text-[color:var(--foreground)]">Total</span>
+              <span className="text-[26px] font-extrabold text-emerald-600 tracking-tight">
+                {formatCurrency(rideAmount)}
+              </span>
+            </div>
+          </div>
 
-          {/* Wallet */}
-          <Card
-            className={`p-4 cursor-pointer hover:border-blue-500 transition-colors ${
-              walletBalance < ride.final_price ? 'opacity-50' : ''
-            }`}
-            onClick={() => !processing && walletBalance >= ride.final_price && handleWalletPayment()}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          {/* Opções de pagamento */}
+          <div className="space-y-3">
+            {/* PIX */}
+            <button
+              type="button"
+              disabled={processing}
+              onClick={handlePixPayment}
+              className="w-full bg-[color:var(--card)] border border-[color:var(--border)] rounded-[18px] p-4 flex items-center gap-4 ios-press hover:border-teal-400 transition-colors disabled:opacity-60"
+            >
+              <div className="w-12 h-12 bg-teal-50 rounded-[14px] flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-teal-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6.5 2a1.5 1.5 0 00-1.5 1.5v2a1.5 1.5 0 001.5 1.5h2A1.5 1.5 0 0010 5.5v-2A1.5 1.5 0 008.5 2h-2zm0 8a1.5 1.5 0 00-1.5 1.5v2a1.5 1.5 0 001.5 1.5h2a1.5 1.5 0 001.5-1.5v-2A1.5 1.5 0 008.5 10h-2zm7.5-8a1.5 1.5 0 00-1.5 1.5v2A1.5 1.5 0 0014 5.5v-2A1.5 1.5 0 0012.5 2H14v-.001zM14 2h2.5A1.5 1.5 0 0118 3.5v2A1.5 1.5 0 0116.5 7h-2A1.5 1.5 0 0113 5.5v-2A1.5 1.5 0 0114.5 2H14zM14 10a1.5 1.5 0 00-1.5 1.5v2a1.5 1.5 0 001.5 1.5h2.5a1.5 1.5 0 001.5-1.5v-2A1.5 1.5 0 0016.5 10H14z"/>
                 </svg>
               </div>
-              <div className="flex-1">
-                <div className="font-semibold text-neutral-900 dark:text-white">Carteira Uppi</div>
-                <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Saldo: {formatCurrency(walletBalance)}
+              <div className="flex-1 text-left">
+                <p className="text-[16px] font-bold text-[color:var(--foreground)]">PIX</p>
+                <p className="text-[13px] text-[color:var(--muted-foreground)]">Pagamento instantaneo</p>
+              </div>
+              {processing ? (
+                <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-5 h-5 text-[color:var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </button>
+
+            {/* Carteira */}
+            <button
+              type="button"
+              disabled={processing || walletBalance < rideAmount}
+              onClick={handleWalletPayment}
+              className="w-full bg-[color:var(--card)] border border-[color:var(--border)] rounded-[18px] p-4 flex items-center gap-4 ios-press hover:border-emerald-400 transition-colors disabled:opacity-50"
+            >
+              <div className="w-12 h-12 bg-emerald-50 rounded-[14px] flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[16px] font-bold text-[color:var(--foreground)]">Carteira Uppi</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[13px] text-emerald-600 font-semibold">
+                    Saldo: {formatCurrency(walletBalance)}
+                  </p>
+                  {walletBalance < rideAmount && (
+                    <span className="text-[11px] bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded-full border border-red-100">
+                      Insuficiente
+                    </span>
+                  )}
                 </div>
               </div>
-              <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg className="w-5 h-5 text-[color:var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-            </div>
-            {walletBalance < ride.final_price && (
-              <div className="mt-2 text-xs text-red-600 dark:text-red-400">
-                Saldo insuficiente
-              </div>
-            )}
-          </Card>
-        </div>
-
-        {processing && (
-          <div className="mt-6 text-center">
-            <div className="inline-flex items-center gap-2 text-neutral-600 dark:text-neutral-400">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              Processando...
-            </div>
+            </button>
           </div>
-        )}
+        </main>
       </div>
-    </div>
+    </>
   )
 }

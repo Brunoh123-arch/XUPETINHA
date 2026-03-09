@@ -191,15 +191,48 @@ export default function RideTrackingPage() {
     }
   }
 
-  // Ações do passageiro — cancelar corrida
+  // Ações do passageiro — cancelar corrida (sem confirm() nativo)
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+
   const handlePassengerCancel = async () => {
-    if (!confirm('Deseja cancelar esta corrida?')) return
+    setShowCancelConfirm(false)
     setUpdatingStatus(true)
     try {
       const result = await trackingService.updateRideStatus(rideId, 'cancelled', 'Cancelado pelo passageiro')
       if (!result.success) iosToast.error(result.error || 'Erro ao cancelar')
     } finally {
       setUpdatingStatus(false)
+    }
+  }
+
+  const [sosSending, setSosSending] = useState(false)
+
+  const handleSOS = async () => {
+    setSosSending(true)
+    setShowSafetyMenu(false)
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000 })
+      ).catch(() => null)
+
+      await fetch('/api/v1/emergency', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'sos',
+          ride_id: rideId,
+          location_lat: position?.coords.latitude ?? null,
+          location_lng: position?.coords.longitude ?? null,
+          location_address: ride?.pickup_address ?? null,
+          description: 'SOS ativado durante corrida',
+        }),
+      })
+      triggerHaptic('heavy')
+      iosToast.error('SOS enviado! Contatos e suporte foram alertados.')
+    } catch {
+      iosToast.error('Erro ao enviar SOS. Ligue para 190.')
+    } finally {
+      setSosSending(false)
     }
   }
 
@@ -357,7 +390,11 @@ export default function RideTrackingPage() {
             </div>
             <div className="text-center">
               <p className="text-[11px] text-[color:var(--muted-foreground)] uppercase tracking-wide">Valor</p>
-              <p className="text-[16px] font-bold text-emerald-600">R$ {ride?.final_price?.toFixed(2) || '—'}</p>
+              <p className="text-[16px] font-bold text-emerald-600">
+                {(ride?.final_price ?? ride?.passenger_price_offer)
+                  ? `R$ ${(ride?.final_price ?? ride?.passenger_price_offer)!.toFixed(2)}`
+                  : '—'}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-[11px] text-[color:var(--muted-foreground)] uppercase tracking-wide">Pagamento</p>
@@ -411,17 +448,41 @@ export default function RideTrackingPage() {
             </div>
           )}
 
-          {/* Botões de ação do PASSAGEIRO */}
+          {/* Botões de ação do PASSAGEIRO — com confirmação inline */}
           {role === 'passenger' && ['accepted'].includes(status) && (
             <div className="pt-4">
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={handlePassengerCancel}
-                className="w-full h-[44px] rounded-[16px] bg-[color:var(--muted)] text-red-500 text-[15px] font-semibold ios-press"
-              >
-                {updatingStatus ? 'Cancelando...' : 'Cancelar corrida'}
-              </button>
+              {showCancelConfirm ? (
+                <div className="space-y-2">
+                  <p className="text-[13px] text-[color:var(--muted-foreground)] text-center font-medium">
+                    Tem certeza que deseja cancelar?
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelConfirm(false)}
+                      className="flex-1 h-[46px] rounded-[16px] bg-[color:var(--muted)] text-[color:var(--foreground)] text-[15px] font-bold ios-press"
+                    >
+                      Nao
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingStatus}
+                      onClick={handlePassengerCancel}
+                      className="flex-1 h-[46px] rounded-[16px] bg-red-500 text-white text-[15px] font-bold ios-press disabled:opacity-60"
+                    >
+                      {updatingStatus ? 'Cancelando...' : 'Sim, cancelar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="w-full h-[44px] rounded-[16px] bg-[color:var(--muted)] text-red-500 text-[15px] font-semibold ios-press"
+                >
+                  Cancelar corrida
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -458,17 +519,24 @@ export default function RideTrackingPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowSafetyMenu(false); router.push('/uppi/emergency') }}
-                  className="flex items-center gap-3 bg-red-500 rounded-2xl px-4 py-3 shadow-xl ios-press"
+                  disabled={sosSending}
+                  onClick={handleSOS}
+                  className="flex items-center gap-3 bg-red-500 rounded-2xl px-4 py-3 shadow-xl ios-press disabled:opacity-70"
                 >
                   <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+                    {sosSending ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    )}
                   </div>
                   <div className="text-left">
-                    <p className="text-[15px] font-bold text-white">SOS Emergência</p>
-                    <p className="text-[12px] text-white/75">Alertar contatos e polícia</p>
+                    <p className="text-[15px] font-bold text-white">SOS Emergencia</p>
+                    <p className="text-[12px] text-white/75">
+                      {sosSending ? 'Enviando alerta...' : 'Alertar contatos e policia'}
+                    </p>
                   </div>
                 </button>
               </div>

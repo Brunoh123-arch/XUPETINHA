@@ -11,6 +11,7 @@ import type { Ride } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { trackingService } from '@/lib/services/tracking-service'
 import { triggerHaptic } from '@/hooks/use-haptic'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 interface RideWithPassenger extends Ride {
   passenger?: {
@@ -172,18 +173,17 @@ export default function DriverPage() {
   const handleAcceptRide = async (ride: RideWithPassenger) => {
     setAccepting(ride.id)
     try {
-      const res = await fetch('/api/v1/offers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ride_id: ride.id, offered_price: ride.passenger_price_offer, estimated_arrival_minutes: 5, message: 'Aceito pelo preço oferecido' }) })
-      if (!res.ok) { const err = await res.json().catch(() => ({})); alert(err.error || 'Erro ao aceitar corrida'); return }
+      const res = await fetch('/api/v1/offers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ride_id: ride.id, offered_price: ride.passenger_price_offer, estimated_arrival_minutes: 5, message: 'Aceito pelo preco oferecido' }) })
+      if (!res.ok) { const err = await res.json().catch(() => ({})); iosToast.error(err.error || 'Erro ao aceitar corrida'); return }
       const { offer } = await res.json()
 
       const acceptRes = await fetch(`/api/v1/offers/${offer.id}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
       if (!acceptRes.ok) {
-        // A corrida pode já ter sido aceita por outro motorista (409)
         const acceptErr = await acceptRes.json().catch(() => ({}))
         if (acceptRes.status === 409) {
-          alert('Esta corrida já foi aceita por outro motorista.')
+          iosToast.error('Esta corrida ja foi aceita por outro motorista.')
         } else {
-          alert(acceptErr.error || 'Erro ao confirmar aceite. Tente outra corrida.')
+          iosToast.error(acceptErr.error || 'Erro ao confirmar aceite. Tente outra corrida.')
         }
         setRides(prev => prev.filter(r => r.id !== ride.id))
         return
@@ -194,7 +194,7 @@ export default function DriverPage() {
       setRides(prev => prev.filter(r => r.id !== ride.id))
       loadDailyStats(userId!)
       router.push(`/uppi/driver/ride/${ride.id}/active`)
-    } catch { alert('Erro ao aceitar corrida. Tente novamente.') } finally { setAccepting(null) }
+    } catch { iosToast.error('Erro ao aceitar corrida. Tente novamente.') } finally { setAccepting(null) }
   }
 
   const handleMakeOffer = async (rideId: string) => {
