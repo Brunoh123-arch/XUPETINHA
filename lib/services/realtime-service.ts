@@ -8,6 +8,13 @@ export type TableName =
   | 'notifications'
   | 'driver_profiles'
   | 'driver_locations'
+  | 'social_posts'
+  | 'post_likes'
+  | 'post_comments'
+  | 'wallet_transactions'
+  | 'payments'
+  | 'ratings'
+  | 'user_achievements'
 
 export type ChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
 

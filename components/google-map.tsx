@@ -140,14 +140,10 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
   ) => {
     if (!mapInstanceRef.current || !window.google) return
 
-    console.log('[v0] Optimizing route from', origin, 'to', destination)
-
     try {
       // Call route optimizer
       const result = await optimizeRoute(origin, destination)
       const recommended = result.recommended
-
-      console.log('[v0] Optimized route:', recommended)
 
       // Initialize directions renderer if not exists
       if (!directionsRendererRef.current) {
@@ -189,13 +185,13 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
               : '',
           })
 
-          console.log('[v0] Route drawn successfully with optimization')
+          // Route drawn successfully
         } else {
-          console.error('[v0] Directions request failed:', status)
+          console.error('Directions request failed:', status)
         }
       })
     } catch (error) {
-      console.error('[v0] Route optimization error:', error)
+      console.error('Route optimization error:', error)
     }
   }, [])
 
@@ -269,10 +265,7 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
 
     useEffect(() => {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      console.log('[v0] Google Maps API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'MISSING')
-      
       if (!apiKey) {
-        console.error('[v0] Google Maps API key is missing!')
         return
       }
 
@@ -280,9 +273,7 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
 
       async function init() {
         try {
-          console.log('[v0] Loading Google Maps script...')
           await loadGoogleMapsScript(apiKey as string)
-          console.log('[v0] Google Maps script loaded successfully')
           if (cancelled) return
 
           // Check geolocation permission
@@ -323,17 +314,16 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
             initMap(DEFAULT_CENTER)
           }
           } catch (error) {
-            console.error('[v0] Error loading Google Maps:', error)
+            console.error('Error loading Google Maps:', error)
             if (!cancelled) {
               if (retryCountRef.current < MAX_RETRIES) {
                 retryCountRef.current++
-                console.log(`[v0] Retrying Google Maps load (attempt ${retryCountRef.current})...`)
                 // Remove failed script and retry after delay
                 const failedScript = document.getElementById('google-maps-script')
                 failedScript?.remove()
                 setTimeout(() => { if (!cancelled) init() }, 2000 * retryCountRef.current)
               } else {
-                console.error('[v0] Google Maps failed after retries, showing fallback')
+                console.error('Google Maps failed after retries, showing fallback')
                 setMapError(true)
                 // Still try to get user location via GPS
                 if (navigator.geolocation) {

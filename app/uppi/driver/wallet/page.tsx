@@ -17,6 +17,7 @@ export default function DriverWalletPage() {
   const [loading, setLoading] = useState(true)
   const [withdrawing, setWithdrawing] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [pixKey, setPixKey] = useState('')
   const [showWithdraw, setShowWithdraw] = useState(false)
 
   useEffect(() => {
@@ -72,24 +73,29 @@ export default function DriverWalletPage() {
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount)
     if (!amount || amount <= 0 || amount > balance) return
+    if (!pixKey.trim()) { alert('Informe uma chave PIX para receber o saque'); return }
 
     setWithdrawing(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      await supabase.from('wallet_transactions').insert({
-        user_id: user.id,
-        type: 'withdrawal',
-        amount: -amount,
-        description: 'Saque para conta bancária',
-        status: 'pending',
+      const response = await fetch('/api/v1/driver/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, pix_key: pixKey.trim() }),
       })
 
-      await supabase.from('user_wallets').update({ balance: balance - amount }).eq('user_id', user.id)
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Erro ao solicitar saque')
+        return
+      }
+
       setShowWithdraw(false)
       setWithdrawAmount('')
+      setPixKey('')
       await loadWallet()
+    } catch (err) {
+      console.error('Withdraw error:', err)
     } finally {
       setWithdrawing(false)
     }
@@ -243,7 +249,14 @@ export default function DriverWalletPage() {
               onChange={e => setWithdrawAmount(e.target.value)}
               placeholder="0,00"
               max={balance}
-              className="w-full h-14 px-4 bg-[color:var(--muted)] rounded-[16px] text-[24px] font-bold text-[color:var(--foreground)] outline-none focus:ring-2 focus:ring-emerald-500 mb-4 text-center"
+              className="w-full h-14 px-4 bg-[color:var(--muted)] rounded-[16px] text-[24px] font-bold text-[color:var(--foreground)] outline-none focus:ring-2 focus:ring-emerald-500 mb-3 text-center"
+            />
+            <input
+              type="text"
+              value={pixKey}
+              onChange={e => setPixKey(e.target.value)}
+              placeholder="Chave PIX (CPF, e-mail, telefone ou aleatória)"
+              className="w-full h-12 px-4 bg-[color:var(--muted)] rounded-[14px] text-[15px] text-[color:var(--foreground)] outline-none focus:ring-2 focus:ring-emerald-500 mb-4"
             />
             <div className="flex gap-3">
               <button
@@ -256,7 +269,7 @@ export default function DriverWalletPage() {
               <button
                 type="button"
                 onClick={handleWithdraw}
-                disabled={withdrawing || !withdrawAmount || parseFloat(withdrawAmount) > balance}
+                disabled={withdrawing || !withdrawAmount || !pixKey.trim() || parseFloat(withdrawAmount) > balance || parseFloat(withdrawAmount) < 10}
                 className="flex-1 h-12 bg-emerald-500 text-white font-bold rounded-[14px] ios-press disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {withdrawing ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Sacar'}

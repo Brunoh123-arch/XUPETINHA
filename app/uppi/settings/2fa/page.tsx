@@ -1,25 +1,66 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Shield, Smartphone, CheckCircle2, Mail } from 'lucide-react'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { haptics } from '@/lib/utils/ios-haptics'
+import { createClient } from '@/lib/supabase/client'
 
 export default function TwoFactorPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [method, setMethod] = useState<'sms' | 'email'>('sms')
   const [enabled, setEnabled] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+
+  useEffect(() => {
+    const load2FA = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('user_2fa')
+        .select('is_enabled')
+        .eq('user_id', user.id)
+        .single()
+      if (data) setEnabled(data.is_enabled)
+      setInitialLoading(false)
+    }
+    load2FA()
+  }, [])
 
   const handleToggle = async () => {
     setLoading(true)
     haptics.impactMedium()
-    await new Promise(r => setTimeout(r, 800))
-    setEnabled(prev => !prev)
-    setLoading(false)
-    iosToast.success(enabled ? 'Verificacao em 2 etapas desativada' : 'Verificacao em 2 etapas ativada')
-    haptics.notificationSuccess()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const newEnabled = !enabled
+      const { error } = await supabase
+        .from('user_2fa')
+        .upsert({
+          user_id: user.id,
+          is_enabled: newEnabled,
+          ...(newEnabled ? { enabled_at: new Date().toISOString() } : {}),
+        })
+
+      if (error) throw error
+
+      // Tambem atualizar user_settings
+      await supabase
+        .from('user_settings')
+        .upsert({ user_id: user.id, two_factor_enabled: newEnabled })
+
+      setEnabled(newEnabled)
+      iosToast.success(newEnabled ? 'Verificacao em 2 etapas ativada' : 'Verificacao em 2 etapas desativada')
+      haptics.notificationSuccess()
+    } catch {
+      iosToast.error('Erro ao atualizar configuracao')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

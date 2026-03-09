@@ -52,7 +52,7 @@ export default function SMSSettingsPage() {
         setMarketing(data.marketing ?? false)
       }
     } catch (error) {
-      console.error('[v0] Error loading SMS preferences:', error)
+      console.error('Error loading SMS preferences:', error)
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export default function SMSSettingsPage() {
 
       iosToast.success('Preferências salvas com sucesso')
     } catch (error) {
-      console.error('[v0] Error saving SMS preferences:', error)
+      console.error('Error saving SMS preferences:', error)
       iosToast.error('Erro ao salvar preferências')
     } finally {
       setSaving(false)
@@ -108,7 +108,7 @@ export default function SMSSettingsPage() {
         setVerifying(false)
       }, 2000)
     } catch (error) {
-      console.error('[v0] Error requesting verification:', error)
+      console.error('Error requesting verification:', error)
       iosToast.error('Erro ao enviar código de verificação')
       setVerifying(false)
     }

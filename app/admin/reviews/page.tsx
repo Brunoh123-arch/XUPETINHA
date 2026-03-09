@@ -11,11 +11,12 @@ interface Review {
   id: string
   ride_id: string
   reviewer_id: string
-  reviewee_id: string
+  reviewed_id: string
   rating: number
   comment: string | null
   tags: string[] | null
-  review_type: string
+  is_public: boolean
+  is_flagged: boolean
   created_at: string
   reviewer?: { full_name: string; user_type: string } | null
   reviewee?: { full_name: string; user_type: string } | null
@@ -42,7 +43,7 @@ export default function AdminReviewsPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('reviews')
-      .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, user_type), reviewee:profiles!reviews_reviewee_id_fkey(full_name, user_type)')
+      .select('*, reviewer:profiles!reviews_reviewer_id_fkey(full_name, user_type), reviewee:profiles!reviews_reviewed_id_fkey(full_name, user_type)')
       .order('created_at', { ascending: false })
       .limit(300)
     if (data) setReviews(data)

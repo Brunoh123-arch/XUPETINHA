@@ -242,13 +242,13 @@ export async function sendRideReportEmail(data: RideReportData): Promise<boolean
     })
 
     if (error) {
-      console.error('[v0] Resend error:', error)
+      console.error('Resend error:', error)
       return false
     }
 
     return true
   } catch (err) {
-    console.error('[v0] sendRideReportEmail error:', err)
+    console.error('sendRideReportEmail error:', err)
     return false
   }
 }

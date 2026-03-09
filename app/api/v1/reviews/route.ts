@@ -71,13 +71,26 @@ export async function POST(request: Request) {
         .single()
 
       if (error) throw error
+
+      // Atualizar rating médio do motorista após avaliação do passageiro
+      if (isPassenger && review_type === 'passenger_to_driver' && ride.driver_id) {
+        await supabase.rpc('update_user_rating', { p_user_id: ride.driver_id }).catch(() => {})
+      }
+
       return NextResponse.json({ success: true, review: data })
     } else {
       // Criar novo review
       const newReview: any = {
         ride_id,
+        // reviewer_id: quem está avaliando (obrigatório na tabela original)
+        reviewer_id: user.id,
+        // driver_id: o motorista da corrida (coluna original)
         driver_id: ride.driver_id,
+        // passenger_id e driver_id_ref: colunas adicionadas na migration 017
         passenger_id: ride.passenger_id,
+        driver_id_ref: ride.driver_id,
+        // rating: rating geral (coluna original)
+        rating: isPassenger ? rating : undefined,
       }
 
       if (isPassenger && review_type === 'passenger_to_driver') {
@@ -85,11 +98,13 @@ export async function POST(request: Request) {
         newReview.passenger_comment = comment
         newReview.passenger_tags = tags || []
         newReview.passenger_reviewed_at = new Date().toISOString()
+        newReview.rating = rating
       } else if (isDriver && review_type === 'driver_to_passenger') {
         newReview.driver_rating = rating
         newReview.driver_comment = comment
         newReview.driver_tags = tags || []
         newReview.driver_reviewed_at = new Date().toISOString()
+        newReview.rating = rating
       }
 
       const { data, error } = await supabase
@@ -99,6 +114,12 @@ export async function POST(request: Request) {
         .single()
 
       if (error) throw error
+
+      // Atualizar rating médio do motorista após avaliação do passageiro
+      if (isPassenger && review_type === 'passenger_to_driver' && ride.driver_id) {
+        await supabase.rpc('update_user_rating', { p_user_id: ride.driver_id }).catch(() => {})
+      }
+
       return NextResponse.json({ success: true, review: data })
     }
   } catch {

@@ -95,7 +95,7 @@ export async function optimizeRoute(
     // For now, generate simulated optimized routes
     return generateOptimizedRoutes(origin, destination, options?.departureTime)
   } catch (error) {
-    console.error('[v0] Route optimization error:', error)
+    console.error('Route optimization error:', error)
     return generateFallbackRoutes(origin, destination, options?.departureTime)
   }
 }

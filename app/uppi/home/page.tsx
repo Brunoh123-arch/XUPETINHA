@@ -22,6 +22,7 @@ export default function HomePage() {
   const [mapInstance, setMapInstance] = useState<any>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [activeRideId, setActiveRideId] = useState<string | null>(null)
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
   const mapRef = useRef<GoogleMapHandle>(null)
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
@@ -78,42 +79,14 @@ export default function HomePage() {
             .maybeSingle()
 
           if (activeRide) setActiveRideId(activeRide.id)
-        }
-      } catch {
-        /* silent */
-      } finally {
-        setLoading(false)
-      }
-        } else {
-          const localProfile = sessionStorage.getItem('userProfile') || localStorage.getItem('uppi_profile')
-          if (localProfile) {
-            const localData = JSON.parse(localProfile)
-            setProfile({
-              id: 'local', full_name: localData.name, phone: localData.phone || '', user_type: localData.user_type || 'passenger',
-              avatar_url: '/images/default-avatar.jpg', rating: 5.0, total_rides: 0,
-              created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-            })
-            const hasSeenWelcome = sessionStorage.getItem('uppi_welcome_shown')
-            if (!hasSeenWelcome) {
-              sessionStorage.setItem('uppi_welcome_shown', 'true')
-              setTimeout(() => {
-                showCouponModal({
-                  id: 'welcome',
-                  userName: localData.name?.split(' ')[0] || 'Usuario',
-                  title: 'Corrida gratis',
-                  description: 'Na sua primeira corrida',
-                  type: 'freeride',
-                  icon: '🚗',
-                })
-              }, 1500)
-            }
-          } else {
-            setProfile({
-              id: 'guest', full_name: 'Usuario', phone: '', user_type: 'passenger',
-              avatar_url: '/images/default-avatar.jpg', rating: 5.0, total_rides: 0,
-              created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-            })
-          }
+
+          // Contagem de notificações não lidas
+          const { count } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('is_read', false)
+          setUnreadNotifications(count ?? 0)
         }
       } catch {
         /* silent */
@@ -123,6 +96,55 @@ export default function HomePage() {
     }
     loadProfile()
   }, [supabase, showCouponModal])
+
+  // Realtime: atualiza contador de notificações quando chega nova
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      channel = supabase
+        .channel(`home-notifications-${user.id}`)
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, () => setUnreadNotifications(prev => prev + 1))
+        .on('postgres_changes', {
+          event: 'UPDATE', schema: 'public', table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, async () => {
+          const { count } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('is_read', false)
+          setUnreadNotifications(count ?? 0)
+        })
+        .subscribe()
+    })
+    return () => { channel && supabase.removeChannel(channel) }
+  }, [supabase])
+
+  // Realtime: acompanha status da corrida ativa — limpa banner se completada/cancelada
+  useEffect(() => {
+    if (!activeRideId) return
+
+    const channel = supabase
+      .channel(`home-active-ride-${activeRideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'rides',
+        filter: `id=eq.${activeRideId}`,
+      }, (payload) => {
+        const newStatus = payload.new?.status
+        if (newStatus === 'completed' || newStatus === 'cancelled') {
+          setActiveRideId(null)
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [activeRideId, supabase])
 
   if (loading) {
     return <HomeSkeleton />
@@ -241,9 +263,16 @@ export default function HomePage() {
                 type="button"
                 className="relative"
                 onClick={() => { triggerHaptic('selection'); router.push('/uppi/notifications') }}
+                aria-label={`Notificações${unreadNotifications > 0 ? `, ${unreadNotifications} não lidas` : ''}`}
               >
                 <Bell className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF9500] rounded-full" />
+                {unreadNotifications > 0 && (
+                  <div className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#FF9500] rounded-full flex items-center justify-center px-1">
+                    <span className="text-[10px] font-black text-white leading-none">
+                      {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                    </span>
+                  </div>
+                )}
               </button>
               <button 
                 type="button"

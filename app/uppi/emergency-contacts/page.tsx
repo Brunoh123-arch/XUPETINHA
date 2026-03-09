@@ -46,7 +46,7 @@ export default function EmergencyContactsPage() {
       if (error) throw error
       setContacts(data || [])
     } catch (error) {
-      console.error('[v0] Error loading contacts:', error)
+      console.error('Error loading contacts:', error)
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export default function EmergencyContactsPage() {
       setShowForm(false)
       iosToast.success('Contato salvo')
     } catch (error) {
-      console.error('[v0] Error saving contact:', error)
+      console.error('Error saving contact:', error)
       iosToast.error('Erro ao salvar contato')
     } finally {
       setSaving(false)
@@ -106,7 +106,7 @@ export default function EmergencyContactsPage() {
       setContacts(contacts.filter(c => c.id !== contactId))
       iosToast.success('Contato removido')
     } catch (error) {
-      console.error('[v0] Error deleting contact:', error)
+      console.error('Error deleting contact:', error)
       iosToast.error('Erro ao deletar contato')
     }
   }

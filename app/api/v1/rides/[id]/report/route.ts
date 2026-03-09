@@ -78,7 +78,7 @@ export async function POST(
     return NextResponse.json({ success: true, sentTo: passenger.email })
 
   } catch (error) {
-    console.error('[v0] ride report error:', error)
+    console.error('ride report error:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

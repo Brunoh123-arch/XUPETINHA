@@ -36,13 +36,13 @@ class ChatService {
         .single()
 
       if (error) {
-        console.error('[v0] Error sending message:', error)
+        console.error('Error sending message:', error)
         return { success: false, error: error.message }
       }
 
       return { success: true, message }
     } catch (error) {
-      console.error('[v0] Chat service error:', error)
+      console.error('Chat service error:', error)
       return { success: false, error: 'Erro ao enviar mensagem' }
     }
   }
@@ -59,13 +59,13 @@ class ChatService {
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.error('[v0] Error loading messages:', error)
+        console.error('Error loading messages:', error)
         return { success: false, error: error.message, messages: [] }
       }
 
       return { success: true, messages: messages || [] }
     } catch (error) {
-      console.error('[v0] Chat service error:', error)
+      console.error('Chat service error:', error)
       return { success: false, error: 'Erro ao carregar mensagens', messages: [] }
     }
   }
@@ -78,20 +78,20 @@ class ChatService {
         .in('id', messageIds)
 
       if (error) {
-        console.error('[v0] Error marking messages as read:', error)
+        console.error('Error marking messages as read:', error)
         return { success: false }
       }
 
       return { success: true }
     } catch (error) {
-      console.error('[v0] Chat service error:', error)
+      console.error('Chat service error:', error)
       return { success: false }
     }
   }
 
   subscribeToChat(rideId: string, callbacks: ChatSubscriptionCallback) {
     const channelName = `chat:${rideId}`
-    
+
     // Unsubscribe if already exists
     if (this.subscriptions.has(channelName)) {
       this.unsubscribeFromChat(rideId)
@@ -108,8 +108,6 @@ class ChatService {
           filter: `ride_id=eq.${rideId}`,
         },
         async (payload) => {
-          console.log('[v0] New message received:', payload.new)
-          
           // Load sender info
           const { data: sender } = await this.supabase
             .from('profiles')
@@ -129,8 +127,6 @@ class ChatService {
 
     this.subscriptions.set(channelName, channel)
 
-    console.log('[v0] Subscribed to chat:', channelName)
-
     return () => this.unsubscribeFromChat(rideId)
   }
 
@@ -141,7 +137,6 @@ class ChatService {
     if (channel) {
       this.supabase.removeChannel(channel)
       this.subscriptions.delete(channelName)
-      console.log('[v0] Unsubscribed from chat:', channelName)
     }
   }
 
@@ -150,18 +145,14 @@ class ChatService {
       const { data: { user } } = await this.supabase.auth.getUser()
       if (!user) return
 
-      // Broadcast typing status via Realtime
       const channel = this.supabase.channel(`typing:${rideId}`)
       await channel.send({
         type: 'broadcast',
         event: 'typing',
-        payload: {
-          userId: user.id,
-          isTyping,
-        },
+        payload: { userId: user.id, isTyping },
       })
     } catch (error) {
-      console.error('[v0] Error sending typing indicator:', error)
+      console.error('Error sending typing indicator:', error)
     }
   }
 

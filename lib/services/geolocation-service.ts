@@ -15,13 +15,10 @@ export interface GeolocationOptions {
 }
 
 class GeolocationService {
-  /**
-   * Get current user position
-   */
   async getCurrentPosition(options?: GeolocationOptions): Promise<Coordinates | null> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        console.error('[v0] Geolocation not supported')
+        console.error('Geolocation not supported')
         resolve(null)
         return
       }
@@ -34,7 +31,7 @@ class GeolocationService {
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const coords: Coordinates = {
+          resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
@@ -42,11 +39,10 @@ class GeolocationService {
             altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
             heading: position.coords.heading || undefined,
             speed: position.coords.speed || undefined,
-          }
-          resolve(coords)
+          })
         },
         (error) => {
-          console.error('[v0] Geolocation error:', error.message)
+          console.error('Geolocation error:', error.message)
           resolve(null)
         },
         defaultOptions
@@ -54,16 +50,13 @@ class GeolocationService {
     })
   }
 
-  /**
-   * Watch user position changes
-   */
   watchPosition(
     onSuccess: (coords: Coordinates) => void,
     onError?: (error: GeolocationPositionError) => void,
     options?: GeolocationOptions
   ): number | null {
     if (!navigator.geolocation) {
-      console.error('[v0] Geolocation not supported')
+      console.error('Geolocation not supported')
       return null
     }
 
@@ -73,9 +66,9 @@ class GeolocationService {
       maximumAge: options?.maximumAge ?? 1000,
     }
 
-    const watchId = navigator.geolocation.watchPosition(
+    return navigator.geolocation.watchPosition(
       (position) => {
-        const coords: Coordinates = {
+        onSuccess({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy,
@@ -83,58 +76,38 @@ class GeolocationService {
           altitudeAccuracy: position.coords.altitudeAccuracy || undefined,
           heading: position.coords.heading || undefined,
           speed: position.coords.speed || undefined,
-        }
-        onSuccess(coords)
+        })
       },
       (error) => {
-        console.error('[v0] Watch position error:', error.message)
+        console.error('Watch position error:', error.message)
         onError?.(error)
       },
       defaultOptions
     )
-
-    return watchId
   }
 
-  /**
-   * Stop watching position
-   */
   clearWatch(watchId: number) {
     if (navigator.geolocation) {
       navigator.geolocation.clearWatch(watchId)
     }
   }
 
-  /**
-   * Check if geolocation is available
-   */
   isAvailable(): boolean {
     return 'geolocation' in navigator
   }
 
-  /**
-   * Request permission (for browsers that require explicit permission)
-   */
   async requestPermission(): Promise<PermissionState | null> {
-    if (!navigator.permissions) {
-      console.warn('[v0] Permissions API not supported')
-      return null
-    }
-
+    if (!navigator.permissions) return null
     try {
       const result = await navigator.permissions.query({ name: 'geolocation' })
       return result.state
-    } catch (error) {
-      console.error('[v0] Permission check error:', error)
+    } catch {
       return null
     }
   }
 
-  /**
-   * Calculate distance between two coordinates (in meters)
-   */
   calculateDistance(coord1: Coordinates, coord2: Coordinates): number {
-    const R = 6371e3 // Earth's radius in meters
+    const R = 6371e3
     const φ1 = (coord1.latitude * Math.PI) / 180
     const φ2 = (coord2.latitude * Math.PI) / 180
     const Δφ = ((coord2.latitude - coord1.latitude) * Math.PI) / 180
@@ -144,14 +117,9 @@ class GeolocationService {
       Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-    return R * c // Distance in meters
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   }
 
-  /**
-   * Format coordinates for display
-   */
   formatCoordinates(coords: Coordinates, decimals: number = 6): string {
     return `${coords.latitude.toFixed(decimals)}, ${coords.longitude.toFixed(decimals)}`
   }

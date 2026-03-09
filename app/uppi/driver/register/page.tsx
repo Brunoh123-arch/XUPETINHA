@@ -68,7 +68,7 @@ export default function DriverRegisterPage() {
       iosToast.success('Cadastro enviado! Aguarde aprovacao')
       setTimeout(() => router.push('/uppi/driver'), 1000)
     } catch (error) {
-      console.error('[v0] Driver registration error:', error)
+      console.error('Driver registration error:', error)
       iosToast.error('Erro ao enviar cadastro')
     } finally {
       setLoading(false)

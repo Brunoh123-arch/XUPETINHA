@@ -16,7 +16,7 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
     import('@vis.gl/react-google-maps').then((mod) => {
       setProvider(() => mod.APIProvider)
     }).catch(() => {
-      console.error('[v0] Failed to load Google Maps')
+      console.error('Failed to load Google Maps')
     })
   }, [apiKey])
 

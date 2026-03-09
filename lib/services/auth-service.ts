@@ -29,16 +29,13 @@ class AuthService {
       try {
         this.supabase = createClient()
       } catch (error: any) {
-        console.error('[v0] Failed to create Supabase client:', error)
+        console.error('Failed to create Supabase client:', error)
         throw new Error('Configuração do banco de dados não disponível. Por favor, tente novamente mais tarde.')
       }
     }
     return this.supabase
   }
 
-  /**
-   * Sign up new user with email and password
-   */
   async signUp(data: SignUpData) {
     try {
       const client = this.getClient()
@@ -46,42 +43,30 @@ class AuthService {
         email: data.email,
         password: data.password,
         options: {
-          data: {
-            full_name: data.fullName,
-            phone: data.phone,
-          },
+          data: { full_name: data.fullName, phone: data.phone },
         },
       })
 
       if (authError) throw authError
 
-      // Create profile in profiles table
       if (authData.user) {
-        const { error: profileError } = await client
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: data.email,
-            full_name: data.fullName,
-            phone: data.phone,
-            created_at: new Date().toISOString(),
-          })
-
-        if (profileError) {
-          console.error('[v0] Error creating profile:', profileError)
-        }
+        const { error: profileError } = await client.from('profiles').insert({
+          id: authData.user.id,
+          email: data.email,
+          full_name: data.fullName,
+          phone: data.phone,
+          created_at: new Date().toISOString(),
+        })
+        if (profileError) console.error('Error creating profile:', profileError)
       }
 
       return { user: authData.user, session: authData.session, error: null }
     } catch (error: any) {
-      console.error('[v0] Sign up error:', error)
+      console.error('Sign up error:', error)
       return { user: null, session: null, error: error.message }
     }
   }
 
-  /**
-   * Sign in with email and password
-   */
   async signIn(data: SignInData) {
     try {
       const client = this.getClient()
@@ -89,63 +74,44 @@ class AuthService {
         email: data.email,
         password: data.password,
       })
-
       if (error) throw error
-
       return { user: authData.user, session: authData.session, error: null }
     } catch (error: any) {
-      console.error('[v0] Sign in error:', error)
+      console.error('Sign in error:', error)
       return { user: null, session: null, error: error.message }
     }
   }
 
-  /**
-   * Sign in with Google OAuth
-   */
   async signInWithGoogle() {
     try {
       const client = this.getClient()
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       })
-
       if (error) throw error
-
       return { data, error: null }
     } catch (error: any) {
-      console.error('[v0] Google sign in error:', error)
+      console.error('Google sign in error:', error)
       return { data: null, error: error.message }
     }
   }
 
-  /**
-   * Sign in with Apple OAuth
-   */
   async signInWithApple() {
     try {
       const client = this.getClient()
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       })
-
       if (error) throw error
-
       return { data, error: null }
     } catch (error: any) {
-      console.error('[v0] Apple sign in error:', error)
+      console.error('Apple sign in error:', error)
       return { data: null, error: error.message }
     }
   }
 
-  /**
-   * Sign out current user
-   */
   async signOut() {
     try {
       const client = this.getClient()
@@ -153,14 +119,11 @@ class AuthService {
       if (error) throw error
       return { error: null }
     } catch (error: any) {
-      console.error('[v0] Sign out error:', error)
+      console.error('Sign out error:', error)
       return { error: error.message }
     }
   }
 
-  /**
-   * Get current user session
-   */
   async getSession() {
     try {
       const client = this.getClient()
@@ -168,23 +131,18 @@ class AuthService {
       if (error) throw error
       return { session, error: null }
     } catch (error: any) {
-      console.error('[v0] Get session error:', error)
+      console.error('Get session error:', error)
       return { session: null, error: error.message }
     }
   }
 
-  /**
-   * Get current user
-   */
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
       const client = this.getClient()
       const { data: { user }, error } = await client.auth.getUser()
       if (error) throw error
-
       if (!user) return null
 
-      // Get profile data
       const { data: profile } = await client
         .from('profiles')
         .select('*')
@@ -200,52 +158,37 @@ class AuthService {
         created_at: profile?.created_at,
       }
     } catch (error: any) {
-      console.error('[v0] Get current user error:', error)
+      console.error('Get current user error:', error)
       return null
     }
   }
 
-  /**
-   * Reset password
-   */
   async resetPassword(email: string) {
     try {
       const client = this.getClient()
       const { error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       })
-
       if (error) throw error
-
       return { error: null }
     } catch (error: any) {
-      console.error('[v0] Reset password error:', error)
+      console.error('Reset password error:', error)
       return { error: error.message }
     }
   }
 
-  /**
-   * Update password
-   */
   async updatePassword(newPassword: string) {
     try {
       const client = this.getClient()
-      const { error } = await client.auth.updateUser({
-        password: newPassword,
-      })
-
+      const { error } = await client.auth.updateUser({ password: newPassword })
       if (error) throw error
-
       return { error: null }
     } catch (error: any) {
-      console.error('[v0] Update password error:', error)
+      console.error('Update password error:', error)
       return { error: error.message }
     }
   }
 
-  /**
-   * Listen to auth state changes
-   */
   onAuthStateChange(callback: (event: string, session: any) => void) {
     const client = this.getClient()
     return client.auth.onAuthStateChange(callback)

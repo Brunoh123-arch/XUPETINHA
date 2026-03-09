@@ -36,7 +36,7 @@ export default function DriverVerifyPage() {
 
       setLoading(false)
     } catch (error) {
-      console.error('[v0] Error checking driver:', error)
+      console.error('Error checking driver:', error)
       setLoading(false)
     }
   }
@@ -62,7 +62,7 @@ export default function DriverVerifyPage() {
       // Navigate to driver dashboard
       router.push('/uppi/driver')
     } catch (error) {
-      console.error('[v0] Error saving verification:', error)
+      console.error('Error saving verification:', error)
       iosToast.error('Erro ao salvar verificacao')
     }
   }

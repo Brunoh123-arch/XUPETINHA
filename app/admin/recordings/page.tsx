@@ -9,10 +9,12 @@ import { cn } from '@/lib/utils'
 interface Recording {
   id: string
   ride_id: string
-  recorded_by: string
+  user_id: string
   storage_path: string
   duration_seconds: number
+  duration_sec: number
   file_size_bytes: number
+  size_bytes: number
   created_at: string
   ride?: {
     pickup_address: string
@@ -53,8 +55,8 @@ export default function AdminRecordingsPage() {
 
   const kpis = {
     total: recordings.length,
-    totalDuration: recordings.reduce((a, r) => a + r.duration_seconds, 0),
-    totalSize: recordings.reduce((a, r) => a + r.file_size_bytes, 0),
+    totalDuration: recordings.reduce((a, r) => a + (r.duration_seconds ?? r.duration_sec ?? 0), 0),
+    totalSize: recordings.reduce((a, r) => a + (r.file_size_bytes ?? r.size_bytes ?? 0), 0),
     usersEnabled: preferences.filter(p => p.enabled).length,
   }
 
@@ -65,13 +67,13 @@ export default function AdminRecordingsPage() {
         supabase
           .from('ride_recordings')
           .select(`
-            id, ride_id, recorded_by, storage_path,
-            duration_seconds, file_size_bytes, created_at,
+            id, ride_id, user_id, storage_path,
+            duration_seconds, duration_sec, file_size_bytes, size_bytes, created_at,
             ride:rides(pickup_address, dropoff_address,
               passenger:profiles!passenger_id(full_name),
               driver:profiles!driver_id(full_name)
             ),
-            recorder:profiles!recorded_by(full_name, email)
+            recorder:profiles!user_id(full_name, email)
           `)
           .order('created_at', { ascending: false })
           .limit(100),
@@ -91,7 +93,7 @@ export default function AdminRecordingsPage() {
   useEffect(() => { load() }, [load])
 
   const handleDelete = async (rec: Recording) => {
-    if (!confirm(`Apagar gravacao de ${formatDuration(rec.duration_seconds)}? Esta acao nao pode ser desfeita.`)) return
+    if (!confirm(`Apagar gravacao de ${formatDuration(rec.duration_seconds ?? rec.duration_sec ?? 0)}? Esta acao nao pode ser desfeita.`)) return
     setDeleting(rec.id)
     try {
       await supabase.storage.from('ride-recordings').remove([rec.storage_path])
@@ -200,9 +202,9 @@ export default function AdminRecordingsPage() {
                       <div className="flex items-center gap-2">
                         <Mic className="w-4 h-4 text-violet-400" />
                         <span className="text-sm font-medium text-white">
-                          {formatDuration(rec.duration_seconds)}
+                          {formatDuration(rec.duration_seconds ?? rec.duration_sec ?? 0)}
                         </span>
-                        <span className="text-xs text-zinc-500">{formatBytes(rec.file_size_bytes)}</span>
+                        <span className="text-xs text-zinc-500">{formatBytes(rec.file_size_bytes ?? rec.size_bytes ?? 0)}</span>
                       </div>
                       <span className="text-xs text-zinc-500">
                         {new Date(rec.created_at).toLocaleString('pt-BR')}
@@ -229,11 +231,11 @@ export default function AdminRecordingsPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Duracao</span>
-                    <span className="text-white">{formatDuration(selected.duration_seconds)}</span>
+                    <span className="text-white">{formatDuration(selected.duration_seconds ?? selected.duration_sec ?? 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Tamanho</span>
-                    <span className="text-white">{formatBytes(selected.file_size_bytes)}</span>
+                    <span className="text-white">{formatBytes(selected.file_size_bytes ?? selected.size_bytes ?? 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-500">Criada em</span>

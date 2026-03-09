@@ -135,7 +135,7 @@ export default function EnhancedReviewPage() {
       })
 
     if (error) {
-      console.error('[v0] Error submitting review:', error)
+      console.error('Error submitting review:', error)
       iosToast.error('Erro ao enviar avaliação')
       setSubmitting(false)
       return

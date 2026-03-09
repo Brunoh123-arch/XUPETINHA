@@ -7,10 +7,14 @@ import { BottomNavigation } from '@/components/bottom-navigation'
 
 interface FamilyMember {
   id: string
-  member_id: string | null
-  member_name: string
-  member_phone: string | null
-  can_cancel: boolean
+  user_id: string
+  name: string
+  phone: string
+  relationship: string
+  can_track_rides: boolean
+  notify_on_start: boolean
+  notify_on_end: boolean
+  is_primary: boolean
   created_at: string
   active_ride?: {
     id: string
@@ -43,38 +47,12 @@ export default function FamilyPage() {
 
     const { data } = await supabase
       .from('family_members')
-      .select('id, member_id, member_name, member_phone, can_cancel, created_at')
-      .eq('guardian_id', user.id)
-      .order('created_at', { ascending: false })
+      .select('*')
+      .eq('user_id', user.id)
+      .order('is_primary', { ascending: false })
 
     if (data) {
-      const withRides = await Promise.all(data.map(async m => {
-        if (!m.member_id) return { ...m, active_ride: null }
-        const { data: ride } = await supabase
-          .from('rides')
-          .select(`
-            id, status, pickup_address, dropoff_address, updated_at,
-            driver:profiles!driver_id(full_name)
-          `)
-          .eq('passenger_id', m.member_id)
-          .in('status', ['accepted', 'in_progress'])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-        const r = ride as any
-        return {
-          ...m,
-          active_ride: ride ? {
-            id: r.id,
-            status: r.status,
-            pickup_address: r.pickup_address,
-            dropoff_address: r.dropoff_address,
-            driver_name: Array.isArray(r.driver) ? r.driver[0]?.full_name : r.driver?.full_name || 'Motorista',
-            updated_at: r.updated_at,
-          } : null,
-        }
-      }))
-      setMembers(withRides)
+      setMembers(data.map(m => ({ ...m, active_ride: null })))
     }
     setLoading(false)
   }
@@ -87,22 +65,15 @@ export default function FamilyPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    let memberId: string | null = null
-    if (addEmail.trim()) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', addEmail.trim().toLowerCase())
-        .single()
-      if (profile) memberId = profile.id
-    }
-
     const { error: err } = await supabase.from('family_members').insert({
-      guardian_id: user.id,
-      member_id: memberId,
-      member_name: addName.trim(),
-      member_phone: addPhone.trim() || null,
-      can_cancel: addCancel,
+      user_id: user.id,
+      name: addName.trim(),
+      phone: addPhone.trim() || addEmail.trim() || '-',
+      relationship: 'family',
+      can_track_rides: true,
+      notify_on_start: true,
+      notify_on_end: true,
+      is_primary: members.length === 0,
     })
 
     if (err) {
@@ -239,12 +210,15 @@ export default function FamilyPage() {
             <div className="p-4">
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-[17px] font-bold text-primary">{m.member_name.charAt(0)}</span>
+                  <span className="text-[17px] font-bold text-primary">{m.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-foreground">{m.member_name}</p>
-                  {m.member_phone && <p className="text-[12px] text-muted-foreground">{m.member_phone}</p>}
-                  {!m.member_id && <p className="text-[11px] text-orange-500 font-semibold mt-0.5">Usuario nao encontrado no Uppi</p>}
+                  <p className="text-[15px] font-bold text-foreground">
+                    {m.name}
+                    {m.is_primary && <span className="ml-2 text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Principal</span>}
+                  </p>
+                  {m.phone && <p className="text-[12px] text-muted-foreground">{m.phone}</p>}
+                  <p className="text-[11px] text-muted-foreground/70 mt-0.5 capitalize">{m.relationship}</p>
                 </div>
                 <button onClick={() => handleRemove(m.id)} className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center ios-press flex-shrink-0">
                   <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ notifications })
   } catch (error) {
-    console.error('[v0] Notifications GET error:', error)
+    console.error('Notifications GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ notification }, { status: 201 })
   } catch (error) {
-    console.error('[v0] Notifications POST error:', error)
+    console.error('Notifications POST error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -81,7 +81,15 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { notification_id, is_read } = body
+    const { notification_id, is_read, mark_all_read } = body
+
+    // Marcar todas como lidas via RPC (atomico)
+    if (mark_all_read === true) {
+      const { data: count, error } = await supabase
+        .rpc('mark_all_notifications_read', { p_user_id: user.id })
+      if (error) throw error
+      return NextResponse.json({ success: true, count: count ?? 0 })
+    }
 
     // Padronizado para is_read (consistente com notification-service e a notifications page)
     const { data: notification, error } = await supabase
@@ -96,7 +104,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ notification })
   } catch (error) {
-    console.error('[v0] Notifications PATCH error:', error)
+    console.error('Notifications PATCH error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

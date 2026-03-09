@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     })
 
     if (authError) {
-      console.error('[v0] Erro ao criar usuário auth:', authError)
+      console.error('Erro ao criar usuário auth:', authError)
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       })
 
     if (profileError) {
-      console.error('[v0] Erro ao criar perfil:', profileError)
+      console.error('Erro ao criar perfil:', profileError)
       return NextResponse.json({ error: profileError.message }, { status: 400 })
     }
 
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       },
     })
   } catch (error) {
-    console.error('[v0] Erro geral:', error)
+    console.error('Erro geral:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

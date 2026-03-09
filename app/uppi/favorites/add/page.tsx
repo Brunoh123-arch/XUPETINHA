@@ -77,7 +77,7 @@ export default function AddFavoritePage() {
       await new Promise(resolve => setTimeout(resolve, 500))
       router.push('/uppi/favorites')
     } catch (error) {
-      console.error('[v0] Error adding favorite:', error)
+      console.error('Error adding favorite:', error)
       haptics.notificationError()
       iosToast.error('Erro ao adicionar favorito')
     } finally {

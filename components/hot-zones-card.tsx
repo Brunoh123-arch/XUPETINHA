@@ -40,7 +40,7 @@ export function HotZonesCard({ driverLat, driverLng, onZoneClick }: HotZonesCard
       const data = await response.json()
       setHotZones(data.hotZones || [])
     } catch (error) {
-      console.error('[v0] Error fetching hot zones:', error)
+      console.error('Error fetching hot zones:', error)
     } finally {
       setLoading(false)
     }

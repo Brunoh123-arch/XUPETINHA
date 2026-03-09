@@ -45,9 +45,9 @@ export default function AdminDriverEarningsPage() {
     const { data: driverProfiles } = await supabase
       .from('driver_profiles')
       .select(`
-        user_id, vehicle_model, vehicle_plate, is_verified, is_available,
+        id, vehicle_model, vehicle_plate, is_verified, is_available,
         total_earnings, rating, total_rides,
-        profile:profiles!driver_profiles_user_id_fkey(full_name, phone, avatar_url)
+        profile:profiles!driver_profiles_id_fkey(full_name, phone, avatar_url)
       `)
       .eq('is_verified', true)
       .order('total_earnings', { ascending: false })
@@ -57,7 +57,7 @@ export default function AdminDriverEarningsPage() {
 
     // Get rides from this week for each driver
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-    const driverIds = driverProfiles.map(d => d.user_id)
+    const driverIds = driverProfiles.map(d => d.id)
 
     const { data: weekRides } = await supabase
       .from('rides')
@@ -92,11 +92,11 @@ export default function AdminDriverEarningsPage() {
 
     const result: DriverEarning[] = driverProfiles.map(d => {
       const profile = d.profile as any
-      const weekData = weekMap[d.user_id] || { amount: 0, count: 0 }
+      const weekData = weekMap[d.id] || { amount: 0, count: 0 }
       const totalRides = d.total_rides || 0
       const totalEarnings = d.total_earnings || 0
       return {
-        driver_id: d.user_id,
+        driver_id: d.id,
         full_name: profile?.full_name || 'Desconhecido',
         phone: profile?.phone || '',
         avatar_url: profile?.avatar_url || null,
@@ -110,7 +110,7 @@ export default function AdminDriverEarningsPage() {
         week_earnings: weekData.amount,
         week_rides: weekData.count,
         avg_per_ride: totalRides > 0 ? totalEarnings / totalRides : 0,
-        last_ride_at: lastRideMap[d.user_id] || null,
+        last_ride_at: lastRideMap[d.id] || null,
       }
     })
 

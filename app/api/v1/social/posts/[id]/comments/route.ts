@@ -46,7 +46,7 @@ export async function GET(
       .range(offset, offset + limit - 1)
 
     if (error) {
-      console.error('[v0] Comments fetch error:', error)
+      console.error('Comments fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
@@ -63,7 +63,7 @@ export async function GET(
       offset,
     })
   } catch (error: any) {
-    console.error('[v0] Comments GET error:', error)
+    console.error('Comments GET error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -140,7 +140,7 @@ export async function POST(
       .single()
 
     if (commentError) {
-      console.error('[v0] Comment insert error:', commentError)
+      console.error('Comment insert error:', commentError)
       return NextResponse.json({ error: commentError.message }, { status: 400 })
     }
 
@@ -150,7 +150,7 @@ export async function POST(
     })
 
     if (updateError) {
-      console.error('[v0] Comment count increment error:', updateError)
+      console.error('Comment count increment error:', updateError)
       // Fallback: atualizar manualmente
       await supabase
         .from('social_posts')
@@ -175,7 +175,7 @@ export async function POST(
 
     return NextResponse.json({ comment }, { status: 201 })
   } catch (error: any) {
-    console.error('[v0] Comment creation error:', error)
+    console.error('Comment creation error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -250,7 +250,7 @@ export async function DELETE(
       .eq('id', comment_id)
 
     if (deleteError) {
-      console.error('[v0] Comment delete error:', deleteError)
+      console.error('Comment delete error:', deleteError)
       return NextResponse.json({ error: deleteError.message }, { status: 400 })
     }
 
@@ -261,7 +261,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deleted_id: comment_id })
   } catch (error: any) {
-    console.error('[v0] Comment deletion error:', error)
+    console.error('Comment deletion error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

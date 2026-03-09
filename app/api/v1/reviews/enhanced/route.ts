@@ -59,13 +59,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) {
-      console.error('[v0] Enhanced reviews fetch error:', error)
+      console.error('Enhanced reviews fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     return NextResponse.json({ reviews: data || [] })
   } catch (error: any) {
-    console.error('[v0] Enhanced reviews API error:', error)
+    console.error('Enhanced reviews API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       .single()
 
     if (reviewError) {
-      console.error('[v0] Enhanced review insert error:', reviewError)
+      console.error('Enhanced review insert error:', reviewError)
       return NextResponse.json({ error: reviewError.message }, { status: 400 })
     }
 
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
         .insert(categoriesData)
 
       if (catError) {
-        console.error('[v0] Review categories insert error:', catError)
+        console.error('Review categories insert error:', catError)
       }
     }
 
@@ -155,13 +155,13 @@ export async function POST(request: Request) {
         .insert(tagsData)
 
       if (tagsError) {
-        console.error('[v0] Review tags insert error:', tagsError)
+        console.error('Review tags insert error:', tagsError)
       }
     }
 
     return NextResponse.json({ review }, { status: 201 })
   } catch (error: any) {
-    console.error('[v0] Enhanced review creation error:', error)
+    console.error('Enhanced review creation error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

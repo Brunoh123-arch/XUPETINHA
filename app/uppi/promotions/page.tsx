@@ -63,7 +63,7 @@ export default function PromotionsPage() {
 
       setCoupons(formattedCoupons)
     } catch (error) {
-      console.error('[v0] Error loading coupons:', error)
+      console.error('Error loading coupons:', error)
       iosToast.error('Erro ao carregar cupons')
     } finally {
       setLoading(false)
@@ -124,7 +124,7 @@ export default function PromotionsPage() {
       setCouponCode('')
       loadCoupons()
     } catch (error) {
-      console.error('[v0] Error applying coupon:', error)
+      console.error('Error applying coupon:', error)
       haptics.notificationError()
       iosToast.error('Erro ao adicionar cupom')
     } finally {

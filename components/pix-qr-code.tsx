@@ -59,7 +59,7 @@ export function PixQrCode({
       triggerHaptic('light')
       setTimeout(() => setCopied(false), 3000)
     } catch (error) {
-      console.error('[v0] Copy error:', error)
+      console.error('Copy error:', error)
       iosToast.error('Erro ao copiar código')
     }
   }

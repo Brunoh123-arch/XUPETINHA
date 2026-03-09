@@ -9,22 +9,29 @@ import { cn } from '@/lib/utils'
 interface SmsDelivery {
   id: string
   user_id: string
-  phone_number: string
+  phone: string           // coluna original
+  phone_number: string    // alias adicionado na migration 020
   message: string
+  type: string
   segments: number
-  status: 'pending' | 'sent' | 'failed' | 'cancelled'
+  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'cancelled'
+  provider: string | null
+  provider_id: string | null
   provider_message_id: string | null
   sent_at: string | null
+  delivered_at: string | null
   failed_at: string | null
   error_message: string | null
   retry_count: number
-  cost_cents: number
+  cost: number            // coluna original (numeric)
+  cost_cents: number      // alias adicionado na migration 020
   created_at: string
   profiles?: { full_name: string; email: string }
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
   sent: { label: 'Enviado', color: 'bg-emerald-500/15 text-emerald-400', icon: CheckCircle },
+  delivered: { label: 'Entregue', color: 'bg-blue-500/15 text-blue-400', icon: CheckCircle },
   failed: { label: 'Falhou', color: 'bg-red-500/15 text-red-400', icon: XCircle },
   pending: { label: 'Pendente', color: 'bg-amber-500/15 text-amber-400', icon: Clock },
   cancelled: { label: 'Cancelado', color: 'bg-zinc-700 text-zinc-400', icon: XCircle },
@@ -36,17 +43,17 @@ export default function AdminSmsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'sent' | 'failed' | 'pending'>('all')
 
+  const sentDeliveries = deliveries.filter(d => d.status === 'sent' || d.status === 'delivered')
   const kpis = {
     total: deliveries.length,
-    sent: deliveries.filter(d => d.status === 'sent').length,
+    sent: sentDeliveries.length,
     failed: deliveries.filter(d => d.status === 'failed').length,
-    totalCost: deliveries.filter(d => d.status === 'sent').reduce((a, d) => a + (d.cost_cents || 0), 0),
-    avgCost: deliveries.filter(d => d.status === 'sent').length
-      ? deliveries.filter(d => d.status === 'sent').reduce((a, d) => a + (d.cost_cents || 0), 0) /
-        deliveries.filter(d => d.status === 'sent').length
+    totalCost: sentDeliveries.reduce((a, d) => a + (d.cost_cents || (d.cost * 100) || 0), 0),
+    avgCost: sentDeliveries.length
+      ? sentDeliveries.reduce((a, d) => a + (d.cost_cents || (d.cost * 100) || 0), 0) / sentDeliveries.length
       : 0,
     successRate: deliveries.length
-      ? Math.round((deliveries.filter(d => d.status === 'sent').length / deliveries.length) * 100)
+      ? Math.round((sentDeliveries.length / deliveries.length) * 100)
       : 0,
   }
 
@@ -55,7 +62,13 @@ export default function AdminSmsPage() {
     try {
       const { data } = await supabase
         .from('sms_deliveries')
-        .select('*, profiles(full_name, email)')
+        .select(`
+          id, user_id, phone, phone_number, message, type,
+          segments, status, provider, provider_id, provider_message_id,
+          sent_at, delivered_at, failed_at, error_message,
+          retry_count, cost, cost_cents, created_at,
+          profiles!sms_deliveries_user_id_fkey(full_name, email)
+        `)
         .order('created_at', { ascending: false })
         .limit(200)
       setDeliveries((data as any[]) || [])
@@ -159,7 +172,7 @@ export default function AdminSmsPage() {
                       <p className="font-medium text-white">{dAs.profiles?.full_name || '—'}</p>
                       <p className="text-xs text-zinc-500">{dAs.profiles?.email || '—'}</p>
                     </td>
-                    <td className="px-4 py-3 text-zinc-300 font-mono text-xs">{d.phone_number}</td>
+                    <td className="px-4 py-3 text-zinc-300 font-mono text-xs">{d.phone_number || d.phone}</td>
                     <td className="px-4 py-3 text-zinc-400 max-w-xs truncate">{d.message}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium', cfg.color)}>
@@ -172,7 +185,7 @@ export default function AdminSmsPage() {
                     </td>
                     <td className="px-4 py-3 text-center text-zinc-400">{d.segments}</td>
                     <td className="px-4 py-3 text-right text-zinc-300">
-                      {d.cost_cents ? `R$ ${(d.cost_cents / 100).toFixed(3)}` : '—'}
+                      {(d.cost_cents || d.cost) ? `R$ ${((d.cost_cents || (d.cost * 100)) / 100).toFixed(3)}` : '—'}
                     </td>
                     <td className="px-4 py-3 text-right text-xs text-zinc-500">
                       {new Date(d.created_at).toLocaleString('pt-BR')}

@@ -1,9 +1,9 @@
 # UPPI - Indice Completo do Projeto
 
-**Ultima atualizacao:** 06/03/2026
-**Versao:** 15.0
-**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 182 total / RLS policies corrigidas) + API (57 routes) + Auth + Realtime (8 tabelas) + Admin
-**Supabase:** mstnqzgsdnlsajuaezhs — schema corrigido em 06/03/2026 — colunas rides renomeadas para pickup_*/dropoff_*, tabelas driver_profiles/driver_locations/price_offers/notifications/wallet_transactions criadas
+**Ultima atualizacao:** 09/03/2026
+**Versao:** 16.0
+**Arquitetura:** Frontend + Backend + Banco (87 tabelas public / 86 com RLS / 51 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
+**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations — 0 FK quebradas / 0 RPCs faltando**
 
 ---
 
@@ -28,8 +28,8 @@ docs/
     VERSIONAMENTO.md                         Padrao /api/v1/, middleware, headers de versao
 
   03-banco-de-dados/
-    AUDITORIA-COMPLETA.md                    Schema alvo completo (73 tabelas, 98+ RLS, 45+ RPC)
-    SCHEMA.md                                Estado real (73 tabelas ativas em 02/03/2026) +
+    AUDITORIA-COMPLETA.md                    Schema real completo (87 tabelas, 51 Realtime, 75 RPCs, 35 triggers)
+    SCHEMA.md                                Estado real (87 tabelas — verificado 09/03/2026, migrations 001-034) +
                                              campos detalhados, RLS, indexes, funcoes SQL
 
   04-infraestrutura/
@@ -38,8 +38,8 @@ docs/
     TESTE-REALTIME.md                        Guia de teste Supabase Realtime (passo a passo)
 
   05-status/
-    STATUS-FUNCIONALIDADES.md                Checklist completo: 73 tabelas, 15 funcoes RPC,
-                                             152 paginas, 57 APIs, 8 tabelas Realtime (02/03/2026)
+    STATUS-FUNCIONALIDADES.md                Checklist completo: 87 tabelas, 75 RPCs,
+                                             152 paginas, 57 APIs, 51 tabelas Realtime (09/03/2026)
 
   06-deploy/
     PLAY-STORE.md                            Guia de publicacao (TWA/Capacitor/FCM)
@@ -396,29 +396,22 @@ package.json                                 Dependencias completas
 
 ---
 
-## 5. Banco de Dados - Estado Real (02/03/2026)
+## 5. Banco de Dados - Estado Real (09/03/2026 — jpnwxqjrhzaobnugjnyx)
 
-| Categoria              | Quantidade | Observacao                                              |
-|------------------------|-----------|--------------------------------------------------------------|
-| Tabelas (schema public)| 74        | Criadas via 4 migrations no Supabase (02/03/2026)           |
-| Tabelas (pg_catalog)   | 64        | Catalog interno do PostgreSQL                               |
-| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth                              |
-| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage                           |
-| Tabelas (information_schema) | 4   | Views do sistema PostgreSQL                                 |
-| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime                          |
-| Tabelas (migrations)   | 1         | supabase_migrations                                         |
-| Tabelas (vault)        | 1         | Segredos criptografados                                     |
-| **Total geral**        | **176**   | Todos os schemas — verificado via SQL em 02/03/2026         |
-| RLS Policies           | 98+       | Todas as 74 tabelas com RLS habilitado               |
-| Funcoes SQL (RPC)      | 15        | find_nearby_drivers, calculate_wallet_balance, etc.  |
-| Triggers               | 24+       | updated_at, rating, streaks, etc.                    |
-| Indexes                | 60+       | Performance em busca e filtros                       |
-| Realtime (publicadas)  | 8         | rides, driver_locations, messages, notifications,    |
-|                        |           | price_offers, support_messages, ride_tracking,       |
-|                        |           | ride_offers                                          |
-| system_settings        | 6 registros | Populado via migration (001_core_tables)            |
-| pricing_rules          | 6 registros | 6 tipos de veiculo                                  |
-| rating_categories      | 4 registros | Direcao, Trajeto, Respeito, Comportamento           |
+| Categoria              | Quantidade | Observacao |
+|------------------------|-----------|------------|
+| Tabelas (schema public)| **87**    | Verificadas via SQL em 09/03/2026 — migrations 001-034 |
+| Tabelas com RLS ativo  | **86**    | Exceto spatial_ref_sys (PostGIS sistema) |
+| Tabelas com Realtime   | **51**    | Verificadas via pg_publication_tables |
+| RPCs callable          | **75**    | Excluindo funcoes PostGIS internas |
+| Politicas RLS          | **162**   | Verificadas via pg_policies |
+| Indices                | **235**   | Verificados via pg_indexes |
+| Trigger functions      | **35**    | Incluindo triggers de corrida, gamificacao e cascata |
+| Views                  | **1**     | ride_offers (alias price_offers) |
+| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth |
+| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage |
+| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime |
+| Tabelas (vault)        | 1         | Segredos criptografados |
 
 ### Migrations aplicadas no Supabase (pjlbixnzjndezoscbhej)
 

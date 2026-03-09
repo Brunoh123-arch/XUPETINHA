@@ -11,14 +11,22 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+const TOPIC_LABELS: Record<string, string> = {
+  ride: 'Problema com corrida',
+  payment: 'Pagamento',
+  account: 'Minha conta',
+  driver: 'Problema com motorista',
+  safety: 'Seguranca',
+  other: 'Outro assunto',
+}
+
 interface SupportTicket {
   id: string
   user_id: string
-  subject: string
-  message: string
+  topic: string
+  category: string | null
   status: string
   priority: string
-  category: string
   created_at: string
   resolved_at: string | null
   admin_notes: string | null
@@ -98,9 +106,10 @@ export default function AdminSupportPage() {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false
     if (search) {
       const q = search.toLowerCase()
+      const topicLabel = TOPIC_LABELS[t.topic] || t.topic
       return (
-        t.subject.toLowerCase().includes(q) ||
-        t.message.toLowerCase().includes(q) ||
+        topicLabel.toLowerCase().includes(q) ||
+        t.topic.toLowerCase().includes(q) ||
         t.user?.full_name?.toLowerCase().includes(q) ||
         t.id.includes(q)
       )
@@ -210,8 +219,8 @@ export default function AdminSupportPage() {
                     <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded', sc.color, sc.bg)}>{sc.label}</span>
                     <span className={cn('text-[10px] font-semibold ml-auto', pc.color)}>{pc.label}</span>
                   </div>
-                  <p className="text-[12px] font-semibold text-slate-200 truncate mb-0.5">{ticket.subject}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{ticket.message}</p>
+                  <p className="text-[12px] font-semibold text-slate-200 truncate mb-0.5">{TOPIC_LABELS[ticket.topic] || ticket.topic}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{ticket.category || 'Sem categoria'}</p>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-600">
                     <User className="w-3 h-3" />
                     <span>{ticket.user?.full_name || 'Usuario'}</span>
@@ -237,7 +246,7 @@ export default function AdminSupportPage() {
               {/* Header */}
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-[17px] font-bold text-slate-100 mb-1">{selectedTicket.subject}</h2>
+                  <h2 className="text-[17px] font-bold text-slate-100 mb-1">{TOPIC_LABELS[selectedTicket.topic] || selectedTicket.topic}</h2>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn('text-[11px] font-bold px-2 py-0.5 rounded', statusConfig[selectedTicket.status]?.color, statusConfig[selectedTicket.status]?.bg)}>
                       {statusConfig[selectedTicket.status]?.label}

@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { rideService } from '@/lib/services/ride-service'
 import { optimizeRoute } from '@/lib/google-maps/route-optimizer'
 import { PixModal } from '@/components/pix-modal'
 import { paymentService } from '@/lib/services/payment-service'
+import { calculateAllVehiclePrices, formatBRL, type VehiclePriceMap } from '@/lib/utils/pricing'
 
 function RequestRideContent() {
   const searchParams = useSearchParams()
@@ -39,9 +40,90 @@ function RequestRideContent() {
   // Dados pendentes da corrida para criar após recarga bem-sucedida
   const [pendingRidePayload, setPendingRidePayload] = useState<Parameters<typeof rideService.createRideRequest>[0] | null>(null)
 
-  const estimatedDistance = 5.2
-  const estimatedDuration = 15
-  const suggestedPrice = 18.50
+  // Dados de rota e pricing dinâmico
+  const [estimatedDistance, setEstimatedDistance] = useState(0)
+  const [estimatedDuration, setEstimatedDuration] = useState(0)
+  const [vehiclePrices, setVehiclePrices] = useState<VehiclePriceMap | null>(null)
+  const [loadingRoute, setLoadingRoute] = useState(true)
+
+  // Preço sugerido reativo ao tipo de veículo
+  const currentPriceEstimate = vehiclePrices?.[vehicleType as keyof VehiclePriceMap] ?? null
+  const suggestedPrice = currentPriceEstimate?.suggestedPrice ?? 0
+
+  // Ao mudar tipo de veículo, atualiza a oferta padrão para o preço sugerido
+  useEffect(() => {
+    if (suggestedPrice > 0 && !priceOffer) {
+      setPriceOffer(suggestedPrice.toFixed(2))
+    }
+  }, [suggestedPrice]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Ao mudar tipo de veículo atualiza a oferta
+  useEffect(() => {
+    if (vehiclePrices && vehicleType) {
+      const price = vehiclePrices[vehicleType as keyof VehiclePriceMap]?.suggestedPrice ?? 0
+      if (price > 0) setPriceOffer(price.toFixed(2))
+    }
+  }, [vehicleType, vehiclePrices])
+
+  // Calcular rota e preços ao montar
+  const initRouteAndPricing = useCallback(async () => {
+    setLoadingRoute(true)
+    try {
+      // Coords do sessionStorage (já salvas pelo route-input)
+      const routeData = sessionStorage.getItem('rideRoute')
+      const parsedRoute = routeData ? JSON.parse(routeData) : null
+
+      let pickupCoords = parsedRoute?.pickupCoords ?? null
+      let dropoffCoords = parsedRoute?.destinationCoords ?? null
+
+      // Fallback: tenta geolocalizacao atual
+      if (!pickupCoords) {
+        const cached = sessionStorage.getItem('userLocation')
+        pickupCoords = cached ? JSON.parse(cached) : { lat: -23.5505, lng: -46.6333 }
+      }
+
+      // Fallback: tenta geocodificar dropoff via place_id
+      if (!dropoffCoords) {
+        const placeId = searchParams.get('dropoff_place_id')
+        if (placeId) {
+          try {
+            const res = await fetch(`/api/v1/places/details?place_id=${encodeURIComponent(placeId)}`)
+            if (res.ok) {
+              const data = await res.json()
+              const loc = data?.result?.geometry?.location
+              if (loc) dropoffCoords = { lat: loc.lat, lng: loc.lng }
+            }
+          } catch { /* mantém fallback */ }
+        }
+        if (!dropoffCoords) dropoffCoords = { lat: -23.5600, lng: -46.6500 }
+      }
+
+      // Calcular rota real via optimizeRoute (Haversine + tráfego estimado)
+      const routeResult = await optimizeRoute(pickupCoords, dropoffCoords)
+      const route = routeResult.recommended
+      const distKm  = Math.round(route.distance * 10) / 10
+      const durMin  = route.duration
+
+      setEstimatedDistance(distKm)
+      setEstimatedDuration(durMin)
+
+      // Calcular preços para todos os tipos de veículo
+      const prices = await calculateAllVehiclePrices(distKm, durMin)
+      setVehiclePrices(prices)
+
+      // Definir oferta inicial com preço sugerido para 'economy'
+      const initial = prices[vehicleType as keyof VehiclePriceMap]?.suggestedPrice
+      if (initial && initial > 0) setPriceOffer(initial.toFixed(2))
+    } catch {
+      // Sem rota: mantém zeros, usuário pode digitar manualmente
+    } finally {
+      setLoadingRoute(false)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    initRouteAndPricing()
+  }, [initRouteAndPricing])
 
   // Carregar saldo da carteira ao montar
   useEffect(() => {
@@ -159,8 +241,15 @@ function RequestRideContent() {
         }
       }
 
-      const routeResult = await optimizeRoute(pickupCoords, dropoffCoords)
-      const optimizedRoute = routeResult.recommended
+      // Usar dados de rota já calculados na inicialização, ou recalcular se não disponíveis
+      let finalDistKm = estimatedDistance
+      let finalDurMin = estimatedDuration
+      if (!finalDistKm || !finalDurMin) {
+        const routeResult = await optimizeRoute(pickupCoords, dropoffCoords)
+        const optimizedRoute = routeResult.recommended
+        finalDistKm = optimizedRoute.distance
+        finalDurMin = optimizedRoute.duration
+      }
 
       const ridePayload = {
         pickup_address: pickupAddress,
@@ -169,8 +258,8 @@ function RequestRideContent() {
         dropoff_address: dropoffAddress,
         dropoff_lat: dropoffCoords.lat,
         dropoff_lng: dropoffCoords.lng,
-        distance_km: optimizedRoute.distance,
-        estimated_duration_minutes: optimizedRoute.duration,
+        distance_km: finalDistKm,
+        estimated_duration_minutes: finalDurMin,
         passenger_price_offer: parseFloat(priceOffer),
         payment_method: paymentMethod,
         vehicle_type: vehicleType,
@@ -304,11 +393,15 @@ function RequestRideContent() {
             <div className="flex gap-6 pt-4 border-t border-blue-100">
               <div>
                 <p className="text-sm text-blue-600">Distância</p>
-                <p className="text-lg font-bold text-blue-900">{estimatedDistance} km</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {loadingRoute ? '...' : `${estimatedDistance} km`}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-blue-600">Tempo estimado</p>
-                <p className="text-lg font-bold text-blue-900">{estimatedDuration} min</p>
+                <p className="text-lg font-bold text-blue-900">
+                  {loadingRoute ? '...' : `${estimatedDuration} min`}
+                </p>
               </div>
             </div>
           </div>
@@ -397,12 +490,27 @@ function RequestRideContent() {
           <div className="bg-card ios-blur rounded-[20px] p-5 mb-4 shadow-[0_0_0_0.5px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_0_0_0.5px_rgba(255,255,255,0.04),0_2px_12px_rgba(0,0,0,0.3)] border-[0.5px] border-border/50">
             <h2 className="text-lg font-bold text-blue-900 mb-4">Quanto você quer pagar?</h2>
             <div className="mb-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-700">Preço sugerido</span>
-                  <span className="text-2xl font-bold text-blue-600">R$ {suggestedPrice.toFixed(2)}</span>
+              {loadingRoute ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-blue-600 text-sm">Calculando preço...</span>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-blue-700 font-medium">Preço sugerido</span>
+                    <span className="text-2xl font-bold text-blue-600">{formatBRL(suggestedPrice)}</span>
+                  </div>
+                  {currentPriceEstimate && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-blue-500 mt-1">
+                      <span>Base: {formatBRL(currentPriceEstimate.breakdown.basePrice)}</span>
+                      <span>Distância: {formatBRL(currentPriceEstimate.breakdown.distancePrice)}</span>
+                      <span>Tempo: {formatBRL(currentPriceEstimate.breakdown.timePrice)}</span>
+                      <span className="font-semibold">{currentPriceEstimate.breakdown.trafficLabel} ×{currentPriceEstimate.breakdown.multiplier}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <Label htmlFor="price" className="text-blue-900 mb-2 block">Sua oferta</Label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-700 font-semibold text-xl">R$</span>

@@ -78,7 +78,7 @@ export default function SocialFeedPage() {
       const res = await fetch(`/api/v1/social/posts/${postId}/like`, { method })
       if (!res.ok) throw new Error('Failed to toggle like')
     } catch (error) {
-      console.error('[v0] Error toggling like:', error)
+      console.error('Error toggling like:', error)
       iosToast.error('Erro ao curtir')
       // Revert optimistic update
       setPosts(prev => prev.map(p => 

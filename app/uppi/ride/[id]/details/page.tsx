@@ -55,7 +55,7 @@ export default function RideDetailsPage() {
       if (error) throw error
       setRide(data)
     } catch (error) {
-      console.error('[v0] Error loading ride details:', error)
+      console.error('Error loading ride details:', error)
     } finally {
       setLoading(false)
     }
@@ -87,7 +87,7 @@ export default function RideDetailsPage() {
 
       router.push('/uppi/history')
     } catch (error) {
-      console.error('[v0] Error cancelling ride:', error)
+      console.error('Error cancelling ride:', error)
       iosToast.error('Erro ao cancelar corrida')
     } finally {
       setCancelling(false)

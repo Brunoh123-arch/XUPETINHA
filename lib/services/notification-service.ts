@@ -89,14 +89,11 @@ class NotificationService {
     }
   }
 
-  /** Marca todas as notificações do usuário como lidas */
+  /** Marca todas as notificações do usuário como lidas (via RPC atomica) */
   async markAllAsRead(userId: string) {
     try {
       const { error } = await this.supabase
-        .from('notifications')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('user_id', userId)
-        .eq('is_read', false)
+        .rpc('mark_all_notifications_read', { p_user_id: userId })
 
       if (error) throw error
       return { success: true }

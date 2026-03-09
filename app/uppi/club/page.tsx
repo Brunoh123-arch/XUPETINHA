@@ -2,9 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { triggerHaptic } from '@/hooks/use-haptic'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
+
+interface PixData {
+  externalId: string
+  qrCodeText: string
+  qrCodeImage: string | null
+  amountLabel: string
+}
+
+
 
 const plans = [
   {
@@ -81,65 +91,68 @@ const plans = [
 
 export default function ClubUppiPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [selectedPlan, setSelectedPlan] = useState('premium')
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
-  const [subscribing, setSubscribing] = useState(false)
+  const [pixData, setPixData] = useState<PixData | null>(null)
+  const [generatingPix, setGeneratingPix] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
     async function fetchSubscription() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('plan, status')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single()
-      if (data) setCurrentPlan(data.plan)
+      try {
+        const res = await fetch('/api/v1/subscriptions')
+        if (res.ok) {
+          const { subscription } = await res.json()
+          if (subscription?.status === 'active') {
+            setCurrentPlan(subscription.plan)
+          }
+        }
+      } catch {
+        // silently fail
+      }
     }
     fetchSubscription()
-  }, [supabase])
+  }, [])
 
-  const handleSubscribe = async () => {
-    setSubscribing(true)
+  async function handleSubscribe() {
+    if (!activePlan) return
+    triggerHaptic('medium')
+    setGeneratingPix(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        router.push('/onboarding/create-account')
+      const result = await paymentService.createPixPayment({
+        amount: Math.round(activePlan.price * 100),
+        description: `Club Uppi — Plano ${activePlan.name}`,
+        ride_id: `club-${selectedPlan}-${Date.now()}`,
+      })
+      if (!result.success || !result.qr_code_text) {
+        iosToast.error(result.error || 'Erro ao gerar cobranca PIX')
         return
       }
-
-      const plan = plans.find(p => p.id === selectedPlan)
-      if (!plan) return
-
-      const now = new Date()
-      const expires = new Date(now)
-      expires.setMonth(expires.getMonth() + 1)
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan: selectedPlan,
-          status: 'active',
-          started_at: now.toISOString(),
-          expires_at: expires.toISOString(),
-          auto_renew: true,
-          discount_rides: plan.discount,
-          priority_support: selectedPlan !== 'basic',
-          cashback_percent: plan.cashback,
-        }, { onConflict: 'user_id' })
-
-      if (!error) {
-        setShowSuccess(true)
-        setCurrentPlan(selectedPlan)
-        setTimeout(() => setShowSuccess(false), 3000)
-      }
+      setPixData({
+        externalId: result.payment_id!,
+        qrCodeText: result.qr_code_text,
+        qrCodeImage: result.qr_code || null,
+        amountLabel: `R$ ${activePlan.price.toFixed(2).replace('.', ',')}`,
+      })
+    } catch {
+      iosToast.error('Erro ao processar pagamento')
     } finally {
-      setSubscribing(false)
+      setGeneratingPix(false)
     }
+  }
+
+  async function handlePixPaid() {
+    // Ativar subscription apos confirmacao do pagamento
+    await fetch('/api/v1/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: selectedPlan }),
+    })
+    setCurrentPlan(selectedPlan)
+    setPixData(null)
+    setShowSuccess(true)
+    triggerHaptic('success')
+    setTimeout(() => setShowSuccess(false), 4000)
   }
 
   const activePlan = plans.find(p => p.id === selectedPlan)
@@ -288,29 +301,29 @@ export default function ClubUppiPage() {
             <button
               type="button"
               onClick={handleSubscribe}
-              disabled={subscribing || currentPlan === selectedPlan}
+              disabled={currentPlan === selectedPlan || generatingPix}
               className={`w-full py-4 rounded-[16px] text-[17px] font-bold text-center ios-press transition-all duration-200 ${
                 currentPlan === selectedPlan
                   ? 'bg-secondary text-muted-foreground'
                   : `bg-gradient-to-r ${activePlan.color} text-white shadow-lg ${activePlan.shadow}`
               } disabled:opacity-50`}
             >
-              {subscribing ? (
+              {generatingPix ? (
                 <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Processando...
+                  <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />
+                  Gerando PIX...
                 </span>
               ) : currentPlan === selectedPlan ? (
-                'Plano atual'
+                'Plano atual ativo'
               ) : currentPlan ? (
-                `Trocar para ${activePlan.name}`
+                `Trocar para ${activePlan.name} — R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
               ) : (
-                `Assinar ${activePlan.name} - R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
+                `Assinar com PIX — R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
               )}
             </button>
 
             <p className="text-[12px] text-muted-foreground/60 text-center mt-3">
-              Cancele a qualquer momento. Sem fidelidade.
+              Pagamento via PIX — ativacao imediata. Cancele a qualquer momento.
             </p>
           </div>
         )}
@@ -336,13 +349,25 @@ export default function ClubUppiPage() {
         </div>
       </main>
 
-      {/* Success toast */}
+      {/* PIX Modal oficial com QR Code, polling e copia e cola */}
+      {pixData && (
+        <PixModal
+          externalId={pixData.externalId}
+          qrCodeText={pixData.qrCodeText}
+          qrCodeImage={pixData.qrCodeImage}
+          amountLabel={pixData.amountLabel}
+          onClose={() => setPixData(null)}
+          onPaid={handlePixPaid}
+        />
+      )}
+
+      {/* Success banner */}
       {showSuccess && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl shadow-emerald-500/30 flex items-center gap-2.5 animate-ios-fade-up">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          <span className="text-[15px] font-bold">Assinatura ativada com sucesso!</span>
+          <span className="text-[15px] font-bold">Plano {currentPlan} ativado!</span>
         </div>
       )}
     </div>

@@ -33,6 +33,7 @@ export default function DriverSchedulePage() {
       let query = supabase
         .from('scheduled_rides')
         .select('*, passenger:profiles!scheduled_rides_passenger_id_fkey(full_name, avatar_url)')
+        .eq('driver_id', uid)
         .order('scheduled_at', { ascending: tab === 'upcoming' })
 
       if (tab === 'upcoming') {

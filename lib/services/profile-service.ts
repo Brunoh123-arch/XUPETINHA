@@ -12,7 +12,7 @@ export const profileService = {
       .single()
 
     if (error) {
-      console.error('[v0] Error fetching profile:', error)
+      console.error('Error fetching profile:', error)
       return { success: false, error: error.message }
     }
 
@@ -33,7 +33,7 @@ export const profileService = {
       .single()
 
     if (error) {
-      console.error('[v0] Error updating profile:', error)
+      console.error('Error updating profile:', error)
       return { success: false, error: error.message }
     }
 
@@ -52,7 +52,7 @@ export const profileService = {
       .upload(filePath, file)
 
     if (uploadError) {
-      console.error('[v0] Error uploading avatar:', uploadError)
+      console.error('Error uploading avatar:', uploadError)
       return { success: false, error: uploadError.message }
     }
 
@@ -67,7 +67,7 @@ export const profileService = {
       .eq('id', userId)
 
     if (updateError) {
-      console.error('[v0] Error updating avatar URL:', updateError)
+      console.error('Error updating avatar URL:', updateError)
       return { success: false, error: updateError.message }
     }
 
@@ -81,7 +81,7 @@ export const profileService = {
     const { error } = await supabase.auth.admin.deleteUser(userId)
 
     if (error) {
-      console.error('[v0] Error deleting account:', error)
+      console.error('Error deleting account:', error)
       return { success: false, error: error.message }
     }
 

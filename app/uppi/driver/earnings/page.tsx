@@ -51,6 +51,10 @@ export default function DriverEarningsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/onboarding/splash'); return }
 
+      // RPC consolidada: busca todos os stats de ganhos em uma unica chamada
+      const { data: stats } = await supabase
+        .rpc('get_driver_earnings_stats', { p_driver_id: user.id })
+
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
@@ -73,12 +77,21 @@ export default function DriverEarningsPage() {
       }
 
       setWeekEarnings(days)
-      const total = days.reduce((s, d) => s + d.amount, 0)
-      const totalR = days.reduce((s, d) => s + d.rides, 0)
-      setTotalWeek(total)
-      setTotalRidesWeek(totalR)
-      setAvgPerRide(totalR > 0 ? total / totalR : 0)
-      setTodayEarnings(days[days.length - 1]?.amount || 0)
+
+      // Usa dados da RPC se disponivel, senao calcula localmente como fallback
+      if (stats && !stats.error) {
+        setTotalWeek(stats.week ?? days.reduce((s, d) => s + d.amount, 0))
+        setTotalRidesWeek(stats.week_rides ?? days.reduce((s, d) => s + d.rides, 0))
+        setAvgPerRide(stats.week_rides > 0 ? stats.week / stats.week_rides : 0)
+        setTodayEarnings(stats.today ?? days[days.length - 1]?.amount ?? 0)
+      } else {
+        const total = days.reduce((s, d) => s + d.amount, 0)
+        const totalR = days.reduce((s, d) => s + d.rides, 0)
+        setTotalWeek(total)
+        setTotalRidesWeek(totalR)
+        setAvgPerRide(totalR > 0 ? total / totalR : 0)
+        setTodayEarnings(days[days.length - 1]?.amount || 0)
+      }
 
       const slots: HourSlot[] = []
       for (let h = 6; h <= 23; h++) {
@@ -91,16 +104,15 @@ export default function DriverEarningsPage() {
       }
       setHourlyDemand(slots)
 
-      // Hot zones reais do banco
+      // Hot zones reais do banco — usa campo intensity (float 0-1)
       const { data: zones } = await supabase
         .from('hot_zones')
-        .select('name, danger_level, latitude, longitude')
+        .select('name, intensity, latitude, longitude')
         .eq('is_active', true)
-        .order('danger_level', { ascending: false })
+        .order('intensity', { ascending: false })
         .limit(6)
 
       if (zones && zones.length > 0) {
-        // Calcular distância aproximada caso tenha geolocalização
         let userLat: number | null = null
         let userLng: number | null = null
         try {
@@ -115,17 +127,15 @@ export default function DriverEarningsPage() {
           let distance = '—'
           if (userLat !== null && userLng !== null) {
             const R = 6371
-            const dLat = (z.latitude - userLat) * Math.PI / 180
-            const dLng = (z.longitude - userLng) * Math.PI / 180
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos(userLat * Math.PI / 180) * Math.cos(z.latitude * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+            const dLat = (z.latitude - userLat!) * Math.PI / 180
+            const dLng = (z.longitude - userLng!) * Math.PI / 180
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(userLat! * Math.PI / 180) * Math.cos(z.latitude * Math.PI / 180) * Math.sin(dLng / 2) ** 2
             const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
             distance = `${km.toFixed(1)} km`
           }
-          return {
-            name: z.name,
-            demand: (z.danger_level === 'high' ? 'peak' : z.danger_level === 'medium' ? 'high' : 'high') as 'high' | 'peak',
-            distance,
-          }
+          // intensity > 0.7 → peak, > 0.4 → high, senão high (default seguro)
+          const demand: 'high' | 'peak' = (z.intensity ?? 0) > 0.7 ? 'peak' : 'high'
+          return { name: z.name, demand, distance }
         }))
       } else {
         setHotZones([])

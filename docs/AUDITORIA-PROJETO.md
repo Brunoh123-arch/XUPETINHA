@@ -1,8 +1,10 @@
 # AUDITORIA COMPLETA - PROJETO UPPI
 
-**Data:** 06/03/2026
-**Versao:** 15.0
-**Status Geral:** 100% Operacional — Supabase mstnqzgsdnlsajuaezhs, 80 tabelas public / 182 total, 157 paginas (5 novas), 57 rotas API, 15 funcoes RPC, fluxo passageiro↔motorista funcional com Realtime
+**Data:** 09/03/2026
+**Versao:** 16.0 — Numeros atualizados para valores reais definitivos
+**Status Geral:** 100% Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas public, 86 com RLS, 51 com Realtime, 75 RPCs, 162 politicas, 235 indices, 35 triggers — migrations 001-034
+
+> **NOTA IMPORTANTE:** Os numeros abaixo desta linha foram registrados em 02/03/2026 com projeto Supabase anterior. Os valores reais atuais (09/03/2026, jpnwxqjrhzaobnugjnyx) estao no SCHEMA.md e STATUS-FUNCIONALIDADES.md.
 
 ---
 

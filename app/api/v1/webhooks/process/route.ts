@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(results)
   } catch (error: any) {
-    console.error('[v0] Webhook processor error:', error)
+    console.error('Webhook processor error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

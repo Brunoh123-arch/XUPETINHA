@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { haptics } from '@/lib/utils/ios-haptics'
@@ -15,12 +15,39 @@ const languages = [
 export default function LanguagePage() {
   const router = useRouter()
   const [selected, setSelected] = useState('pt-BR')
+  const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const handleSelect = (code: string) => {
+  useEffect(() => {
+    fetch('/api/v1/settings')
+      .then(r => r.json())
+      .then(data => {
+        if (data.settings?.language) setSelected(data.settings.language)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleSelect = async (code: string) => {
+    if (code === selected || saving) return
     haptics.selection()
     setSelected(code)
-    const lang = languages.find(l => l.code === code)
-    iosToast.success(`Idioma alterado para ${lang?.label}`)
+    setSaving(true)
+    try {
+      const res = await fetch('/api/v1/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language: code }),
+      })
+      if (!res.ok) throw new Error()
+      const lang = languages.find(l => l.code === code)
+      iosToast.success(`Idioma alterado para ${lang?.label}`)
+    } catch {
+      setSelected(selected) // reverter
+      iosToast.error('Erro ao salvar idioma')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -41,14 +68,17 @@ export default function LanguagePage() {
               key={lang.code}
               type="button"
               onClick={() => handleSelect(lang.code)}
-              className={`w-full px-5 py-4 flex items-center gap-4 ios-press ${i < languages.length - 1 ? 'border-b border-black/[0.04] dark:border-white/[0.04]' : ''}`}
+              disabled={loading || saving}
+              className={`w-full px-5 py-4 flex items-center gap-4 ios-press ${i < languages.length - 1 ? 'border-b border-black/[0.04] dark:border-white/[0.04]' : ''} disabled:opacity-60`}
             >
               <span className="text-[28px]">{lang.flag}</span>
               <div className="flex-1 text-left">
                 <p className="text-[17px] font-semibold text-foreground">{lang.label}</p>
                 {lang.default && <p className="text-[12px] text-muted-foreground">Padrao</p>}
               </div>
-              {selected === lang.code && <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />}
+              {selected === lang.code && (
+                <CheckCircle2 className="w-5 h-5 text-blue-500 flex-shrink-0" />
+              )}
             </button>
           ))}
         </div>

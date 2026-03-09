@@ -49,6 +49,9 @@ export async function POST(request: Request) {
       vip: { discount_rides: 20, priority_support: true, cashback_percent: 10 },
     }
 
+    const planBenefits = benefits[plan as keyof typeof benefits]
+    const prices = { basic: 14.90, premium: 29.90, vip: 49.90 }
+
     const { data, error } = await supabase
       .from('subscriptions')
       .upsert({
@@ -56,13 +59,26 @@ export async function POST(request: Request) {
         plan,
         status: 'active',
         started_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        ...benefits[plan as keyof typeof benefits],
-      })
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        price: prices[plan as keyof typeof prices],
+        auto_renew: true,
+        priority_support: plan !== 'basic',
+        ...planBenefits,
+      }, { onConflict: 'user_id' })
       .select()
       .single()
 
     if (error) throw error
+
+    // Notificar usuário
+    await supabase.from('notifications').insert({
+      user_id: user.id,
+      type: 'system',
+      title: 'Assinatura ativada!',
+      message: `Seu plano ${plan.charAt(0).toUpperCase() + plan.slice(1)} foi ativado com sucesso.`,
+      data: { plan },
+      is_read: false,
+    })
 
     return NextResponse.json({ subscription: data })
   } catch {

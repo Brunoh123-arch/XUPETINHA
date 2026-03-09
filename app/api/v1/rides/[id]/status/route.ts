@@ -1,6 +1,35 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { sendRideReportEmail } from '@/lib/email'
+import { sendFcmToTokens } from '@/lib/firebase-admin'
+
+/** Busca os FCM tokens ativos de um usuario e dispara push silenciosamente. */
+async function pushToUser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  title: string,
+  body: string,
+  data: Record<string, string> = {}
+) {
+  try {
+    const { data: tokens } = await supabase
+      .from('user_push_tokens')
+      .select('token')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+
+    if (!tokens || tokens.length === 0) return
+
+    await sendFcmToTokens(
+      tokens.map((t: { token: string }) => t.token),
+      title,
+      body,
+      data
+    )
+  } catch {
+    // Push nao e critico — falha silenciosa
+  }
+}
 
 export async function PATCH(
   request: Request,
@@ -91,6 +120,24 @@ export async function PATCH(
         data: { ride_id: id, status },
         is_read: false,
       })
+      // Disparar push FCM em paralelo (nao bloqueia a resposta)
+      pushToUser(supabase, notif.user_id, notif.title, notif.message, {
+        ride_id: id,
+        status,
+        type: 'ride_update',
+      })
+    }
+
+    // Push adicional ao passageiro quando motorista aceita a corrida
+    if (status === 'accepted' && ride.passenger_id) {
+      const driverName = (ride.driver as any)?.full_name || 'Motorista'
+      pushToUser(
+        supabase,
+        ride.passenger_id,
+        'Corrida aceita',
+        `${driverName} aceitou sua corrida e esta a caminho.`,
+        { ride_id: id, status: 'accepted', type: 'ride_update' }
+      )
     }
 
     // Email de relatório ao finalizar

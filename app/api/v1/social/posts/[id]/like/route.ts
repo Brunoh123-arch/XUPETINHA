@@ -32,7 +32,7 @@ export async function POST(
 
     return NextResponse.json({ like: data })
   } catch (error) {
-    console.error('[v0] Error liking post:', error)
+    console.error('Error liking post:', error)
     return NextResponse.json({ error: 'Failed to like post' }, { status: 500 })
   }
 }
@@ -59,7 +59,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('[v0] Error unliking post:', error)
+    console.error('Error unliking post:', error)
     return NextResponse.json({ error: 'Failed to unlike post' }, { status: 500 })
   }
 }

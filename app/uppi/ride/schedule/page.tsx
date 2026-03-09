@@ -121,24 +121,53 @@ export default function ScheduleRidePage() {
     triggerHaptic('success')
     setConfirming(true)
 
-    // Store schedule data
-    const scheduleData = {
-      ...ride,
-      route,
-      scheduledTime: scheduledDateTime.toISOString(),
-      reminder,
+    try {
+      // Chamar API real de agendamento
+      const res = await fetch('/api/v1/scheduled-rides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origin_address: route.pickup,
+          origin_lat: route.pickupCoords?.lat ?? null,
+          origin_lng: route.pickupCoords?.lng ?? null,
+          dest_address: route.destination,
+          dest_lat: route.destinationCoords?.lat ?? null,
+          dest_lng: route.destinationCoords?.lng ?? null,
+          scheduled_at: scheduledDateTime.toISOString(),
+          vehicle_type: ride?.vehicleType || 'economy',
+          notes: reminder !== 'none' ? `Lembrete: ${reminder} antes` : undefined,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        iosToast.error(data.error || 'Erro ao agendar corrida')
+        triggerHaptic('error')
+        return
+      }
+
+      // Store schedule data for success screen
+      const scheduleData = {
+        ...ride,
+        route,
+        scheduledTime: scheduledDateTime.toISOString(),
+        reminder,
+        rideId: data.ride?.id,
+      }
+      sessionStorage.setItem('scheduledRide', JSON.stringify(scheduleData))
+
+      setShowSuccess(true)
+
+      setTimeout(() => {
+        router.push('/uppi/home')
+      }, 2500)
+    } catch {
+      iosToast.error('Erro ao agendar corrida')
+      triggerHaptic('error')
+    } finally {
+      setConfirming(false)
     }
-    sessionStorage.setItem('scheduledRide', JSON.stringify(scheduleData))
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
-    setConfirming(false)
-    setShowSuccess(true)
-
-    setTimeout(() => {
-      router.push('/uppi/home')
-    }, 2500)
   }
 
   const formattedDate = selectedDay

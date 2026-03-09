@@ -41,7 +41,7 @@ export function NearbyDrivers({ userLat, userLng, mapInstance, onDriversUpdate }
       setDrivers(data.drivers || [])
       onDriversUpdate?.(data.drivers?.length || 0)
     } catch (error) {
-      console.error('[v0] Error fetching nearby drivers:', error)
+      console.error('Error fetching nearby drivers:', error)
     }
   }, [userLat, userLng, onDriversUpdate])
 

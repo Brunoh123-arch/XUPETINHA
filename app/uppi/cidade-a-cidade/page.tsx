@@ -1,13 +1,68 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { BottomNavigation } from '@/components/bottom-navigation'
+import { iosToast } from '@/lib/utils/ios-toast'
+
+interface IntercityRide {
+  id: string
+  origin_city: string
+  dest_city: string
+  departure_time: string
+  available_seats: number
+  booked_seats: number
+  price_per_seat: number
+  status: string
+  driver?: { full_name: string; avatar_url: string | null; rating: number } | null
+}
 
 export default function CidadeACidadePage() {
   const router = useRouter()
+  const supabase = createClient()
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
+  const [availableRides, setAvailableRides] = useState<IntercityRide[]>([])
+  const [searching, setSearching] = useState(false)
+  const [searched, setSearched] = useState(false)
+
+  const handleSearch = async () => {
+    if (!origin.trim() || !destination.trim()) {
+      iosToast.error('Informe origem e destino')
+      return
+    }
+    setSearching(true)
+    setSearched(true)
+    try {
+      const res = await fetch(`/api/v1/intercity?origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(destination)}`)
+      const data = await res.json()
+      setAvailableRides(data.rides || [])
+    } catch {
+      iosToast.error('Erro ao buscar viagens')
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  const handleBook = async (rideId: string) => {
+    try {
+      const res = await fetch('/api/v1/intercity/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ride_id: rideId, seats: 1 }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        iosToast.success(`Reserva confirmada! Total: R$ ${data.total_price.toFixed(2)}`)
+        handleSearch() // reload
+      } else {
+        iosToast.error(data.error || 'Erro ao reservar')
+      }
+    } catch {
+      iosToast.error('Erro ao reservar')
+    }
+  }
 
   const popularRoutes = [
     { from: 'Sao Paulo', to: 'Campinas', distance: '99 km', time: '~1h30', price: 'R$ 120-180' },
@@ -70,9 +125,11 @@ export default function CidadeACidadePage() {
 
           <button
             type="button"
-            className="w-full h-[52px] rounded-[16px] bg-blue-500 text-white font-semibold text-[17px] mt-5 ios-press shadow-[0_4px_16px_rgba(59,130,246,0.3)]"
+            onClick={handleSearch}
+            disabled={searching}
+            className="w-full h-[52px] rounded-[16px] bg-blue-500 text-white font-semibold text-[17px] mt-5 ios-press shadow-[0_4px_16px_rgba(59,130,246,0.3)] disabled:opacity-50"
           >
-            Buscar motoristas
+            {searching ? 'Buscando...' : 'Buscar motoristas'}
           </button>
         </div>
 
@@ -93,6 +150,69 @@ export default function CidadeACidadePage() {
             ))}
           </div>
         </div>
+
+        {/* Search Results */}
+        {searched && (
+          <div>
+            <p className="ios-section-header">
+              {availableRides.length > 0 ? `${availableRides.length} viagem(ns) encontrada(s)` : 'Nenhuma viagem encontrada'}
+            </p>
+            {availableRides.length > 0 ? (
+              <div className="space-y-3">
+                {availableRides.map((ride) => {
+                  const seatsLeft = ride.available_seats - ride.booked_seats
+                  const departDate = new Date(ride.departure_time)
+                  return (
+                    <div key={ride.id} className="ios-card-elevated p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-[15px] font-bold text-neutral-900">{ride.origin_city} {'>'} {ride.dest_city}</p>
+                          <p className="text-[12px] text-neutral-500">
+                            {departDate.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })} as{' '}
+                            {departDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[18px] font-bold text-blue-500">R$ {ride.price_per_seat.toFixed(2)}</p>
+                          <p className="text-[11px] text-neutral-500">por assento</p>
+                        </div>
+                      </div>
+                      {ride.driver && (
+                        <div className="flex items-center gap-2 mb-3 bg-neutral-50 rounded-xl p-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[12px] font-bold text-blue-600">
+                            {ride.driver.full_name?.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-[13px] font-semibold text-neutral-800">{ride.driver.full_name}</p>
+                            <p className="text-[11px] text-neutral-500">{ride.driver.rating?.toFixed(1)} estrelas</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[12px] font-bold ${seatsLeft <= 1 ? 'text-red-500' : 'text-green-600'}`}>
+                          {seatsLeft} assento(s) disponivel(is)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleBook(ride.id)}
+                          disabled={seatsLeft <= 0}
+                          className="px-5 py-2 bg-blue-500 text-white text-[13px] font-bold rounded-xl ios-press disabled:opacity-50"
+                        >
+                          Reservar
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="ios-card p-8 text-center">
+                <p className="text-[15px] font-semibold text-neutral-800">Nenhuma viagem disponivel</p>
+                <p className="text-[13px] text-neutral-500 mt-1">Tente outra data ou rota</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Popular Routes */}
         <div>

@@ -42,6 +42,7 @@ export default function PaymentsPage() {
       const { data: paymentsData } = await supabase
         .from('payments')
         .select('id, amount, payment_method, status, created_at, ride_id')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(30)
 

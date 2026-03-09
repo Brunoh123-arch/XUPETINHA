@@ -41,7 +41,7 @@ export function RecordingSettingsClient({ initialPreference, userId }: Recording
         !enabled ? 'Suas corridas serão gravadas' : 'Gravação pausada'
       )
     } catch (error) {
-      console.error('[v0] Failed to update preference:', error)
+      console.error('Failed to update preference:', error)
       haptic('error')
       iosToast.error('Erro', { description: 'Nao foi possivel atualizar configuracao' })
     } finally {

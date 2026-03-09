@@ -304,32 +304,69 @@ export default function HistoryPage() {
   const [rides, setRides] = useState<RideWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
+  const PAGE_SIZE = 20
 
-  const loadHistory = async () => {
+  const loadHistory = async (reset = true, statusFilter = filter) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data } = await supabase
-        .from('rides')
-        .select(`
-          *,
-          driver:profiles!driver_id ( full_name, avatar_url, rating ),
-          passenger:profiles!passenger_id ( full_name, avatar_url, rating ),
-          driver_profile:driver_profiles!driver_id ( vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type )
-        `)
-        .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)
-        .order('created_at', { ascending: false })
-      setRides(data || [])
+    if (!user) { setLoading(false); return }
+
+    const currentPage = reset ? 0 : page
+    const offset = currentPage * PAGE_SIZE
+
+    // Busca com filtro de status no banco (evita carregar dados desnecessários)
+    const supabaseClient = createClient()
+    let query = supabaseClient
+      .from('rides')
+      .select(`
+        *,
+        driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, rating, total_rides),
+        driver_profile:driver_profiles!driver_id(vehicle_type, vehicle_brand, vehicle_model, vehicle_plate, vehicle_color),
+        passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url)
+      `, { count: 'exact' })
+      .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + PAGE_SIZE - 1)
+
+    // Aplica filtro de status direto no banco
+    if (statusFilter === 'completed') {
+      query = query.eq('status', 'completed')
+    } else if (statusFilter === 'cancelled') {
+      query = query.eq('status', 'cancelled')
+    }
+
+    const { data, error, count } = await query
+
+    if (!error && data) {
+      if (reset) {
+        setRides(data as RideWithDetails[])
+        setPage(1)
+      } else {
+        setRides(prev => [...prev, ...(data as RideWithDetails[])])
+        setPage(p => p + 1)
+      }
+      setHasMore((count || 0) > offset + PAGE_SIZE)
     }
     setLoading(false)
     setRefreshing(false)
+    setLoadingMore(false)
   }
 
-  useEffect(() => { loadHistory() }, [supabase])
+  useEffect(() => { loadHistory(true, filter) }, [filter])
+  useEffect(() => { loadHistory(true) }, [supabase])
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadHistory()
+    await loadHistory(true, filter)
+  }
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    await loadHistory(false, filter)
   }
 
   const formatTime = (d: string) =>
@@ -344,13 +381,10 @@ export default function HistoryPage() {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long' })
   }
 
-  const completedRides = rides.filter(r => r.status === 'completed')
-  const cancelledRides = rides.filter(r => r.status === 'cancelled')
+  // Com filtro DB-side, rides já é o resultado filtrado
   const activeRides = rides.filter(r => ['pending', 'negotiating', 'accepted', 'in_progress'].includes(r.status))
-
-  const filtered = filter === 'completed' ? completedRides
-    : filter === 'cancelled' ? cancelledRides
-    : rides
+  // Para o filtered, usamos rides diretamente (já filtrados no banco)
+  const filtered = rides
 
   const groupByDay = (list: RideWithDetails[]) => {
     const groups: { label: string; rides: RideWithDetails[] }[] = []
@@ -436,9 +470,9 @@ export default function HistoryPage() {
         {/* ── Summary pills ── */}
         <div className="flex gap-2 mb-1 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
           {[
-            { key: 'all' as const, n: rides.length, label: 'Todas', color: 'text-foreground', activeBg: 'bg-foreground', activeFg: 'text-background' },
-            { key: 'completed' as const, n: completedRides.length, label: 'Concluidas', color: 'text-emerald-500', activeBg: 'bg-emerald-500', activeFg: 'text-white' },
-            { key: 'cancelled' as const, n: cancelledRides.length, label: 'Canceladas', color: 'text-red-500', activeBg: 'bg-red-500', activeFg: 'text-white' },
+            { key: 'all' as const, label: 'Todas', activeBg: 'bg-foreground', activeFg: 'text-background' },
+            { key: 'completed' as const, label: 'Concluidas', activeBg: 'bg-emerald-500', activeFg: 'text-white' },
+            { key: 'cancelled' as const, label: 'Canceladas', activeBg: 'bg-red-500', activeFg: 'text-white' },
           ].map((pill) => (
             <button
               key={pill.key}
@@ -451,7 +485,7 @@ export default function HistoryPage() {
                   : "bg-secondary/60 text-muted-foreground"
               )}
             >
-              <span className="tabular-nums">{pill.n}</span>
+              {filter === pill.key && <span className="tabular-nums">{rides.length}</span>}
               <span>{pill.label}</span>
             </button>
           ))}
@@ -488,6 +522,27 @@ export default function HistoryPage() {
                 </div>
               </div>
             ))}
+
+            {/* Load more */}
+            {hasMore && (
+              <div className="flex justify-center py-6">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-3 bg-secondary rounded-full text-[14px] font-semibold text-foreground ios-press disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <div className="w-4 h-4 border-2 border-foreground/40 border-t-foreground rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                  {loadingMore ? 'Carregando...' : 'Carregar mais'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>

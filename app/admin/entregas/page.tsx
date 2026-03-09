@@ -92,7 +92,7 @@ export default function AdminEntregasPage() {
     const supabase = createClient()
     channelRef.current = supabase
       .channel('admin-entregas-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rides', filter: 'ride_type=eq.delivery' }, fetchDeliveries)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rides' }, () => { fetchDeliveries() })
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [fetchDeliveries])

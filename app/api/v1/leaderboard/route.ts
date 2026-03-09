@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '100', 10)
 
     // Get leaderboard data
-    const { data: leaderboard, error } = await supabase.rpc('get_leaderboard', {
+    const { data: leaderboard, error } = await supabase.rpc('get_leaderboard_full', {
       limit_count: limit,
       category,
     })

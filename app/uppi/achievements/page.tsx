@@ -133,6 +133,20 @@ export default function AchievementsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
+      // 1. Busca conquistas + dispara RPC check_and_grant via API server-side
+      const res = await fetch('/api/v1/achievements')
+      if (res.ok) {
+        const apiData = await res.json()
+
+        // Mostrar toast para conquistas novas desbloqueadas
+        if (apiData.new_achievements && apiData.new_achievements.length > 0) {
+          for (const na of apiData.new_achievements) {
+            iosToast.success(`Conquista desbloqueada: ${na.achievement_id || na.name || 'Nova conquista'}`)
+          }
+        }
+      }
+
+      // 2. Busca stats do perfil e corridas para calcular progresso local
       const { data: profile } = await supabase
         .from('profiles')
         .select('rating, total_rides')
@@ -145,6 +159,7 @@ export default function AchievementsPage() {
         .eq('passenger_id', user.id)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
+        .limit(500)
 
       const totalRides = profile?.total_rides || rides?.length || 0
       const totalSaved = (rides || []).reduce((sum, r) => {
@@ -153,19 +168,17 @@ export default function AchievementsPage() {
       }, 0)
       const totalSpent = (rides || []).reduce((sum, r) => sum + (r.final_price || 0), 0)
 
-      // Calculate night rides (after 22h or before 6h)
       const nightRides = (rides || []).filter(r => {
         const h = new Date(r.created_at).getHours()
         return h >= 22 || h < 6
       }).length
 
-      // Weekend rides
       const weekendRides = (rides || []).filter(r => {
         const d = new Date(r.created_at).getDay()
         return d === 0 || d === 6
       }).length
 
-      // Calculate streak
+      // Streak: dias consecutivos com corrida
       const dates = [...new Set((rides || []).map(r =>
         new Date(r.created_at).toISOString().split('T')[0]
       ))].sort().reverse()
@@ -184,6 +197,17 @@ export default function AchievementsPage() {
         }
       }
 
+      // 3. Busca conquistas desbloqueadas do banco para marcar corretamente
+      const { data: unlockedRows } = await supabase
+        .from('user_achievements')
+        .select('achievement_id, unlocked_at')
+        .eq('user_id', user.id)
+
+      const unlockedSet = new Set((unlockedRows || []).map(r => r.achievement_id))
+      const unlockedDates = Object.fromEntries(
+        (unlockedRows || []).map(r => [r.achievement_id, r.unlocked_at])
+      )
+
       const userStats: UserStats = {
         totalRides,
         totalSaved,
@@ -196,7 +220,17 @@ export default function AchievementsPage() {
       }
 
       setStats(userStats)
-      setAchievements(getAchievements(userStats))
+
+      // Mescla: se o banco já marcou como desbloqueado, respeita isso
+      const computed = getAchievements(userStats)
+      const merged = computed.map(a => ({
+        ...a,
+        unlocked: a.unlocked || unlockedSet.has(a.id),
+        unlockedAt: unlockedDates[a.id],
+        // Se banco diz desbloqueado mas progresso calculado < 1, mostra 100%
+        progress: (a.unlocked || unlockedSet.has(a.id)) ? 1 : a.progress,
+      }))
+      setAchievements(merged)
     } catch (e) {
       console.error('Error loading achievements:', e)
     }

@@ -96,13 +96,13 @@ export async function POST(request: Request) {
       .single()
 
     if (reviewError) {
-      console.error('[v0] Driver review insert error:', reviewError)
+      console.error('Driver review insert error:', reviewError)
       return NextResponse.json({ error: reviewError.message }, { status: 400 })
     }
 
     return NextResponse.json({ review }, { status: 201 })
   } catch (error: any) {
-    console.error('[v0] Driver review API error:', error)
+    console.error('Driver review API error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -159,13 +159,13 @@ export async function GET(request: Request) {
     const { data, error } = await query
 
     if (error) {
-      console.error('[v0] Driver reviews fetch error:', error)
+      console.error('Driver reviews fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     return NextResponse.json({ reviews: data || [] })
   } catch (error: any) {
-    console.error('[v0] Driver reviews GET error:', error)
+    console.error('Driver reviews GET error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

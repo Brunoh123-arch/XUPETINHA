@@ -30,7 +30,7 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
         setHasPermission(true)
         stream.getTracks().forEach(track => track.stop()) // Stop the test stream
       } catch (error) {
-        console.error('[v0] Microphone permission denied:', error)
+        console.error('Microphone permission denied:', error)
         setHasPermission(false)
         iosToast.error('Permissão de microfone negada', 'Ative nas configurações do navegador')
       }
@@ -99,9 +99,8 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
         setDuration(prev => prev + 1)
       }, 1000)
 
-      console.log('[v0] Audio recording started for ride:', rideId)
     } catch (error) {
-      console.error('[v0] Failed to start recording:', error)
+      console.error('Failed to start recording:', error)
       iosToast.error('Erro ao gravar', 'Não foi possível iniciar a gravação')
     }
   }
@@ -118,7 +117,6 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
     }
 
     haptic('medium')
-    console.log('[v0] Audio recording stopped. Duration:', duration, 'seconds')
   }
 
   const uploadRecording = async (audioBlob: Blob, durationSeconds: number) => {
@@ -137,11 +135,10 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
         throw new Error('Upload failed')
       }
 
-      const data = await response.json()
-      console.log('[v0] Recording uploaded successfully:', data.id)
+      await response.json()
       iosToast.success('Gravação salva', 'Áudio criptografado armazenado com segurança')
     } catch (error) {
-      console.error('[v0] Failed to upload recording:', error)
+      console.error('Failed to upload recording:', error)
       iosToast.error('Erro ao salvar', 'Não foi possível enviar a gravação')
     }
   }
