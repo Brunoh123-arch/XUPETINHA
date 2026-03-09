@@ -42,25 +42,8 @@ function LazyProviders({ children }: { children: ReactNode }) {
         }}
       />
       <ClientOnlyProviders />
-      <PushNotificationsBootstrap />
     </ThemeProvider>
   )
-}
-
-// Solicita permissao e registra o token FCM assim que o usuario esta autenticado
-function PushNotificationsBootstrap() {
-  const { permission, isRegistered, register } = useFcmPushNotifications()
-
-  useEffect(() => {
-    // So pede se ainda nao foi decidido e nao esta registrado
-    if (permission === 'default' && !isRegistered) {
-      // Aguarda 3s para nao bloquear a renderizacao inicial
-      const timer = setTimeout(() => { register() }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [permission, isRegistered, register])
-
-  return null
 }
 
 // These providers return null and only run effects on the client
