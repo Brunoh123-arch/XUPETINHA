@@ -65,6 +65,9 @@ export interface DriverProfile {
   acceptance_rate?: number
   trust_score?: number
   rejection_count?: number
+  cancellation_count?: number
+  punctuality_rate?: number
+  is_online?: boolean
   mode?: 'passenger' | 'driver'
   license_number?: string
   license_category?: string

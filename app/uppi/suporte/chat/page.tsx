@@ -19,6 +19,7 @@ function SupportChatInner() {
   const searchParams = useSearchParams()
   const supabase = createClient()
   const topic = searchParams.get('topic') || 'other'
+  const ticketFromUrl = searchParams.get('ticket')
 
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [input, setInput] = useState('')
@@ -51,37 +52,44 @@ function SupportChatInner() {
         return
       }
 
-      // Check for open ticket
-      const { data: existing } = await supabase
-        .from('support_tickets')
-        .select('id')
-        .eq('user_id', user.id)
-        .in('status', ['open', 'waiting'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
       let tid: string
+      let isNew = false
 
-      if (existing) {
-        tid = existing.id
+      // Se tiver ticket na URL (criado pela página de suporte), usar ele
+      if (ticketFromUrl) {
+        tid = ticketFromUrl
       } else {
-        const { data: newTicket, error } = await supabase
+        // Check for open ticket
+        const { data: existing } = await supabase
           .from('support_tickets')
-          .insert({ user_id: user.id, topic, status: 'open' })
           .select('id')
+          .eq('user_id', user.id)
+          .in('status', ['open', 'waiting'])
+          .order('created_at', { ascending: false })
+          .limit(1)
           .single()
 
-        if (error || !newTicket) return
-        tid = newTicket.id
+        if (existing) {
+          tid = existing.id
+        } else {
+          const { data: newTicket, error } = await supabase
+            .from('support_tickets')
+            .insert({ user_id: user.id, topic, status: 'open' })
+            .select('id')
+            .single()
 
-        // System welcome message
-        await supabase.from('support_messages').insert({
-          ticket_id: tid,
-          sender_type: 'system',
-          sender_name: 'Uppi',
-          message: `Bem-vindo ao suporte Uppi! Voce esta falando sobre: ${topicLabels[topic] || topic}. Um atendente ira responder em breve.`,
-        })
+          if (error || !newTicket) return
+          tid = newTicket.id
+          isNew = true
+
+          // System welcome message
+          await supabase.from('support_messages').insert({
+            ticket_id: tid,
+            sender_type: 'system',
+            sender_name: 'Uppi',
+            message: `Bem-vindo ao suporte Uppi! Voce esta falando sobre: ${topicLabels[topic] || topic}. Um atendente ira responder em breve.`,
+          })
+        }
       }
 
       setTicketId(tid)
@@ -96,7 +104,7 @@ function SupportChatInner() {
       if (msgs) setMessages(msgs)
 
       // Simulate agent auto-reply for demo
-      if (!existing) {
+      if (isNew) {
         setTimeout(() => {
           setTyping(true)
           setTimeout(async () => {
