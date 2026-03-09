@@ -51,6 +51,10 @@ export default function DriverEarningsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/onboarding/splash'); return }
 
+      // RPC consolidada: busca todos os stats de ganhos em uma unica chamada
+      const { data: stats } = await supabase
+        .rpc('get_driver_earnings_stats', { p_driver_id: user.id })
+
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
@@ -73,12 +77,21 @@ export default function DriverEarningsPage() {
       }
 
       setWeekEarnings(days)
-      const total = days.reduce((s, d) => s + d.amount, 0)
-      const totalR = days.reduce((s, d) => s + d.rides, 0)
-      setTotalWeek(total)
-      setTotalRidesWeek(totalR)
-      setAvgPerRide(totalR > 0 ? total / totalR : 0)
-      setTodayEarnings(days[days.length - 1]?.amount || 0)
+
+      // Usa dados da RPC se disponivel, senao calcula localmente como fallback
+      if (stats && !stats.error) {
+        setTotalWeek(stats.week ?? days.reduce((s, d) => s + d.amount, 0))
+        setTotalRidesWeek(stats.week_rides ?? days.reduce((s, d) => s + d.rides, 0))
+        setAvgPerRide(stats.week_rides > 0 ? stats.week / stats.week_rides : 0)
+        setTodayEarnings(stats.today ?? days[days.length - 1]?.amount ?? 0)
+      } else {
+        const total = days.reduce((s, d) => s + d.amount, 0)
+        const totalR = days.reduce((s, d) => s + d.rides, 0)
+        setTotalWeek(total)
+        setTotalRidesWeek(totalR)
+        setAvgPerRide(totalR > 0 ? total / totalR : 0)
+        setTodayEarnings(days[days.length - 1]?.amount || 0)
+      }
 
       const slots: HourSlot[] = []
       for (let h = 6; h <= 23; h++) {

@@ -81,7 +81,15 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { notification_id, is_read } = body
+    const { notification_id, is_read, mark_all_read } = body
+
+    // Marcar todas como lidas via RPC (atomico)
+    if (mark_all_read === true) {
+      const { data: count, error } = await supabase
+        .rpc('mark_all_notifications_read', { p_user_id: user.id })
+      if (error) throw error
+      return NextResponse.json({ success: true, count: count ?? 0 })
+    }
 
     // Padronizado para is_read (consistente com notification-service e a notifications page)
     const { data: notification, error } = await supabase

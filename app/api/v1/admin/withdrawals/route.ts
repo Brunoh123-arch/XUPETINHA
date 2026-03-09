@@ -27,9 +27,6 @@ export async function GET(request: Request) {
         *,
         driver:profiles!driver_withdrawals_driver_id_fkey(
           id, full_name, avatar_url, email, phone
-        ),
-        processed_by_profile:profiles!driver_withdrawals_processed_by_fkey(
-          id, full_name
         )
       `, { count: 'exact' })
       .order('requested_at', { ascending: false })
