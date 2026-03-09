@@ -36,13 +36,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Apenas motoristas verificados podem sacar' }, { status: 403 })
     }
 
-    // Usar RPC atômica que valida saldo, limite diário, debita e cria registro
-    const { data, error } = await supabase.rpc('request_withdrawal_v2', {
-      p_driver_id: user.id,
-      p_amount:    amount,
-      p_pix_key:   pix_key,
-      p_pix_type:  pix_key_type,
-      p_bank_name: bank_name || null,
+    // Usar RPC atômica que valida saldo, debita e cria registro em driver_withdrawals
+    const { data, error } = await supabase.rpc('request_withdrawal', {
+      p_driver_id:    user.id,
+      p_amount:       amount,
+      p_pix_key:      pix_key,
+      p_pix_key_type: pix_key_type,
+      p_bank_name:    bank_name || null,
     })
 
     if (error) throw error
