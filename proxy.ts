@@ -1,9 +1,7 @@
 import { updateSession } from '@/lib/supabase/session'
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
-// Next.js 16: proxy.ts substituiu middleware.ts mas ambos sao aceitos.
-// Usar apenas middleware.ts elimina o conflito "Both detected".
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
 
