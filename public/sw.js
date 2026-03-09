@@ -135,8 +135,8 @@ self.addEventListener('push', (event) => {
   const title = payload.title || 'Uppi'
   const options = {
     body:     payload.body    || '',
-    icon:     payload.icon    || '/icons/icon-192x192.png',
-    badge:    payload.badge   || '/icons/badge-72x72.png',
+    icon:     payload.icon    || '/icons/icon-192x192.jpg',
+    badge:    payload.badge   || '/icons/icon-72x72.jpg',
     data:     payload.data    || {},
     tag:      payload.tag     || 'uppi-push',
     renotify: true,

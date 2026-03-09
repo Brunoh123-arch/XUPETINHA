@@ -1,53 +1,36 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  // Package name deve ser identico ao do google-services.json
   appId: 'app.uppi.mobile',
   appName: 'Uppi',
 
-  // Onde o app web esta hospedado em producao
-  // Em dev, usar livereload apontando para localhost
+  // App NATIVO - carrega apenas localmente
+  // next export gera arquivos estáticos em 'out'
+  // Após 'npx cap sync', esses arquivos vão para android/app/src/main/assets/www
   webDir: 'out',
 
-  server: {
-    // Em producao, remove esta secao e usa webDir
-    // Em desenvolvimento: npx cap run android --livereload --external
-    androidScheme: 'https',
-  },
-
   android: {
-    // Habilita FCM via google-services.json (colocado em android/app/)
     useLegacyBridge: false,
-    // Permite HTTP em dev (nao necessario em producao com HTTPS)
     allowMixedContent: false,
-    // Cor da splash screen
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FF6B00',
   },
 
   plugins: {
-    // Push Notifications (FCM nativo)
     PushNotifications: {
-      // Apresentacao das notificacoes com o app em foreground
       presentationOptions: ['badge', 'sound', 'alert'],
     },
-
-    // Geolocation - precisao alta para rastreamento de corridas
-    Geolocation: {
-      // Permissoes declaradas no AndroidManifest.xml
-    },
-
-    // SplashScreen
+    Geolocation: {},
     SplashScreen: {
-      launchShowDuration: 1500,
+      launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: '#007AFF',
+      backgroundColor: '#FF6B00',
       androidSplashResourceName: 'splash',
       showSpinner: false,
     },
-
-    // Status bar
     StatusBar: {
-      overlaysWebView: true,
+      overlaysWebView: false,
+      style: 'DARK',
+      backgroundColor: '#FF6B00',
     },
   },
 }
