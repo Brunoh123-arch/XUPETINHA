@@ -63,7 +63,7 @@ export default function AdminCidadeACidadePage() {
       .from('rides')
       .select(`
         id, passenger_id, driver_id, pickup_address, dropoff_address,
-        pickup_city, dropoff_city, status, final_price, passenger_price_offer,
+        pickup_city, dropoff_city, ride_type, status, final_price, passenger_price_offer,
         distance_km, created_at, completed_at,
         profile:profiles!rides_passenger_id_fkey(full_name, phone),
         driver_profile:profiles!rides_driver_id_fkey(full_name, phone)
@@ -89,7 +89,7 @@ export default function AdminCidadeACidadePage() {
     const supabase = createClient()
     channelRef.current = supabase
       .channel('admin-cac-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rides', filter: 'ride_type=eq.intercity' }, fetchRides)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rides' }, () => { fetchRides() })
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [fetchRides])
