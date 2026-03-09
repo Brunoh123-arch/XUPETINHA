@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-async function handleRequest(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -28,11 +28,6 @@ async function handleRequest(request: NextRequest) {
   await supabase.auth.getUser()
 
   return supabaseResponse
-}
-
-// Next.js 16: proxy e o unico export esperado
-export async function proxy(request: NextRequest) {
-  return handleRequest(request)
 }
 
 export const config = {
