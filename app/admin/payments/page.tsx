@@ -14,16 +14,16 @@ import { cn } from '@/lib/utils'
 interface Payment {
   id: string
   ride_id: string
-  passenger_id: string
+  user_id: string
   driver_id: string | null
   amount: number
   platform_fee: number
   driver_earnings: number
   status: string
   payment_method: string
-  gateway_transaction_id: string | null
+  provider_ref: string | null
   created_at: string
-  paid_at: string | null
+  updated_at: string | null
   passenger?: { full_name: string } | null
   driver?: { full_name: string } | null
 }
@@ -66,7 +66,7 @@ export default function AdminPaymentsPage() {
     const [paymentsRes, walletRes] = await Promise.all([
       supabase
         .from('payments')
-        .select('*, passenger:profiles!payments_passenger_id_fkey(full_name), driver:profiles!payments_driver_id_fkey(full_name)')
+        .select('*, passenger:profiles!payments_user_id_fkey(full_name), driver:profiles!payments_driver_id_fkey(full_name)')
         .order('created_at', { ascending: false })
         .limit(200),
       supabase
@@ -104,7 +104,7 @@ export default function AdminPaymentsPage() {
       p.passenger?.full_name?.toLowerCase().includes(q) ||
       p.driver?.full_name?.toLowerCase().includes(q) ||
       p.id.includes(q) ||
-      p.gateway_transaction_id?.toLowerCase().includes(q)
+      p.provider_ref?.toLowerCase().includes(q)
     )
   })
 
@@ -224,8 +224,8 @@ export default function AdminPaymentsPage() {
                           <span className="text-[11px] text-slate-500">Taxa: <span className="text-[hsl(var(--admin-green))]">R$ {Number(p.platform_fee).toFixed(2)}</span></span>
                           <span className="text-[11px] text-slate-500">Motorista: <span className="text-purple-400">R$ {Number(p.driver_earnings).toFixed(2)}</span></span>
                         </div>
-                        {p.gateway_transaction_id && (
-                          <p className="text-[10px] text-slate-700 font-mono mt-1 truncate">TXN: {p.gateway_transaction_id}</p>
+                        {p.provider_ref && (
+                          <p className="text-[10px] text-slate-700 font-mono mt-1 truncate">REF: {p.provider_ref}</p>
                         )}
                       </div>
                     </div>
