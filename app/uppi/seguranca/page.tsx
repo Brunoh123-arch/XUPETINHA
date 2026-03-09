@@ -1,15 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Switch } from '@/components/ui/switch'
 import { BottomNavigation } from '@/components/bottom-navigation'
+import { iosToast } from '@/lib/utils/ios-toast'
+import { haptics } from '@/lib/utils/ios-haptics'
 
 export default function SegurancaPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState<string | null>(null)
   const [shareLocation, setShareLocation] = useState(true)
   const [rideRecording, setRideRecording] = useState(false)
   const [trustedContacts, setTrustedContacts] = useState(true)
+
+  useEffect(() => { loadSettings() }, [])
+
+  const loadSettings = async () => {
+    try {
+      const res = await fetch('/api/v1/settings')
+      if (res.ok) {
+        const data = await res.json()
+        const s = data.settings
+        if (s) {
+          setShareLocation(s.share_location_family ?? true)
+          setRideRecording(s.recording_enabled ?? false)
+          setTrustedContacts(s.share_location_family ?? true)
+        }
+      }
+    } catch { /* silencia */ } finally { setLoading(false) }
+  }
+
+  const handleToggle = async (key: string, value: boolean, setter: (v: boolean) => void) => {
+    setter(value)
+    haptics.selection()
+    setSaving(key)
+    try {
+      const res = await fetch('/api/v1/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setter(!value) // reverter
+      iosToast.error('Erro ao salvar preferencia')
+    } finally { setSaving(null) }
+  }
 
   const securityFeatures = [
     {
@@ -34,7 +72,6 @@ export default function SegurancaPage() {
 
   return (
     <div className="h-dvh overflow-y-auto bg-neutral-50 pb-24 ios-scroll">
-      {/* Header */}
       <header className="bg-white/95 ios-blur border-b border-neutral-200/60 sticky top-0 z-30">
         <div className="px-5 pt-safe-offset-4 pb-3">
           <div className="flex items-center gap-4">
@@ -69,7 +106,7 @@ export default function SegurancaPage() {
           </svg>
         </button>
 
-        {/* Toggles */}
+        {/* Toggles persistidos */}
         <div>
           <p className="ios-section-header">Preferencias de seguranca</p>
           <div className="ios-list-group">
@@ -78,21 +115,33 @@ export default function SegurancaPage() {
                 <p className="text-[17px] font-medium text-neutral-900">Compartilhar localizacao</p>
                 <p className="text-[13px] text-neutral-500 mt-0.5">Com contatos de confianca durante corridas</p>
               </div>
-              <Switch checked={shareLocation} onCheckedChange={setShareLocation} />
+              <Switch
+                checked={shareLocation}
+                disabled={saving === 'share_location_family' || loading}
+                onCheckedChange={(v) => handleToggle('share_location_family', v, setShareLocation)}
+              />
             </div>
             <div className="px-5 py-4 flex items-center justify-between border-b border-neutral-100/80">
               <div className="flex-1 pr-4">
                 <p className="text-[17px] font-medium text-neutral-900">Gravacao de audio</p>
                 <p className="text-[13px] text-neutral-500 mt-0.5">Gravar audio durante viagens para seguranca</p>
               </div>
-              <Switch checked={rideRecording} onCheckedChange={setRideRecording} />
+              <Switch
+                checked={rideRecording}
+                disabled={saving === 'recording_enabled' || loading}
+                onCheckedChange={(v) => handleToggle('recording_enabled', v, setRideRecording)}
+              />
             </div>
             <div className="px-5 py-4 flex items-center justify-between">
               <div className="flex-1 pr-4">
                 <p className="text-[17px] font-medium text-neutral-900">Contatos de confianca</p>
                 <p className="text-[13px] text-neutral-500 mt-0.5">Notificar ao iniciar e finalizar corridas</p>
               </div>
-              <Switch checked={trustedContacts} onCheckedChange={setTrustedContacts} />
+              <Switch
+                checked={trustedContacts}
+                disabled={saving === 'share_location_family' || loading}
+                onCheckedChange={(v) => handleToggle('share_location_family', v, setTrustedContacts)}
+              />
             </div>
           </div>
         </div>
