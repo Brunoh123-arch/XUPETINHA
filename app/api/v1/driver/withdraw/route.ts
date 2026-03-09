@@ -4,8 +4,7 @@ import { apiLimiter, rateLimitResponse } from '@/lib/utils/rate-limit'
 
 /**
  * POST /api/v1/driver/withdraw
- * Motorista solicita saque dos ganhos para conta bancaria/PIX.
- * Debita da carteira e cria registro de transacao atomicamente.
+ * Motorista solicita saque via RPC request_withdrawal_v2 (usa driver_withdrawals + user_wallets atomicamente).
  */
 export async function POST(request: Request) {
   const rlResult = apiLimiter.check(request, 3)
@@ -14,108 +13,59 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { amount, pix_key, bank_account } = body
+    const { amount, pix_key, pix_key_type = 'cpf', bank_name } = body
 
-    if (!amount || typeof amount !== 'number' || amount < 10) {
-      return NextResponse.json({ error: 'Valor minimo de saque e R$ 10,00' }, { status: 400 })
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return NextResponse.json({ error: 'Informe um valor válido para saque' }, { status: 400 })
+    }
+    if (!pix_key) {
+      return NextResponse.json({ error: 'Informe uma chave PIX' }, { status: 400 })
     }
 
-    if (!pix_key && !bank_account) {
-      return NextResponse.json(
-        { error: 'Informe uma chave PIX ou conta bancaria para saque' },
-        { status: 400 }
-      )
-    }
-
-    // Verificar se e motorista verificado
-    const { data: driverProfile } = await supabase
+    // Verificar se é motorista verificado
+    const { data: driver } = await supabase
       .from('driver_profiles')
-      .select('is_verified')
+      .select('is_verified, pix_key')
       .eq('id', user.id)
       .single()
 
-    if (!driverProfile?.is_verified) {
-      return NextResponse.json({ error: 'Motorista nao verificado' }, { status: 403 })
+    if (!driver?.is_verified) {
+      return NextResponse.json({ error: 'Apenas motoristas verificados podem sacar' }, { status: 403 })
     }
 
-    // Verificar saldo via RPC (calcula saldo real baseado em transacoes)
-    const { data: balance } = await supabase.rpc('calculate_wallet_balance', {
-      p_user_id: user.id,
+    // Usar RPC atômica que valida saldo, limite diário, debita e cria registro
+    const { data, error } = await supabase.rpc('request_withdrawal_v2', {
+      p_driver_id: user.id,
+      p_amount:    amount,
+      p_pix_key:   pix_key,
+      p_pix_type:  pix_key_type,
+      p_bank_name: bank_name || null,
     })
 
-    const currentBalance = typeof balance === 'number' ? balance : 0
-
-    if (currentBalance < amount) {
-      return NextResponse.json(
-        {
-          error: `Saldo insuficiente. Saldo atual: R$ ${currentBalance.toFixed(2)}`,
-          current_balance: currentBalance,
-        },
-        { status: 400 }
-      )
+    if (error) throw error
+    if (!data?.success) {
+      return NextResponse.json({ error: data?.error || 'Erro ao processar saque' }, { status: 400 })
     }
-
-    // Criar transacao de debito atomicamente
-    const { data: transaction, error: txError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: user.id,
-        amount: -amount, // negativo = debito
-        type: 'withdrawal',
-        status: 'pending',
-        description: `Saque via ${pix_key ? 'PIX' : 'transferencia bancaria'}`,
-        metadata: {
-          pix_key: pix_key || null,
-          bank_account: bank_account || null,
-          requested_at: new Date().toISOString(),
-        },
-      })
-      .select()
-      .single()
-
-    if (txError) throw txError
-
-    // Atualizar saldo em user_wallets (cache de saldo)
-    const newBalance = currentBalance - amount
-    await supabase
-      .from('user_wallets')
-      .upsert(
-        { user_id: user.id, balance: newBalance, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      )
-
-    // Notificar motorista
-    await supabase.from('notifications').insert({
-      user_id: user.id,
-      type: 'payment',
-      title: 'Solicitacao de saque recebida',
-      message: `Seu saque de R$ ${amount.toFixed(2)} foi solicitado e sera processado em ate 1 dia util.`,
-      data: { transaction_id: transaction.id, amount },
-      is_read: false,
-    })
 
     return NextResponse.json({
       success: true,
-      transaction_id: transaction.id,
-      amount,
-      new_balance: newBalance,
-      message: 'Saque solicitado com sucesso. Processamento em ate 1 dia util.',
+      withdrawal_id: data.withdrawal_id,
+      amount: data.amount,
+      status: 'pending',
+      message: 'Saque solicitado com sucesso. Processamento em até 1 dia útil.',
     })
-  } catch (error) {
-    console.error('Driver withdraw error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch (err) {
+    console.error('[driver/withdraw POST]', err)
+    return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
 
 /**
  * GET /api/v1/driver/withdraw
- * Historico de saques do motorista.
+ * Histórico de saques do motorista via driver_withdrawals.
  */
 export async function GET(request: Request) {
   const rlResult = apiLimiter.check(request, 20)
@@ -124,24 +74,31 @@ export async function GET(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const limit = parseInt(searchParams.get('limit') || '30')
 
-    const { data: withdrawals, error } = await supabase
-      .from('wallet_transactions')
+    let query = supabase
+      .from('driver_withdrawals')
       .select('*')
-      .eq('user_id', user.id)
-      .eq('type', 'withdrawal')
-      .order('created_at', { ascending: false })
-      .limit(50)
+      .eq('driver_id', user.id)
+      .order('requested_at', { ascending: false })
+      .limit(limit)
 
+    if (status) query = query.eq('status', status)
+
+    const { data: withdrawals, error } = await query
     if (error) throw error
 
-    return NextResponse.json({ withdrawals })
-  } catch (error) {
-    console.error('Driver withdraw GET error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // Totais
+    const pending = withdrawals?.filter(w => w.status === 'pending').reduce((s, w) => s + Number(w.amount), 0) || 0
+    const paid    = withdrawals?.filter(w => w.status === 'paid').reduce((s, w) => s + Number(w.amount), 0) || 0
+
+    return NextResponse.json({ withdrawals: withdrawals || [], totals: { pending, paid } })
+  } catch (err) {
+    console.error('[driver/withdraw GET]', err)
+    return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

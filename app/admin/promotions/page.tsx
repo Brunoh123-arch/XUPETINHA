@@ -12,17 +12,25 @@ import { cn } from '@/lib/utils'
 interface Campaign {
   id: string
   title: string
-  description: string | null
-  type: 'banner' | 'push' | 'discount' | 'cashback'
-  target_audience: 'all' | 'passengers' | 'drivers' | 'inactive' | 'new'
-  discount_value: number | null
-  discount_type: 'percentage' | 'fixed' | null
-  start_date: string | null
-  end_date: string | null
+  subtitle: string | null
+  description?: string | null
+  type?: 'banner' | 'push' | 'discount' | 'cashback'
+  target_audience?: 'all' | 'passengers' | 'drivers' | 'inactive' | 'new'
+  target?: 'all' | 'passenger' | 'driver'
+  discount_value?: number | null
+  discount_type?: 'percentage' | 'fixed' | null
+  start_date?: string | null
+  end_date?: string | null
+  start_at?: string | null
+  end_at?: string | null
   is_active: boolean
   impressions: number
   clicks: number
-  conversions: number
+  conversions?: number
+  bg_color?: string
+  action_url?: string
+  action_label?: string
+  priority?: number
   created_at: string
 }
 
@@ -74,18 +82,28 @@ export default function AdminPromotionsPage() {
 
   const fetchCampaigns = async () => {
     const { data } = await supabase
-      .from('campaigns')
+      .from('promo_banners')
       .select('*')
+      .order('priority', { ascending: false })
       .order('created_at', { ascending: false })
-    setCampaigns((data as Campaign[]) || [])
+    // Normalizar campos
+    const normalized = (data || []).map((d: Record<string, unknown>) => ({
+      ...d,
+      target_audience: d.target === 'driver' ? 'drivers' : d.target === 'passenger' ? 'passengers' : 'all',
+      start_date: d.start_at,
+      end_date: d.end_at,
+      type: 'banner',
+      conversions: 0,
+    }))
+    setCampaigns(normalized as Campaign[])
     setLoading(false)
   }
 
   useEffect(() => {
     fetchCampaigns()
     channelRef.current = supabase
-      .channel('admin-campaigns')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, fetchCampaigns)
+      .channel('admin-promo-banners')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promo_banners' }, fetchCampaigns)
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [])
@@ -93,21 +111,20 @@ export default function AdminPromotionsPage() {
   const handleSave = async () => {
     if (!form.title?.trim()) return
     setSaving(true)
+    const targetMap: Record<string, string> = { passengers: 'passenger', drivers: 'driver', all: 'all', inactive: 'all', new: 'all' }
     const payload = {
       title: form.title,
-      description: form.description || null,
-      type: form.type || 'banner',
-      target_audience: form.target_audience || 'all',
-      discount_value: form.discount_value || null,
-      discount_type: form.discount_type || null,
-      start_date: form.start_date || null,
-      end_date: form.end_date || null,
+      subtitle: form.description || null,
+      target: targetMap[form.target_audience || 'all'] || 'all',
+      start_at: form.start_date || null,
+      end_at: form.end_date || null,
       is_active: form.is_active ?? true,
+      priority: form.priority || 0,
     }
     if (editId) {
-      await supabase.from('campaigns').update(payload).eq('id', editId)
+      await supabase.from('promo_banners').update(payload).eq('id', editId)
     } else {
-      await supabase.from('campaigns').insert({ ...payload, impressions: 0, clicks: 0, conversions: 0 })
+      await supabase.from('promo_banners').insert({ ...payload, impressions: 0, clicks: 0 })
     }
     setSaving(false)
     setShowForm(false)
@@ -117,12 +134,12 @@ export default function AdminPromotionsPage() {
   }
 
   const handleToggle = async (id: string, current: boolean) => {
-    await supabase.from('campaigns').update({ is_active: !current }).eq('id', id)
+    await supabase.from('promo_banners').update({ is_active: !current }).eq('id', id)
     setCampaigns(prev => prev.map(c => c.id === id ? { ...c, is_active: !current } : c))
   }
 
   const handleDelete = async (id: string) => {
-    await supabase.from('campaigns').delete().eq('id', id)
+    await supabase.from('promo_banners').delete().eq('id', id)
     setCampaigns(prev => prev.filter(c => c.id !== id))
   }
 
