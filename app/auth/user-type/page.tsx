@@ -107,7 +107,7 @@ export default function UserTypePage() {
         router.push(selectedUserType.redirectTo)
       }
     } catch (error: any) {
-      console.error('[v0] Error updating user type:', error)
+      console.error('Error updating user type:', error)
       iosToast.error('Erro ao salvar preferência')
     } finally {
       setIsLoading(false)

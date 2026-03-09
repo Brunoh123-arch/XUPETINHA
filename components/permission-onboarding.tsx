@@ -41,8 +41,8 @@ export function PermissionOnboarding() {
           setStep('notification')
         }
       }, 2000)
-    } catch (error) {
-      console.error('[v0] Permission check error:', error)
+    } catch {
+      // Permissions API not available — skip
     }
   }
 
@@ -95,8 +95,7 @@ export function PermissionOnboarding() {
         iosToast.error('Notificacoes negadas')
         finishOnboarding()
       }
-    } catch (error) {
-      console.error('[v0] Notification permission error:', error)
+    } catch {
       finishOnboarding()
     }
   }

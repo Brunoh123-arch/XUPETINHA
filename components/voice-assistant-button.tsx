@@ -23,7 +23,7 @@ export function VoiceAssistantButton() {
   })
 
   function handleVoiceCommand(command: VoiceCommand) {
-    console.log('[v0] Processing voice command:', command)
+    // Processing voice command
     haptic.notification('success')
 
     if (command.type === 'ride_request' && command.destination) {

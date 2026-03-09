@@ -86,7 +86,7 @@ export const historyService = {
       .single()
 
     if (error) {
-      console.error('[v0] Error adding favorite:', error)
+      console.error('Error adding favorite:', error)
       return { success: false, error: error.message }
     }
 
@@ -102,7 +102,7 @@ export const historyService = {
       .eq('id', favoriteId)
 
     if (error) {
-      console.error('[v0] Error removing favorite:', error)
+      console.error('Error removing favorite:', error)
       return { success: false, error: error.message }
     }
 
@@ -120,7 +120,7 @@ export const historyService = {
       })
 
     if (error) {
-      console.error('[v0] Error fetching frequent destinations:', error)
+      console.error('Error fetching frequent destinations:', error)
       return { success: false, error: error.message }
     }
 

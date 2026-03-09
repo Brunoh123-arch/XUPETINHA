@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ messages })
   } catch (error) {
-    console.error('[v0] Messages GET error:', error)
+    console.error('Messages GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -61,10 +61,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { ride_id, message } = body
+    const { ride_id, content, message } = body
+    const msgContent = content || message  // suporta ambos os campos
 
-    if (!ride_id || !message) {
-      return NextResponse.json({ error: 'ride_id and message are required' }, { status: 400 })
+    if (!ride_id || !msgContent) {
+      return NextResponse.json({ error: 'ride_id and content are required' }, { status: 400 })
     }
 
     // Verify user is part of this ride
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       .insert({
         ride_id,
         sender_id: user.id,
-        message,
+        content: msgContent,
       })
       .select(`
         *,
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: newMessage }, { status: 201 })
   } catch (error) {
-    console.error('[v0] Messages POST error:', error)
+    console.error('Messages POST error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

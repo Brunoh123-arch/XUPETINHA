@@ -15,7 +15,7 @@ export async function sendNotification({
 }) {
   const supabase = await createClient()
 
-  console.log('[v0] Sending notification:', { userId, type, title })
+  // Sending notification to userId
 
   const { error } = await supabase.from('notifications').insert({
     user_id: userId,
@@ -27,11 +27,11 @@ export async function sendNotification({
   })
 
   if (error) {
-    console.error('[v0] Error sending notification:', error)
+    console.error('Error sending notification:', error)
     throw error
   }
 
-  console.log('[v0] Notification sent successfully')
+  // Notification sent successfully
 }
 
 export async function notifyNewOffer(

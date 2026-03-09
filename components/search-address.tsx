@@ -31,7 +31,7 @@ export function SearchAddress({ onSelect, placeholder = 'Digite o endereço...',
         setSuggestions(data.predictions || [])
         setShowSuggestions(true)
       } catch (error) {
-        console.error('[v0] Search error:', error)
+        console.error('Search error:', error)
       } finally {
         setLoading(false)
       }
@@ -58,7 +58,7 @@ export function SearchAddress({ onSelect, placeholder = 'Digite o endereço...',
         onSelect(suggestion.description)
       }
     } catch (error) {
-      console.error('[v0] Place details error:', error)
+      console.error('Place details error:', error)
       onSelect(suggestion.description)
     }
   }
@@ -83,7 +83,7 @@ export function SearchAddress({ onSelect, placeholder = 'Digite o endereço...',
         setQuery(data.address)
         onSelect(data.address, { lat: latitude, lng: longitude })
       } catch (error) {
-        console.error('[v0] Geolocation error:', error)
+        console.error('Geolocation error:', error)
         alert('Não foi possível acessar sua localização')
       }
     }

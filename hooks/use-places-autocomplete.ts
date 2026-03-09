@@ -48,7 +48,7 @@ export function usePlacesAutocomplete() {
 
         setPredictions(result?.predictions || [])
       } catch (error) {
-        console.error('[v0] Places autocomplete error:', error)
+        console.error('Places autocomplete error:', error)
         setPredictions([])
       } finally {
         setLoading(false)

@@ -5,8 +5,8 @@ Executa diretamente no sistema de arquivos (não usa uv/pip).
 import os
 import re
 
-# Path fixo para o sandbox do v0
-ROOT = os.path.join(os.path.dirname(__file__), "..")
+# Path fixo — o sandbox executa os scripts dentro do diretório do projeto
+ROOT = "/vercel/share/v0-project"
 
 # Padrão: qualquer string entre aspas que inicia com [v0]
 # Ex: console.error('[v0] msg', ...) → console.error('msg', ...)

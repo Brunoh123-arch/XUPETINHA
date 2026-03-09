@@ -77,7 +77,7 @@ export function usePullToRefresh(options: UsePullToRefreshOptions) {
       try {
         await onRefresh()
       } catch (error) {
-        console.error('[v0] Pull to refresh error:', error)
+        console.error('Pull to refresh error:', error)
       } finally {
         setIsRefreshing(false)
         setCanRefresh(false)

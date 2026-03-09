@@ -72,7 +72,7 @@ export function ChatInterface({ rideId, otherUserName = 'Motorista', otherUserAv
     })
 
     if (!result.success) {
-      console.error('[v0] Error sending message')
+      console.error('Error sending message')
     }
 
     setLoading(false)

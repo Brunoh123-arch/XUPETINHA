@@ -81,7 +81,7 @@ export const profileService = {
     const { error } = await supabase.auth.admin.deleteUser(userId)
 
     if (error) {
-      console.error('[v0] Error deleting account:', error)
+      console.error('Error deleting account:', error)
       return { success: false, error: error.message }
     }
 

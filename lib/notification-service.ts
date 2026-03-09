@@ -39,7 +39,7 @@ export class NotificationService {
           filter: "type=in.(coupon_received,cashback_earned,free_ride)",
         },
         (payload) => {
-          console.log('[v0] New coupon notification:', payload)
+          // New coupon notification received
           this.handleNewNotification(payload.new as any)
         }
       )

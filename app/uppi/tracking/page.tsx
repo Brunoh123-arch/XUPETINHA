@@ -121,7 +121,7 @@ function TrackingContent() {
       await supabase.from('price_offers').update({ status: 'rejected' }).eq('ride_id', rideId).neq('id', offer.id)
       router.push(`/uppi/ride/${rideId}/tracking`)
     } catch (e) {
-      console.error('[v0] Error accepting offer:', e)
+      console.error('Error accepting offer:', e)
     } finally {
       setAcceptingId(null)
     }
