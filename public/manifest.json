@@ -1,89 +1,145 @@
 {
   "id": "app.uppi.mobile",
-  "name": "Uppi",
+  "name": "Uppi - Viagens com Preco Justo",
   "short_name": "Uppi",
-  "description": "Mobilidade urbana com preço justo — negocie sua corrida diretamente com motoristas",
-  "start_url": "/uppi/home",
+  "description": "Mobilidade urbana com preco justo. Negocie sua corrida diretamente com motoristas. Transparencia e economia em cada viagem.",
+  "start_url": "/uppi/home?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#000000",
-  "theme_color": "#007AFF",
+  "theme_color": "#FF6B00",
   "lang": "pt-BR",
   "dir": "ltr",
-  "categories": ["transportation", "travel"],
-  "gcm_sender_id": "470554921028",
+  "categories": ["transportation", "travel", "lifestyle"],
+  "iarc_rating_id": "",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/icons/icon-72x72.jpg",
       "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/icons/icon-96x96.jpg",
       "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "/icons/icon-128x128.jpg",
       "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/icons/icon-144x144.jpg",
       "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/icons/icon-152x152.jpg",
       "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icons/icon-192x192.jpg",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/icons/icon-384x384.jpg",
       "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon-512x512.jpg",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
     {
-      "src": "/screenshots/screen1.png",
-      "sizes": "390x844",
-      "type": "image/png",
+      "src": "/screenshots/home.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
       "form_factor": "narrow",
-      "label": "Tela inicial Uppi"
+      "label": "Tela inicial do Uppi"
+    },
+    {
+      "src": "/screenshots/ride.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Solicitar corrida"
     }
   ],
   "prefer_related_applications": false,
-  "related_applications": [],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.uppi.twa",
+      "id": "app.uppi.twa"
+    }
+  ],
   "shortcuts": [
     {
-      "name": "Solicitar corrida",
-      "url": "/?action=ride",
-      "description": "Solicite uma corrida no Uppi"
+      "name": "Pedir corrida",
+      "short_name": "Corrida",
+      "url": "/uppi/ride/route-input?source=shortcut",
+      "description": "Solicite uma corrida agora",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
     },
     {
-      "name": "Entrar",
-      "url": "/?action=login",
-      "description": "Faça login na sua conta Uppi"
+      "name": "Historico",
+      "short_name": "Historico",
+      "url": "/uppi/history?source=shortcut",
+      "description": "Veja suas corridas anteriores",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
+    },
+    {
+      "name": "Carteira",
+      "short_name": "Carteira",
+      "url": "/uppi/wallet?source=shortcut",
+      "description": "Gerencie seu saldo",
+      "icons": [
+        {
+          "src": "/icons/icon-96x96.jpg",
+          "sizes": "96x96",
+          "type": "image/jpeg"
+        }
+      ]
     }
-  ]
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }
