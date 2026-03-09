@@ -93,7 +93,7 @@ export default function RideTrackingPage() {
           .single()
 
         if (locData) {
-          setDriverLocation({
+          const loc: DriverLocation = {
             driver_id: rideData.driver_id,
             latitude: locData.latitude,
             longitude: locData.longitude,
@@ -101,7 +101,9 @@ export default function RideTrackingPage() {
             speed: locData.speed ?? 0,
             accuracy: 0,
             timestamp: new Date().toISOString(),
-          })
+          }
+          setDriverLocation(loc)
+          recalcEta(loc, rideData)
         }
       }
 
@@ -141,12 +143,51 @@ export default function RideTrackingPage() {
           const loc = update.driver_location
           setDriverLocation(loc)
           updateDriverMarker(loc)
+          setRide(prev => {
+            recalcEta(loc, prev)
+            return prev
+          })
         }
       })
     } finally {
       setLoading(false)
     }
   }
+
+  /** Calcula distância em km entre dois pontos (Haversine) */
+  const haversineKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371
+    const dLat = ((lat2 - lat1) * Math.PI) / 180
+    const dLon = ((lng2 - lng1) * Math.PI) / 180
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  }
+
+  /** Calcula e seta o ETA baseado na localização do motorista */
+  const recalcEta = useCallback((location: DriverLocation, currentRide: Ride | null) => {
+    const status = currentRide?.status
+    if (!status || !['accepted', 'driver_arrived'].includes(status)) {
+      // Durante a viagem: ETA para o destino
+      if (status === 'in_progress' && currentRide?.dropoff_lat && currentRide?.dropoff_lng) {
+        const distKm = haversineKm(
+          location.latitude, location.longitude,
+          currentRide.dropoff_lat, currentRide.dropoff_lng
+        )
+        setEta(Math.max(1, Math.round((distKm / 30) * 60)))
+      }
+      return
+    }
+    // Antes de iniciar: ETA até o passageiro
+    if (currentRide?.pickup_lat && currentRide?.pickup_lng) {
+      const distKm = haversineKm(
+        location.latitude, location.longitude,
+        currentRide.pickup_lat, currentRide.pickup_lng
+      )
+      setEta(Math.max(1, Math.round((distKm / 30) * 60)))
+    }
+  }, [])
 
   const updateDriverMarker = useCallback((location: DriverLocation) => {
     const map = mapRef.current?.getMapInstance()
@@ -155,6 +196,7 @@ export default function RideTrackingPage() {
     const position = { lat: location.latitude, lng: location.longitude }
 
     if (!driverMarkerRef.current) {
+      // Usar Marker legado para compatibilidade máxima com Maps carregado dinamicamente
       driverMarkerRef.current = new window.google.maps.Marker({
         position,
         map,
@@ -165,7 +207,7 @@ export default function RideTrackingPage() {
           fillOpacity: 1,
           strokeColor: '#FFFFFF',
           strokeWeight: 2,
-          rotation: location.heading,
+          rotation: location.heading ?? 0,
         },
         title: 'Motorista',
       })
@@ -173,7 +215,7 @@ export default function RideTrackingPage() {
       driverMarkerRef.current.setPosition(position)
       const icon = driverMarkerRef.current.getIcon() as google.maps.Symbol
       if (icon) {
-        icon.rotation = location.heading
+        icon.rotation = location.heading ?? 0
         driverMarkerRef.current.setIcon(icon)
       }
     }

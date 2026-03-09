@@ -448,6 +448,9 @@ export default function RideOffersPage() {
   const [newOfferToast, setNewOfferToast] = useState<{ name: string; price: number } | null>(null)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const prevOfferCount = useRef(0)
+  // Timeout sem ofertas → rebuscar motoristas
+  const noOffersTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [searchingAgain, setSearchingAgain] = useState(false)
   const [pixModal, setPixModal] = useState<{
     externalId: string
     qrCodeText: string
@@ -517,6 +520,16 @@ export default function RideOffersPage() {
     return offersWithTime
   }, [ride, params.id, supabase])
 
+  // Rebuscar motoristas próximos via API após 2min sem ofertas
+  const retryFindDrivers = useCallback(async () => {
+    if (searchingAgain) return
+    setSearchingAgain(true)
+    try {
+      await fetch(`/api/v1/rides/${params.id}/retry-drivers`, { method: 'POST' })
+    } catch { /* silencioso */ }
+    finally { setSearchingAgain(false) }
+  }, [params.id, searchingAgain])
+
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
@@ -525,14 +538,32 @@ export default function RideOffersPage() {
         .select('*')
         .eq('id', params.id)
         .single()
+
+      // Se corrida já foi aceita (motorista aceitou pelo preço do passageiro), redirecionar
+      if (rideData?.status === 'accepted') {
+        router.replace(`/uppi/ride/${params.id}/tracking`)
+        return
+      }
+
       setRide(rideData)
       const offersData = await fetchOffers(rideData)
       setOffers(offersData)
       prevOfferCount.current = offersData.length
       setLoading(false)
+
+      // Iniciar timer: se após 2min não houver ofertas, rebuscar motoristas
+      noOffersTimerRef.current = setTimeout(async () => {
+        const currentOffers = await fetchOffers(rideData)
+        if (currentOffers.length === 0) {
+          await retryFindDrivers()
+        }
+      }, 2 * 60 * 1000)
     }
     loadData()
-  }, [params.id])
+    return () => {
+      if (noOffersTimerRef.current) clearTimeout(noOffersTimerRef.current)
+    }
+  }, [params.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Realtime subscriptions using realtime-service
   useEffect(() => {

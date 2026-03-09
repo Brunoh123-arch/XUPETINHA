@@ -13,7 +13,7 @@ interface Message {
   id: string
   ride_id: string
   sender_id: string
-  message: string
+  content: string
   created_at: string
 }
 
@@ -132,7 +132,7 @@ export default function ChatPage() {
         .insert({
           ride_id: params.id,
           sender_id: user.id,
-          message: content,
+          content,
         })
 
       if (error) throw error
@@ -237,7 +237,7 @@ export default function ChatPage() {
                           : 'bg-white dark:bg-[#1C1C1E] text-foreground rounded-bl-[6px] border border-black/[0.04] dark:border-white/[0.06]'
                       }`}
                     >
-                      <p className="text-[15px] leading-relaxed break-words">{msg.message}</p>
+                      <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
                     </div>
                   </motion.div>
                 </div>

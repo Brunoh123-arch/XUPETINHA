@@ -71,6 +71,12 @@ export async function POST(request: Request) {
         .single()
 
       if (error) throw error
+
+      // Atualizar rating médio do motorista após avaliação do passageiro
+      if (isPassenger && review_type === 'passenger_to_driver' && ride.driver_id) {
+        await supabase.rpc('update_user_rating', { p_user_id: ride.driver_id }).catch(() => {})
+      }
+
       return NextResponse.json({ success: true, review: data })
     } else {
       // Criar novo review
@@ -99,6 +105,12 @@ export async function POST(request: Request) {
         .single()
 
       if (error) throw error
+
+      // Atualizar rating médio do motorista após avaliação do passageiro
+      if (isPassenger && review_type === 'passenger_to_driver' && ride.driver_id) {
+        await supabase.rpc('update_user_rating', { p_user_id: ride.driver_id }).catch(() => {})
+      }
+
       return NextResponse.json({ success: true, review: data })
     }
   } catch {
