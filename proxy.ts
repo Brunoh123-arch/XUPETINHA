@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
+async function handleRequest(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -30,7 +30,13 @@ export async function proxy(request: NextRequest) {
   return supabaseResponse
 }
 
-export default proxy
+// Next.js 16: proxy export (novo nome)
+export const proxy = handleRequest
+
+// Next.js 15 backwards compatibility
+export const middleware = handleRequest
+
+export default handleRequest
 
 export const config = {
   matcher: [
