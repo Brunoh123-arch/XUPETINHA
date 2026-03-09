@@ -33,7 +33,11 @@ export default function WalletPage() {
   const [transactions, setTransactions] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddMoney, setShowAddMoney] = useState(false)
+  const [showWithdraw, setShowWithdraw] = useState(false)
   const [amount, setAmount] = useState('')
+  const [withdrawAmount, setWithdrawAmount] = useState('')
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [txFilter, setTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
 
   useEffect(() => {
     loadWalletData()
@@ -137,6 +141,50 @@ export default function WalletPage() {
     }
   }
 
+  const handleWithdraw = async () => {
+    const value = parseFloat(withdrawAmount)
+    if (!value || value <= 0) {
+      iosToast.error('Informe um valor valido')
+      return
+    }
+    if (value > balance) {
+      iosToast.error('Saldo insuficiente')
+      triggerHaptic('error')
+      return
+    }
+    if (value < 10) {
+      iosToast.error('Valor minimo para saque e R$ 10,00')
+      return
+    }
+
+    setWithdrawing(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase.from('wallet_transactions').insert({
+        user_id: user.id,
+        amount: value,
+        type: 'debit',
+        description: 'Solicitacao de saque via PIX',
+        status: 'pending',
+      })
+
+      if (error) throw error
+
+      await loadWalletData()
+      setShowWithdraw(false)
+      setWithdrawAmount('')
+      triggerHaptic('success')
+      iosToast.success('Saque solicitado! Sera processado em ate 1 dia util.')
+    } catch {
+      triggerHaptic('error')
+      iosToast.error('Erro ao solicitar saque')
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
   const getTransactionIcon = (type: string) => {
     if (type === 'credit' || type === 'refund') return '+'
     return '-'
@@ -231,7 +279,7 @@ export default function WalletPage() {
                 type="button"
                 onClick={() => {
                   haptics.impactMedium()
-                  iosToast.info('Em breve')
+                  setShowWithdraw(true)
                 }}
                 className="h-[56px] bg-white/10 backdrop-blur-md rounded-[18px] flex items-center justify-center gap-2.5 text-white/90 font-semibold text-[17px] ios-press border border-white/10"
               >
@@ -280,21 +328,33 @@ export default function WalletPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.2 }}
         >
-          <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="text-[20px] font-bold text-foreground tracking-tight">Transações</h3>
-            <button 
-              type="button"
-              onClick={() => {
-                haptics.selection()
-                iosToast.info('Filtros em breve')
-              }}
-              className="text-[15px] text-blue-500 font-semibold ios-press"
-            >
-              Filtrar
-            </button>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="text-[20px] font-bold text-foreground tracking-tight">Transacoes</h3>
           </div>
 
-          {transactions.length === 0 ? (
+          {/* Filtros */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { key: 'all' as const, label: 'Todas' },
+              { key: 'credit' as const, label: 'Entradas' },
+              { key: 'debit' as const, label: 'Saidas' },
+            ].map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => { haptics.selection(); setTxFilter(f.key) }}
+                className={`px-4 py-2 rounded-full text-[13px] font-semibold ios-press transition-all ${
+                  txFilter === f.key
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'bg-secondary/60 text-muted-foreground'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {(txFilter === 'all' ? transactions : transactions.filter(t => t.type === txFilter)).length === 0 ? (
             <div className="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-[24px] p-12 text-center border border-black/[0.04] dark:border-white/[0.08]">
               <div className="w-20 h-20 rounded-full bg-secondary/40 mx-auto mb-4 flex items-center justify-center">
                 <TrendingUp className="w-10 h-10 text-muted-foreground/40" />
@@ -305,7 +365,7 @@ export default function WalletPage() {
           ) : (
             <div className="bg-white/80 dark:bg-[#1C1C1E]/80 backdrop-blur-xl rounded-[24px] overflow-hidden border border-black/[0.04] dark:border-white/[0.08] shadow-lg">
               <AnimatePresence>
-                {transactions.map((transaction, i) => (
+                {(txFilter === 'all' ? transactions : transactions.filter(t => t.type === txFilter)).map((transaction, i) => (
                   <motion.div
                     key={transaction.id}
                     initial={{ opacity: 0, x: -20 }}
@@ -371,6 +431,59 @@ export default function WalletPage() {
           )}
         </motion.div>
       </main>
+
+      {/* Bottom Sheet para saque */}
+      <IOSBottomSheet
+        isOpen={showWithdraw}
+        onClose={() => { setShowWithdraw(false); setWithdrawAmount('') }}
+        detent="medium"
+      >
+        <div className="p-6 space-y-6">
+          <div>
+            <h2 className="text-[28px] font-bold text-foreground tracking-tight mb-1">Sacar Saldo</h2>
+            <p className="text-[15px] text-muted-foreground">Transferencia via PIX — minimo R$ 10,00</p>
+          </div>
+
+          <div className="bg-secondary/40 rounded-[16px] px-4 py-3 flex items-center justify-between">
+            <span className="text-[15px] text-muted-foreground">Saldo disponivel</span>
+            <span className="text-[17px] font-bold text-emerald-600">R$ {balance.toFixed(2)}</span>
+          </div>
+
+          <IOSInputEnhanced
+            label="Valor do saque"
+            type="number"
+            step="0.01"
+            placeholder="0,00"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            prefix="R$"
+          />
+
+          <div className="flex gap-3">
+            {[20, 50, 100].map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => { haptics.impactLight(); setWithdrawAmount(v.toString()) }}
+                className={`flex-1 h-[48px] rounded-[14px] font-semibold text-[15px] ios-press transition-all ${
+                  withdrawAmount === v.toString() ? 'bg-blue-500 text-white' : 'bg-secondary/60 text-foreground'
+                }`}
+              >
+                R$ {v}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleWithdraw}
+            disabled={withdrawing || !withdrawAmount || parseFloat(withdrawAmount) <= 0}
+            className="w-full h-[56px] rounded-[18px] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold text-[17px] ios-press shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {withdrawing ? 'Solicitando...' : 'Confirmar Saque'}
+          </button>
+        </div>
+      </IOSBottomSheet>
 
       {/* Bottom Sheet for adding money */}
       <IOSBottomSheet
