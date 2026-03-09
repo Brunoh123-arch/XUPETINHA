@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
     const { data: tickets, error } = await supabase
       .from('support_tickets')
-      .select('id, subject, category, status, created_at, updated_at')
+      .select('id, topic, category, status, priority, created_at, updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
 
