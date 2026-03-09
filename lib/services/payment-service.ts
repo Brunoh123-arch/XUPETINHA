@@ -124,50 +124,47 @@ class PaymentService {
     const supabase = createClient()
 
     try {
-      // Verificar saldo
-      const { data: wallet } = await supabase
-        .from('user_wallets')
-        .select('balance')
-        .eq('user_id', userId)
-        .single()
-
-      if (!wallet || wallet.balance < amount) {
-        return false
+      // Verificar saldo via RPC (fonte principal) ou cálculo via transações (fallback)
+      let balance = 0
+      const { data: rpcBalance } = await supabase.rpc('calculate_wallet_balance', { p_user_id: userId })
+      if (typeof rpcBalance === 'number') {
+        balance = rpcBalance
+      } else {
+        const { data: wallet } = await supabase.from('user_wallets').select('balance').eq('user_id', userId).single()
+        balance = wallet?.balance ?? 0
       }
 
-      // Criar transação
-      const { error: txError } = await supabase.from('wallet_transactions').insert({
-        user_id: userId,
-        amount: -amount,
-        type: 'ride_payment',
-        description: `Pagamento da corrida`,
-        ride_id: rideId,
+      if (balance < amount) return false
+
+      // Debitar via wallet API para garantir consistência do saldo em user_wallets
+      const res = await fetch('/api/v1/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount,
+          type: 'debit',
+          description: 'Pagamento de corrida',
+          reference_id: rideId,
+          reference_type: 'ride',
+        }),
       })
 
-      if (txError) {
-        return false
-      }
+      if (!res.ok) return false
 
-      // Atualizar saldo
-      await supabase
-        .from('user_wallets')
-        .update({ balance: wallet.balance - amount })
-        .eq('user_id', userId)
-
-      // Atualizar corrida
+      // Atualizar corrida como paga
       await supabase
         .from('rides')
-        .update({ payment_status: 'completed' })
+        .update({ payment_status: 'paid', payment_method: 'wallet' })
         .eq('id', rideId)
 
-      // Criar registro de pagamento
+      // Registrar pagamento
       await supabase.from('payments').insert({
         ride_id: rideId,
         amount,
         payment_method: 'wallet',
         status: 'completed',
         paid_at: new Date().toISOString(),
-      })
+      }).throwOnError().catch(() => {})
 
       return true
     } catch {

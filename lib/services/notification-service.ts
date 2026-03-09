@@ -34,10 +34,10 @@ class NotificationService {
       const { error } = await this.supabase.from('notifications').insert({
         user_id:  notification.user_id,
         title:    notification.title,
-        body:     notification.body,
+        message:  notification.body,
         type:     notification.type,
         data:     notification.data ?? {},
-        read:     false,
+        is_read:  false,
       })
 
       if (error) throw error

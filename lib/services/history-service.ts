@@ -9,7 +9,8 @@ export const historyService = {
       .from('rides')
       .select(`
         *,
-        driver:driver_profiles!rides_driver_id_fkey(id, rating, vehicle_type, vehicle_model, license_plate),
+        driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, rating, total_rides),
+        driver_profile:driver_profiles!driver_id(vehicle_type, vehicle_brand, vehicle_model, vehicle_plate, vehicle_color),
         passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url)
       `, { count: 'exact' })
       .or(`passenger_id.eq.${userId},driver_id.eq.${userId}`)
@@ -36,9 +37,10 @@ export const historyService = {
       .from('rides')
       .select(`
         *,
-        driver:driver_profiles!rides_driver_id_fkey(*),
-        passenger:profiles!rides_passenger_id_fkey(*),
-        rating:ratings(*)
+        driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, rating, total_rides),
+        driver_profile:driver_profiles!driver_id(vehicle_brand, vehicle_model, vehicle_plate, vehicle_color, vehicle_type),
+        passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url, rating, total_rides),
+        review:driver_reviews!ride_id(passenger_rating, passenger_comment, driver_rating, driver_comment)
       `)
       .eq('id', rideId)
       .single()

@@ -28,15 +28,11 @@ export default function DriverWalletPage() {
 
       await loadWallet()
 
-      // Real-time: listen for wallet transaction changes
+      // Real-time: escuta apenas wallet_transactions (user_wallets não existe no schema)
       channel = supabase
         .channel(`driver-wallet-${user.id}`)
         .on('postgres_changes', {
           event: '*', schema: 'public', table: 'wallet_transactions',
-          filter: `user_id=eq.${user.id}`,
-        }, () => loadWallet())
-        .on('postgres_changes', {
-          event: 'UPDATE', schema: 'public', table: 'user_wallets',
           filter: `user_id=eq.${user.id}`,
         }, () => loadWallet())
         .subscribe()
@@ -51,8 +47,8 @@ export default function DriverWalletPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/onboarding/splash'); return }
 
-      const [{ data: wallet }, { data: txs }] = await Promise.all([
-        supabase.from('user_wallets').select('balance').eq('user_id', user.id).single(),
+      const [{ data: rpcBalance }, { data: txs }] = await Promise.all([
+        supabase.rpc('calculate_wallet_balance', { p_user_id: user.id }),
         supabase.from('wallet_transactions')
           .select('*')
           .eq('user_id', user.id)
@@ -60,13 +56,13 @@ export default function DriverWalletPage() {
           .limit(30),
       ])
 
-      setBalance(wallet?.balance || 0)
+      setBalance(typeof rpcBalance === 'number' ? rpcBalance : 0)
       setTransactions(txs || [])
 
       // Saldo pendente: corridas completadas ainda não liquidadas
       const pending = (txs || [])
         .filter(t => t.status === 'pending' && t.type === 'credit')
-        .reduce((s, t) => s + t.amount, 0)
+        .reduce((s, t) => s + parseFloat(String(t.amount)), 0)
       setPendingBalance(pending)
     } finally {
       setLoading(false)

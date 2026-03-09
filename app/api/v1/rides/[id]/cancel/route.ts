@@ -81,7 +81,7 @@ export async function POST(
           title: 'Corrida cancelada',
           message: `A corrida foi cancelada. Motivo: ${reason || 'Cancelado pelo usuário'}`,
           ride_id: id,
-          read: false,
+          is_read: false,
         })
       }
 

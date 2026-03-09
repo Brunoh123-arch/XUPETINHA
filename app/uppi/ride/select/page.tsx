@@ -271,33 +271,29 @@ export default function RideSelectPage() {
     setApplyingCoupon(true)
     setCouponError('')
     try {
-      const res = await fetch('/api/v1/coupons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode.trim().toUpperCase() }),
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setCouponError(data.error || 'Cupom inválido')
+      // Validar cupom via GET (busca todos os ativos, filtra por código localmente)
+      const couponRes = await fetch('/api/v1/coupons')
+      if (!couponRes.ok) {
+        setCouponError('Erro ao validar cupom. Tente novamente.')
         return
       }
-      // Calcular desconto: o cupom retorna o objeto da tabela user_coupons, precisamos do coupon_id
-      // Buscar detalhes do cupom para saber o discount_value e discount_type
-      const couponRes = await fetch(`/api/v1/coupons?code=${couponCode.trim().toUpperCase()}`)
-      if (couponRes.ok) {
-        const { coupons } = await couponRes.json()
-        const coupon = coupons?.[0]
-        if (coupon) {
-          let discount = 0
-          if (coupon.discount_type === 'percentage') {
-            discount = Math.round((selectedPriceBase * (coupon.discount_value / 100)) * 100) / 100
-          } else {
-            discount = Math.min(coupon.discount_value || 0, selectedPriceBase)
-          }
-          setCouponDiscount(discount)
-          setAppliedCouponCode(couponCode.trim().toUpperCase())
-        }
+      const { coupons } = await couponRes.json()
+      const code = couponCode.trim().toUpperCase()
+      const coupon = (coupons || []).find((c: { code: string }) => c.code === code)
+
+      if (!coupon) {
+        setCouponError('Cupom inválido ou expirado')
+        return
       }
+
+      let discount = 0
+      if (coupon.discount_type === 'percentage') {
+        discount = Math.round((selectedPriceBase * (coupon.discount_value / 100)) * 100) / 100
+      } else {
+        discount = Math.min(coupon.discount_value || 0, selectedPriceBase)
+      }
+      setCouponDiscount(discount)
+      setAppliedCouponCode(code)
       setShowCoupon(false)
     } catch {
       setCouponError('Erro ao aplicar cupom. Tente novamente.')
