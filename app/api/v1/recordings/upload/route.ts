@@ -80,13 +80,18 @@ export async function POST(request: Request) {
       .from('ride_recordings')
       .insert({
         ride_id: rideId,
-        recorded_by: user.id,
+        user_id: user.id,
         storage_path: fileName,
+        file_url: uploadData.path,
+        duration_sec: duration,
         duration_seconds: duration,
         encryption_key: key.toString('base64'),
         encryption_iv: iv.toString('base64'),
         encryption_auth_tag: authTag.toString('base64'),
+        size_bytes: encrypted.length,
         file_size_bytes: encrypted.length,
+        status: 'ready',
+        recording_type: 'audio',
       })
       .select()
       .single()
