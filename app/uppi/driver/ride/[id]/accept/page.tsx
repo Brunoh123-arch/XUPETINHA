@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { trackingService } from '@/lib/services/tracking-service'
 import type { Ride } from '@/lib/types/database'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 interface RideWithPassenger extends Ride {
   passenger?: {
@@ -109,19 +110,29 @@ export default function DriverAcceptRidePage() {
         }),
       })
       if (!res.ok) {
-        const err = await res.json()
-        alert(err.error || 'Erro ao aceitar corrida')
+        const err = await res.json().catch(() => ({}))
+        iosToast.error(err.error || 'Erro ao aceitar corrida')
         return
       }
       const { offer } = await res.json()
-      await fetch(`/api/v1/offers/${offer.id}/accept`, {
+      const acceptRes = await fetch(`/api/v1/offers/${offer.id}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       })
+      if (!acceptRes.ok) {
+        const acceptErr = await acceptRes.json().catch(() => ({}))
+        if (acceptRes.status === 409) {
+          iosToast.error('Corrida ja foi aceita por outro motorista.')
+        } else {
+          iosToast.error(acceptErr.error || 'Erro ao confirmar aceite. Tente outra corrida.')
+        }
+        router.replace('/uppi/driver')
+        return
+      }
       if (userId) trackingService.startDriverTracking(ride.id, userId)
-      router.replace(`/uppi/ride/${ride.id}/tracking`)
+      router.replace(`/uppi/driver/ride/${ride.id}/active`)
     } catch {
-      alert('Erro ao aceitar corrida. Tente novamente.')
+      iosToast.error('Erro ao aceitar corrida. Tente novamente.')
     } finally {
       setAccepting(false)
     }
@@ -151,8 +162,14 @@ export default function DriverAcceptRidePage() {
         }),
       })
       if (res.ok) {
+        iosToast.success('Contra-oferta enviada ao passageiro!')
         router.replace('/uppi/driver')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        iosToast.error(err.error || 'Erro ao enviar contra-oferta')
       }
+    } catch {
+      iosToast.error('Erro ao enviar contra-oferta. Tente novamente.')
     } finally {
       setSendingOffer(false)
     }

@@ -150,7 +150,7 @@ export default function WalletPage() {
       } else {
         // Fallback: se o PIX falhar, informar mas não creditar
         triggerHaptic('error')
-        iosToast.error('Erro ao gerar PIX', 'Tente novamente em instantes')
+        iosToast.error('Erro ao gerar PIX', { description: 'Tente novamente em instantes' })
       }
     } catch (error) {
       console.error('[v0] Error adding money:', error)

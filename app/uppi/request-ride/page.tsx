@@ -219,7 +219,7 @@ function RequestRideContent() {
             )
             return
           } else {
-            iosToast.error('Saldo insuficiente e erro ao gerar PIX', 'Adicione saldo na carteira e tente novamente.')
+            iosToast.error('Saldo insuficiente', { description: 'Adicione saldo na carteira e tente novamente.' })
             setLoading(false)
             return
           }

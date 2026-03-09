@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { Ride, Profile, DriverProfile } from '@/lib/types/database'
 import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 type RideStatus = Ride['status']
 
@@ -146,7 +147,7 @@ export default function DriverActiveRidePage() {
         setRide(prev => prev ? { ...prev, ...updates } : null)
       } else {
         const err = await res.json().catch(() => ({}))
-        console.error('[v0] advanceStatus error:', err)
+        iosToast.error(err.error || 'Erro ao atualizar status da corrida')
       }
     } finally {
       setUpdating(false)
@@ -203,6 +204,29 @@ export default function DriverActiveRidePage() {
   }
 
   if (!ride) return null
+
+  // Tela de corrida finalizada — exibida antes do redirect para summary
+  if (ride.status === 'completed') {
+    const earnings = ride.final_price ? ride.final_price * 0.85 : 0
+    return (
+      <div className="h-dvh bg-[color:var(--background)] flex flex-col items-center justify-center px-6 gap-6">
+        <div className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center">
+          <svg className="w-12 h-12 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div className="text-center space-y-2">
+          <h1 className="text-[26px] font-bold text-[color:var(--foreground)]">Corrida finalizada!</h1>
+          <p className="text-[15px] text-[color:var(--muted-foreground)]">Voce ganhou</p>
+          {earnings > 0 && (
+            <p className="text-[36px] font-extrabold text-emerald-500">R$ {earnings.toFixed(2)}</p>
+          )}
+        </div>
+        <div className="w-8 h-8 border-[2.5px] border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-[13px] text-[color:var(--muted-foreground)]">Redirecionando para o resumo...</p>
+      </div>
+    )
+  }
 
   const cfg = STATUS_CFG[ride.status] || STATUS_CFG.accepted
   const isActive = ['accepted', 'driver_arrived', 'in_progress'].includes(ride.status)

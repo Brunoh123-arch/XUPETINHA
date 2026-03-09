@@ -18,12 +18,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { ride_id, max_passengers, split_method, pickup_lat, pickup_lng, pickup_address, dropoff_lat, dropoff_lng, dropoff_address } = body
 
-    // Generate invite code
-    const { data: codeData, error: codeError } = await supabase.rpc('generate_invite_code')
-    
-    if (codeError) {
-      return NextResponse.json({ error: 'Failed to generate invite code' }, { status: 500 })
+    // Gera código de convite de 6 dígitos inline (sem dependência de RPC)
+    const generateCode = () => {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sem I, O, 0, 1 para evitar confusão
+      let code = ''
+      for (let i = 0; i < 6; i++) {
+        code += chars[Math.floor(Math.random() * chars.length)]
+      }
+      return code
     }
+    const codeData = generateCode()
 
     // Create group ride
     const { data: groupRide, error: createError } = await supabase

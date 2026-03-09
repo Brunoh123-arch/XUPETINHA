@@ -154,26 +154,39 @@ function SupportChatInner() {
         message: text,
       })
 
-      // Simulate agent typing reply
+      // Resposta contextual baseada no topico do ticket
       setTimeout(() => {
         setTyping(true)
         setTimeout(async () => {
-          const replies = [
-            'Entendi! Vou verificar isso para voce agora mesmo.',
-            'Obrigado por explicar. Estou analisando o seu caso.',
-            'Ja estou cuidando disso! Um momento, por favor.',
-            'Perfeito, vou resolver isso rapidamente para voce.',
-            'Compreendo a situacao. Deixa comigo!',
-          ]
+          // Gera resposta relevante ao topico + conteudo da mensagem
+          const lowerText = text.toLowerCase()
+          let reply = ''
+
+          if (topic === 'payment' || lowerText.includes('pagamento') || lowerText.includes('cobrança') || lowerText.includes('pix')) {
+            reply = 'Entendido! Para problemas de pagamento, precisamos verificar o historico da sua corrida. Voce pode me informar o ID ou data da corrida em questao? Enquanto isso, vou acessar seu historico de transacoes.'
+          } else if (topic === 'ride' || lowerText.includes('corrida') || lowerText.includes('motorista') || lowerText.includes('cancelar')) {
+            reply = 'Recebi sua mensagem sobre a corrida. Vou consultar os detalhes no sistema agora mesmo. Caso haja qualquer irregularidade, providenciaremos o reembolso ou compensacao adequada.'
+          } else if (topic === 'account' || lowerText.includes('conta') || lowerText.includes('senha') || lowerText.includes('login') || lowerText.includes('acesso')) {
+            reply = 'Para questoes de conta, posso ajudar a redefinir sua senha, verificar o status da conta ou resolver problemas de acesso. Qual dessas opcoes melhor descreve sua situacao?'
+          } else if (topic === 'safety' || lowerText.includes('seguranca') || lowerText.includes('assedio') || lowerText.includes('emergencia') || lowerText.includes('acidente')) {
+            reply = 'Sua seguranca e nossa prioridade absoluta. Estou escalando seu caso para nossa equipe especializada em seguranca que entrara em contato em ate 1 hora. Se for uma emergencia ativa, acione o 190.'
+          } else if (lowerText.includes('reembolso') || lowerText.includes('devolucao') || lowerText.includes('estorno')) {
+            reply = 'Entendi que voce deseja um reembolso. Vou verificar a elegibilidade da sua solicitacao. O prazo padrao para credito na Carteira Uppi e de ate 24 horas uteis apos a aprovacao.'
+          } else if (lowerText.includes('avaliacao') || lowerText.includes('nota') || lowerText.includes('estrela')) {
+            reply = 'Sobre a avaliacao, voce pode contestar notas injustas em ate 48 horas apos a corrida. Me conta o que aconteceu para eu verificar as opcoes disponiveis para voce.'
+          } else {
+            reply = 'Recebi sua mensagem e estou analisando seu caso. Caso necessite de mais informacoes, serei rapida em responder. Ha algo mais especifico que voce gostaria de detalhar?'
+          }
+
           await supabase.from('support_messages').insert({
             ticket_id: ticketId,
             sender_type: 'agent',
             sender_name: 'Ana - Suporte',
-            message: replies[Math.floor(Math.random() * replies.length)],
+            message: reply,
           })
           setTyping(false)
-        }, 2000 + Math.random() * 2000)
-      }, 800)
+        }, 1800 + Math.floor(Math.random() * 1200))
+      }, 900)
     } finally {
       setSending(false)
       inputRef.current?.focus()

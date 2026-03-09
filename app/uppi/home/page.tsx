@@ -21,6 +21,7 @@ export default function HomePage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [mapInstance, setMapInstance] = useState<any>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [activeRideId, setActiveRideId] = useState<string | null>(null)
   const mapRef = useRef<GoogleMapHandle>(null)
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
@@ -65,6 +66,24 @@ export default function HomePage() {
           if (profileData) {
             setProfile(profileData)
           }
+
+          // Verifica se ha corrida ativa em andamento para exibir banner
+          const { data: activeRide } = await supabase
+            .from('rides')
+            .select('id, status')
+            .eq('passenger_id', user.id)
+            .in('status', ['accepted', 'driver_arrived', 'in_progress'])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (activeRide) setActiveRideId(activeRide.id)
+        }
+      } catch {
+        /* silent */
+      } finally {
+        setLoading(false)
+      }
         } else {
           const localProfile = sessionStorage.getItem('userProfile') || localStorage.getItem('uppi_profile')
           if (localProfile) {
@@ -96,8 +115,8 @@ export default function HomePage() {
             })
           }
         }
-      } catch (error) {
-        console.log('[v0] Error loading profile:', error)
+      } catch {
+        /* silent */
       } finally {
         setLoading(false)
       }
@@ -236,6 +255,26 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        {/* Banner de corrida ativa */}
+        {activeRideId && (
+          <div className="px-5 pb-3">
+            <button
+              type="button"
+              onClick={() => { triggerHaptic('impact'); router.push(`/uppi/ride/${activeRideId}/tracking`) }}
+              className="w-full bg-[#007AFF] rounded-2xl p-4 flex items-center gap-3 shadow-lg shadow-[#007AFF]/20"
+            >
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-bold text-[15px]">Corrida em andamento</p>
+                <p className="text-white/80 text-[12px] mt-0.5">Toque para acompanhar sua corrida</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/70 flex-shrink-0" />
+            </button>
+          </div>
+        )}
 
         {/* Quick Services */}
         <div className="px-5 pb-4">

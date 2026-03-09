@@ -43,7 +43,7 @@ export function RecordingSettingsClient({ initialPreference, userId }: Recording
     } catch (error) {
       console.error('[v0] Failed to update preference:', error)
       haptic('error')
-      iosToast.error('Erro', 'Não foi possível atualizar configuração')
+      iosToast.error('Erro', { description: 'Nao foi possivel atualizar configuracao' })
     } finally {
       setLoading(false)
     }

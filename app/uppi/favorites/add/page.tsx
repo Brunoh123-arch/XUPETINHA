@@ -53,10 +53,9 @@ export default function AddFavoritePage() {
         if (coords) {
           latitude = coords.lat
           longitude = coords.lng
-          console.log('[v0] Geocoded address:', address, coords)
         }
-      } catch (geocodeError) {
-        console.error('[v0] Geocoding failed, using fallback:', geocodeError)
+      } catch {
+        /* geocoding silently falls back to null coords */
       }
 
       const { error } = await supabase
