@@ -104,7 +104,7 @@ export async function POST(request: Request) {
       user_id: user.id,
       type: 'system',
       title: delta > 0 ? 'Crédito adicionado' : 'Débito realizado',
-      body: `R$ ${Math.abs(Number(amount)).toFixed(2)} ${delta > 0 ? 'adicionado à' : 'debitado da'} sua carteira`,
+      message: `R$ ${Math.abs(Number(amount)).toFixed(2)} ${delta > 0 ? 'adicionado à' : 'debitado da'} sua carteira`,
       data: { transaction_id: transaction.id },
       is_read: false,
     })
