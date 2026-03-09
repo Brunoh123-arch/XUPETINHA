@@ -185,9 +185,40 @@ export function useFcmPushNotifications(): UseFcmPushNotificationsReturn {
       })
 
       // Listener para taps em notificacoes (app fechado/background)
+      // Navega para a tela correta com base no campo "action" dos dados
       await PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
         const event = new CustomEvent('fcm-notification-tap', { detail: action })
         window.dispatchEvent(event)
+
+        const data    = action.notification?.data ?? {}
+        const rideId  = data.ride_id  as string | undefined
+        const type    = data.type     as string | undefined
+        const deepAction = data.action as string | undefined
+
+        // Mapa de acoes para rotas
+        const routeMap: Record<string, string> = {
+          track_ride:   rideId ? `/uppi/ride/${rideId}/tracking`       : '/uppi/home',
+          open_ride:    rideId ? `/uppi/driver/ride/${rideId}/accept`   : '/uppi/driver',
+          review_ride:  rideId ? `/uppi/ride/${rideId}/review`          : '/uppi/home',
+        }
+
+        // Fallback por tipo de notificacao
+        const typeMap: Record<string, string> = {
+          new_ride:       rideId ? `/uppi/driver/ride/${rideId}/accept`  : '/uppi/driver',
+          ride_accepted:  rideId ? `/uppi/ride/${rideId}/tracking`        : '/uppi/home',
+          driver_arriving:rideId ? `/uppi/ride/${rideId}/tracking`        : '/uppi/home',
+          driver_arrived: rideId ? `/uppi/ride/${rideId}/tracking`        : '/uppi/home',
+          ride_started:   rideId ? `/uppi/ride/${rideId}/tracking`        : '/uppi/home',
+          ride_completed: rideId ? `/uppi/ride/${rideId}/review`          : '/uppi/home',
+          ride_cancelled: '/uppi/home',
+        }
+
+        const route = (deepAction && routeMap[deepAction])
+          || (type && typeMap[type])
+          || '/uppi/home'
+
+        // Navega para a rota correta
+        window.location.href = route
       })
 
       // 3. Registra no FCM

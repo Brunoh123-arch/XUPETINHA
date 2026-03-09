@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'   // Habilita FCM / Firebase
+
+android {
+    namespace "app.uppi.mobile"
+    compileSdk project.ext.compileSdkVersion
+
+    defaultConfig {
+        applicationId "app.uppi.mobile"
+        minSdk project.ext.minSdkVersion
+        targetSdk project.ext.targetSdkVersion
+
+        // Versao do app — incrementar a cada release na Play Store
+        versionCode 1
+        versionName "1.0.0"
+
+        // Suporte a splits por densidade (menor APK final)
+        vectorDrawables.useSupportLibrary = true
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Configuracao de assinatura release
+    signingConfigs {
+        release {
+            // As credenciais sao passadas via flags -P no gradle ou local.properties
+            if (project.hasProperty('android.injected.signing.store.file')) {
+                storeFile     file(project.property('android.injected.signing.store.file'))
+                storePassword project.property('android.injected.signing.store.password') ?: ''
+                keyAlias      project.property('android.injected.signing.key.alias')    ?: ''
+                keyPassword   project.property('android.injected.signing.key.password') ?: ''
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            // Debug: sem minificacao para stacktraces legiveis
+            minifyEnabled false
+            debuggable    true
+        }
+        release {
+            // Release: minificacao + ProGuard para Play Store
+            minifyEnabled          true
+            shrinkResources        true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
+            // Disable debug logs em release
+            debuggable false
+        }
+    }
+
+    // Garante build reproducivel
+    dependenciesInfo {
+        includeInApk       false
+        includeInBundle    false
+    }
+
+    // Suporte a Java 17 (exigido pelo Capacitor 8)
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+repositories {
+    flatDir {
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+
+    // Capacitor core
+    implementation project(':capacitor-android')
+
+    // AndroidX
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+
+    // Firebase BoM — garante versoes compativeis entre si
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // Tests
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+}
+
+// Aplica configuracoes de todos os plugins Capacitor
+apply from: 'capacitor.build.gradle'

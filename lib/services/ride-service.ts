@@ -110,7 +110,8 @@ export class RideService {
     radiusKm: number = 5
   ) {
     try {
-      const { data, error } = await this.supabase.rpc('get_nearby_drivers', {
+      // RPC correta conforme SUPABASE-RESUMO.md: find_nearby_drivers
+      const { data, error } = await this.supabase.rpc('find_nearby_drivers', {
         p_lat: lat,
         p_lng: lng,
         p_radius_km: radiusKm,
@@ -122,7 +123,9 @@ export class RideService {
         return []
       }
 
-      return data || []
+      // find_nearby_drivers retorna array de objetos { driver_id, distance_km, ... }
+      // Extrair apenas os driver_ids para notifyDrivers
+      return (data || []).map((row: any) => row.driver_id || row).filter(Boolean)
     } catch (error) {
       console.error('[v0] Error in findNearbyDrivers:', error)
       return []

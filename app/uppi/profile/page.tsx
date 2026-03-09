@@ -113,8 +113,7 @@ export default function ProfilePage() {
         setProfile(prev => prev ? { ...prev, avatar_url: url } : null)
         iosToast.success('Foto atualizada')
       }
-    } catch (error) {
-      console.error('[v0] Avatar upload error:', error)
+    } catch {
       iosToast.error('Erro ao enviar foto')
     }
   }
@@ -343,13 +342,13 @@ export default function ProfilePage() {
         <div className="bg-card rounded-[20px] overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)] mb-5 animate-ios-fade-up">
           <p className="text-[13px] font-semibold text-muted-foreground uppercase tracking-wide px-5 pt-4 pb-2">Configuracoes</p>
           {[
-            { icon: Bell, label: 'Notificacoes', color: 'text-red-500' },
-            { icon: CreditCard, label: 'Formas de Pagamento', color: 'text-blue-500' },
-            { icon: HelpCircle, label: 'Ajuda e Suporte', color: 'text-purple-500' },
+            { icon: Bell, label: 'Notificacoes', color: 'text-red-500', href: '/uppi/notifications' },
+            { icon: CreditCard, label: 'Formas de Pagamento', color: 'text-blue-500', href: '/uppi/payments' },
+            { icon: HelpCircle, label: 'Ajuda e Suporte', color: 'text-purple-500', href: '/uppi/suporte' },
           ].map((item, i) => {
             const IconComponent = item.icon
             return (
-              <button key={item.label} type="button" className={`w-full flex items-center gap-4 px-5 py-4 ios-list-press group ${i < 2 ? 'border-b border-border' : ''}`}>
+              <button key={item.label} type="button" onClick={() => router.push(item.href)} className={`w-full flex items-center gap-4 px-5 py-4 ios-list-press group ${i < 2 ? 'border-b border-border' : ''}`}>
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${item.color === 'text-red-500' ? 'from-red-500/10 to-pink-500/10' : item.color === 'text-blue-500' ? 'from-blue-500/10 to-cyan-500/10' : 'from-purple-500/10 to-indigo-500/10'} flex items-center justify-center`}>
                   <IconComponent className={`w-[18px] h-[18px] ${item.color}`} strokeWidth={2.5} />
                 </div>

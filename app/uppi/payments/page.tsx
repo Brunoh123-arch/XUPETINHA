@@ -38,29 +38,53 @@ export default function PaymentsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Load wallet transactions (which represent payments)
-      const { data, error } = await supabase
+      // Busca pagamentos reais da tabela payments (corridas pagas)
+      const { data: paymentsData } = await supabase
+        .from('payments')
+        .select('id, amount, payment_method, status, created_at, ride_id')
+        .order('created_at', { ascending: false })
+        .limit(30)
+
+      // Busca transacoes de carteira como complemento
+      const { data: walletData } = await supabase
         .from('wallet_transactions')
-        .select('*')
+        .select('id, amount, type, description, created_at, ride_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20)
 
-      if (error) throw error
-      
-      // Transform to payment format
-      const formattedPayments = (data || []).map(t => ({
-        id: t.id,
-        amount: parseFloat(t.amount),
-        payment_method: 'wallet',
-        status: 'completed',
-        created_at: t.created_at,
-        ride_id: t.ride_id
+      const fromPayments = (paymentsData || []).map(p => ({
+        id: p.id,
+        amount: parseFloat(p.amount),
+        payment_method: p.payment_method || 'pix',
+        status: p.status || 'completed',
+        created_at: p.created_at,
+        ride_id: p.ride_id,
       }))
-      
-      setPayments(formattedPayments)
-    } catch (error) {
-      console.error('[v0] Error loading payments:', error)
+
+      const fromWallet = (walletData || [])
+        .filter(t => t.type === 'debit')
+        .map(t => ({
+          id: `w-${t.id}`,
+          amount: Math.abs(parseFloat(t.amount)),
+          payment_method: 'wallet',
+          status: 'completed',
+          created_at: t.created_at,
+          ride_id: t.ride_id,
+        }))
+
+      // Merge, deduplicando por ride_id
+      const seenRideIds = new Set<string>()
+      const merged = [...fromPayments, ...fromWallet].filter(p => {
+        if (!p.ride_id) return true
+        if (seenRideIds.has(p.ride_id)) return false
+        seenRideIds.add(p.ride_id)
+        return true
+      })
+
+      merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      setPayments(merged.slice(0, 30))
+    } catch {
       iosToast.error('Erro ao carregar pagamentos')
     } finally {
       setLoading(false)
@@ -162,12 +186,12 @@ export default function PaymentsPage() {
               type="button"
               onClick={() => {
                 haptics.impactMedium()
-                iosToast.info('Em breve')
+                router.push('/uppi/wallet')
               }}
               className="flex items-center gap-2 text-blue-500 text-[15px] font-semibold ios-press"
             >
               <Plus className="w-4 h-4" strokeWidth={2.5} />
-              Adicionar
+              Adicionar saldo
             </button>
           </div>
 

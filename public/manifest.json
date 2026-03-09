@@ -1,16 +1,18 @@
 {
+  "id": "app.uppi.mobile",
   "name": "Uppi",
   "short_name": "Uppi",
   "description": "Mobilidade urbana com preço justo — negocie sua corrida diretamente com motoristas",
-  "start_url": "/",
+  "start_url": "/uppi/home",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
-  "theme_color": "#000000",
+  "theme_color": "#007AFF",
   "lang": "pt-BR",
   "dir": "ltr",
   "categories": ["transportation", "travel"],
+  "gcm_sender_id": "470554921028",
   "icons": [
     {
       "src": "/icons/icon-72x72.png",

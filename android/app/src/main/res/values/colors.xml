@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores principais do Uppi -->
+    <color name="colorPrimary">#007AFF</color>
+    <color name="colorPrimaryDark">#0055CC</color>
+    <color name="colorAccent">#FF9500</color>
+
+    <!-- Splash e status bar -->
+    <color name="ic_launcher_background">#007AFF</color>
+    <color name="ic_notification_background">#007AFF</color>
+
+    <!-- Cor de fundo do app (dark mode) -->
+    <color name="colorBackground">#000000</color>
+    <color name="colorSurface">#1C1C1E</color>
+</resources>
