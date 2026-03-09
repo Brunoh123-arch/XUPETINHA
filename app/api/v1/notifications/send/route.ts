@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { user_id, title, body: messageBody, data } = body
+    const { user_id, title, body: messageBody, message: messageAlt, data } = body
 
-    if (!user_id || !title || !messageBody) {
+    if (!user_id || !title || (!messageBody && !messageAlt)) {
       return NextResponse.json(
-        { error: 'Campos obrigatorios ausentes: user_id, title, body' },
+        { error: 'Campos obrigatorios ausentes: user_id, title, body/message' },
         { status: 400 }
       )
     }
@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id,
         title,
-        body: messageBody,
+        message: messageBody || messageAlt,
         data: data || {},
-        read: false,
+        is_read: false,
       })
 
     if (error) throw error

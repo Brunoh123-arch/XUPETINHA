@@ -573,15 +573,24 @@ export default function RideOffersPage() {
   }, [params.id, fetchOffers, router])
 
   const handleAccept = async (offer: OfferWithDriver) => {
-  triggerHaptic('success')
-  setAcceptingId(offer.id)
+    triggerHaptic('success')
+    setAcceptingId(offer.id)
     try {
-      await supabase.from('price_offers').update({ status: 'accepted' }).eq('id', offer.id)
-      await supabase.from('rides').update({ driver_id: offer.driver_id, final_price: offer.offered_price, status: 'accepted' }).eq('id', params.id)
-      await supabase.from('price_offers').update({ status: 'rejected' }).eq('ride_id', params.id).neq('id', offer.id)
+      const res = await fetch(`/api/v1/offers/${offer.id}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        alert(res.status === 409 ? 'Esta oferta não está mais disponível.' : (err.error || 'Erro ao aceitar oferta.'))
+        const fresh = await fetchOffers()
+        setOffers(fresh)
+        return
+      }
       router.push(`/uppi/ride/${params.id}/tracking`)
     } catch (e) {
       console.error('Error accepting offer:', e)
+      alert('Erro de conexão. Tente novamente.')
     } finally {
       setAcceptingId(null)
     }

@@ -102,16 +102,9 @@ export default function PaymentPage() {
       setProfile(profileData)
     }
 
-    // Load wallet balance
-    const { data: walletData } = await supabase
-      .from('user_wallets')
-      .select('balance')
-      .eq('user_id', user.id)
-      .single()
-
-    if (walletData) {
-      setWalletBalance(walletData.balance)
-    }
+    // Calcular saldo via RPC (fonte única de verdade)
+    const { data: rpcBalance } = await supabase.rpc('calculate_wallet_balance', { p_user_id: user.id })
+    setWalletBalance(typeof rpcBalance === 'number' ? rpcBalance : 0)
 
     setLoading(false)
   }

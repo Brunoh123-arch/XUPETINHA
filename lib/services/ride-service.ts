@@ -151,7 +151,7 @@ export class RideService {
         distance_km: ride.distance_km,
         estimated_duration: ride.estimated_duration_minutes,
       },
-      read: false,
+      is_read: false,
     }))
 
     const { error } = await this.supabase
@@ -232,7 +232,7 @@ export class RideService {
             offer_id: offer.id,
             offered_price: offeredPrice,
           },
-          read: false,
+          is_read: false,
         })
       }
 
@@ -310,7 +310,7 @@ export class RideService {
           ride_id: offer.ride_id,
           offer_id: offerId,
         },
-        read: false,
+        is_read: false,
       })
 
       return { success: true, ride: updatedRide }

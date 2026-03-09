@@ -87,6 +87,15 @@ export default function CancelRidePage() {
       })
 
       if (res.ok) {
+        const data = await res.json()
+
+        // Mostrar feedback de reembolso antes de redirecionar
+        if (data.refund?.status === 'refunded' && data.refund.amount > 0) {
+          alert(`Corrida cancelada.\n\nReembolso: R$ ${data.refund.amount.toFixed(2)} creditados na sua carteira Uppi.`)
+        } else if (data.refund?.status === 'pending_refund') {
+          alert('Corrida cancelada.\n\nSeu reembolso PIX está sendo processado e será creditado na sua carteira em breve.')
+        }
+
         router.replace('/uppi/home')
       } else {
         const err = await res.json()

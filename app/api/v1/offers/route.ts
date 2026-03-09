@@ -101,7 +101,7 @@ export async function POST(request: Request) {
         title: 'Nova oferta recebida',
         message: `Oferta de R$ ${Number(offered_price).toFixed(2)} de ${driver.vehicle_brand} ${driver.vehicle_model}`,
         data: { ride_id, offer_id: offer.id },
-        read: false,
+        is_read: false,
       })
     } catch (_) {}
 

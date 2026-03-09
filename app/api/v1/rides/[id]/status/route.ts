@@ -89,7 +89,7 @@ export async function PATCH(
         title: notif.title,
         message: notif.message,
         data: { ride_id: id, status },
-        read: false,
+        is_read: false,
       })
     }
 

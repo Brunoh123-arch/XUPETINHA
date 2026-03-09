@@ -23,7 +23,7 @@ export async function sendNotification({
     title,
     message,
     ride_id: rideId,
-    read: false,
+    is_read: false,
   })
 
   if (error) {

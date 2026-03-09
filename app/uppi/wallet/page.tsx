@@ -61,12 +61,14 @@ export default function WalletPage() {
         (payload) => {
           if (payload.eventType === 'INSERT' && payload.new.user_id === user.id) {
             setTransactions(prev => [payload.new as Payment, ...prev])
-            if (payload.new.type === 'credit') {
-              setBalance(prev => prev + parseFloat(payload.new.amount))
-              iosToast.success(`+R$ ${parseFloat(payload.new.amount).toFixed(2)}`)
+            const isCredit = ['credit', 'refund', 'bonus'].includes(payload.new.type)
+            const amt = parseFloat(payload.new.amount)
+            if (isCredit) {
+              setBalance(prev => prev + amt)
+              iosToast.success(`+R$ ${amt.toFixed(2)}`)
               haptics.notification('success')
-            } else if (payload.new.type === 'debit') {
-              setBalance(prev => prev - parseFloat(payload.new.amount))
+            } else {
+              setBalance(prev => prev - amt)
             }
           }
         },
@@ -84,24 +86,13 @@ export default function WalletPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Load wallet transactions to calculate balance
-      const { data: transactions, error } = await supabase
-        .from('wallet_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-
-      // Calculate balance from transactions
-      const calculatedBalance = (transactions || []).reduce((sum, t) => {
-        if (t.type === 'credit') return sum + parseFloat(t.amount)
-        if (t.type === 'debit') return sum - parseFloat(t.amount)
-        return sum
-      }, 0)
-
-      setBalance(calculatedBalance)
-      setTransactions(transactions || [])
+      // Carregar via API de wallet (calcula saldo via RPC e retorna transações)
+      const res = await fetch('/api/v1/wallet')
+      if (res.ok) {
+        const { balance: apiBalance, transactions: apiTxs } = await res.json()
+        setBalance(typeof apiBalance === 'number' ? apiBalance : 0)
+        setTransactions(apiTxs || [])
+      }
     } catch (error) {
       console.error('[v0] Error loading wallet:', error)
     } finally {
@@ -188,18 +179,23 @@ export default function WalletPage() {
 
     setWithdrawing(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { error } = await supabase.from('wallet_transactions').insert({
-        user_id: user.id,
-        amount: value,
-        type: 'debit',
-        description: 'Solicitacao de saque via PIX',
-        status: 'pending',
+      // Usar API de wallet para garantir consistência do saldo em user_wallets
+      const res = await fetch('/api/v1/wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: value,
+          type: 'withdrawal',
+          description: 'Solicitacao de saque via PIX',
+        }),
       })
 
-      if (error) throw error
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        iosToast.error(err.error || 'Erro ao solicitar saque')
+        triggerHaptic('error')
+        return
+      }
 
       await loadWalletData()
       setShowWithdraw(false)
