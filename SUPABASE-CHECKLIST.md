@@ -108,39 +108,52 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 
 ---
 
-## RPCs Disponiveis (42 funcoes)
+## RPCs Disponiveis (58 funcoes de negocio — verificadas via SELECT em information_schema.routines em 09/03/2026)
 
 ### Corridas e Motorista
 - find_nearby_drivers, create_ride, accept_ride, start_ride, complete_ride, cancel_ride
-- submit_price_offer, accept_price_offer, upsert_driver_location
+- submit_price_offer, accept_price_offer, upsert_driver_location (2 assinaturas)
 - get_driver_active_ride, estimate_ride_price, get_surge_multiplier
 - driver_accept_scheduled_ride, get_available_scheduled_rides
+- handle_driver_cancellation, handle_ride_completed
+- get_ride_with_details, get_ride_history, get_ride_history_paginated
 
 ### Financeiro
 - calculate_wallet_balance, get_wallet_balance, get_full_wallet_statement
-- request_withdrawal, request_withdrawal_v2
+- get_driver_wallet_balance, get_user_payment_summary
+- request_withdrawal (2 assinaturas), request_withdrawal_v2
 - apply_coupon, apply_coupon_to_ride, redeem_coupon
 - admin_approve_withdrawal, admin_reject_withdrawal, admin_process_withdrawal
 - get_admin_financial_summary, get_rides_revenue_by_day
+- sync_driver_wallet_on_complete, auto_create_payment_on_complete
+- book_intercity_seat, get_pending_withdrawals
 
 ### Perfil e Usuario
 - get_full_profile, get_driver_stats, get_driver_dashboard_stats
 - get_passenger_home_data, get_driver_home_data
 - get_referral_stats, generate_referral_code
 - submit_rating, check_ride_reviewed, get_pending_reviews
+- update_user_rating (2 assinaturas), update_acceptance_rate (2 assinaturas)
+- update_trust_score, trigger_update_trust_score
+- handle_new_user, handle_new_profile, handle_new_profile_wallet
+- handle_new_user_settings, handle_new_recording_prefs, handle_new_sms_prefs
 
 ### Social e Gamificacao
-- get_social_feed, get_leaderboard, get_leaderboard_full, refresh_leaderboard
+- get_social_feed, get_leaderboard (3 assinaturas), get_leaderboard_full, refresh_leaderboard
+- update_leaderboard_on_complete
 - check_and_award_achievements, check_and_grant_achievements
+- check_and_grant_referral_achievements, trigger_check_achievements_on_complete
+- update_post_likes_count, update_post_comments_count
+- increment, increment_comment_count, decrement_comment_count
 - process_referral_reward, check_referral_on_complete
 
 ### Admin e Plataforma
 - admin_ban_user, admin_verify_driver, send_notification
 - mark_all_notifications_read, get_app_config
 - create_support_ticket, reply_support_ticket, create_emergency_alert
-- get_ride_history, get_ride_history_paginated, get_ride_with_details
 - get_popular_routes, record_address_search, search_address_history
-- snapshot_platform_metrics
+- snapshot_platform_metrics, trigger_snapshot_on_complete
+- update_updated_at_column
 
 ---
 

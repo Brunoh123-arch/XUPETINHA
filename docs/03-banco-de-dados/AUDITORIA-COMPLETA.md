@@ -16,7 +16,7 @@
 | Tabelas com RLS ativo | 79 (exceto spatial_ref_sys — PostGIS) |
 | Tabelas COM Realtime | **39** (verificado via pg_publication_tables) |
 | Tabelas SEM Realtime | **41** |
-| RPCs callable (negocio) | 42 |
+| RPCs callable (negocio, excl. PostGIS) | 58 (verificado via information_schema.routines em 09/03/2026) |
 | Trigger functions | 25+ |
 | API Routes (arquivos route.ts) | 57+ |
 | Endpoints HTTP totais | 92+ |

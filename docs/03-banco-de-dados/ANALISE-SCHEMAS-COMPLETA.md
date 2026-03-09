@@ -227,7 +227,7 @@ SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'TWILIO_AUTH_T
 | Tabelas dominio (public) | 80 |
 | Tabelas com RLS | 79 |
 | Tabelas com Realtime | 39 |
-| RPCs callable | 42 |
+| RPCs callable (negocio, excl. PostGIS) | 58 |
 | Trigger functions | 25+ |
 | Schemas ativos | 8 |
 | Extensoes | 7 |

@@ -12,8 +12,8 @@
 PROJETO:   jpnwxqjrhzaobnugjnyx
 TABELAS:   80 (schema public)
 RLS:       79 tabelas (exceto spatial_ref_sys)
-REALTIME:  39 tabelas (verificado via pg_publication_tables)
-RPCs:      42 funcoes callable
+REALTIME:  39 tabelas (verificado via pg_publication_tables em 09/03/2026)
+RPCs:      58 funcoes de negocio callable (excluindo PostGIS)
 TRIGGERS:  25+ functions
 ```
 
@@ -36,30 +36,41 @@ TRIGGERS:  25+ functions
 - [x] Indexes otimizados
 - [x] PostGIS instalado (find_nearby_drivers usa ST_Distance)
 
-### Realtime (35 tabelas publicadas)
-- [x] rides, price_offers, driver_locations, driver_profiles
+### Realtime (39 tabelas — verificado via pg_publication_tables em 09/03/2026)
+- [x] rides, price_offers, driver_locations, driver_profiles, driver_reviews
 - [x] messages, notifications, support_messages, support_tickets
-- [x] payments, wallet_transactions, user_wallets
+- [x] payments, wallet_transactions, user_wallets, driver_withdrawals
 - [x] social_posts, social_post_likes, social_follows
-- [x] ratings, driver_reviews, leaderboard, user_achievements
+- [x] ratings, leaderboard, user_achievements, user_push_tokens
 - [x] group_rides, group_ride_members, group_ride_participants
 - [x] intercity_rides, intercity_bookings, delivery_orders
 - [x] scheduled_rides, ride_tracking, hot_zones, city_zones, surge_pricing
 - [x] emergency_alerts, emergency_contacts, sms_deliveries
-- [x] subscriptions, promo_banners, user_push_tokens
+- [x] subscriptions, promo_banners
 - [x] profiles, error_logs, webhook_deliveries
 
-### RPCs Disponiveis (42 funcoes)
+### Tabelas SEM Realtime (41 tabelas — correto, nao precisam de escuta em tempo real)
+address_history, address_search_history, admin_logs, app_config, campaigns,
+coupon_uses, coupons, driver_verifications, email_otps, family_members, faqs,
+favorite_drivers, favorites, legal_documents, notification_preferences,
+platform_metrics, popular_routes, post_comments, post_likes, pricing_rules,
+promotions, push_subscriptions, rating_categories, recording_consents,
+referral_achievements, referrals, reviews, ride_recordings, sms_logs, sms_templates,
+spatial_ref_sys, system_settings, user_2fa, user_coupons, user_onboarding,
+user_recording_preferences, user_settings, user_sms_preferences, user_social_stats,
+vehicles, webhook_endpoints
 
-**Corridas:** find_nearby_drivers, create_ride, accept_ride, start_ride, complete_ride, cancel_ride, submit_price_offer, accept_price_offer, upsert_driver_location, estimate_ride_price, get_surge_multiplier, get_driver_active_ride, driver_accept_scheduled_ride
+### RPCs Disponiveis (58 funcoes de negocio — verificado via SQL em 09/03/2026)
 
-**Financeiro:** calculate_wallet_balance, get_wallet_balance, get_full_wallet_statement, request_withdrawal, request_withdrawal_v2, apply_coupon, redeem_coupon, admin_approve_withdrawal, admin_reject_withdrawal
+**Corridas:** find_nearby_drivers, create_ride, accept_ride, start_ride, complete_ride, cancel_ride, submit_price_offer, accept_price_offer, upsert_driver_location, estimate_ride_price, get_surge_multiplier, get_driver_active_ride, driver_accept_scheduled_ride, handle_driver_cancellation, handle_ride_completed, get_ride_with_details, get_ride_history, get_ride_history_paginated
 
-**Perfil:** get_full_profile, get_driver_stats, get_driver_dashboard_stats, get_passenger_home_data, get_driver_home_data, get_referral_stats, generate_referral_code, submit_rating
+**Financeiro:** calculate_wallet_balance, get_wallet_balance, get_full_wallet_statement, get_driver_wallet_balance, get_user_payment_summary, request_withdrawal, request_withdrawal_v2, apply_coupon, apply_coupon_to_ride, redeem_coupon, admin_approve_withdrawal, admin_reject_withdrawal, admin_process_withdrawal, get_admin_financial_summary, get_rides_revenue_by_day, sync_driver_wallet_on_complete, auto_create_payment_on_complete, book_intercity_seat, get_pending_withdrawals
 
-**Social:** get_social_feed, get_leaderboard, refresh_leaderboard, check_and_award_achievements, process_referral_reward
+**Perfil:** get_full_profile, get_driver_stats, get_driver_dashboard_stats, get_passenger_home_data, get_driver_home_data, get_referral_stats, generate_referral_code, submit_rating, check_ride_reviewed, get_pending_reviews, update_user_rating, update_acceptance_rate, update_trust_score, handle_new_user, handle_new_profile, handle_new_profile_wallet, handle_new_user_settings
 
-**Admin:** admin_ban_user, admin_verify_driver, send_notification, create_support_ticket, get_ride_with_details, get_ride_history, snapshot_platform_metrics
+**Social e Gamificacao:** get_social_feed, get_leaderboard, get_leaderboard_full, refresh_leaderboard, update_leaderboard_on_complete, check_and_award_achievements, check_and_grant_achievements, check_and_grant_referral_achievements, update_post_likes_count, update_post_comments_count, increment_comment_count, decrement_comment_count, process_referral_reward, check_referral_on_complete
+
+**Admin e Plataforma:** admin_ban_user, admin_verify_driver, send_notification, mark_all_notifications_read, get_app_config, create_support_ticket, reply_support_ticket, create_emergency_alert, get_popular_routes, record_address_search, search_address_history, snapshot_platform_metrics, trigger_snapshot_on_complete, update_updated_at_column
 
 ---
 
