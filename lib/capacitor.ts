@@ -1,7 +1,4 @@
 import { Capacitor } from '@capacitor/core'
-import { App } from '@capacitor/app'
-import { StatusBar, Style } from '@capacitor/status-bar'
-import { SplashScreen } from '@capacitor/splash-screen'
 
 /**
  * Verifica se esta rodando como app nativo (Capacitor)
@@ -24,6 +21,11 @@ export async function initCapacitorApp() {
   if (!isNativePlatform()) return
 
   try {
+    // Imports dinamicos — so rodam se for nativo
+    const { SplashScreen } = await import('@capacitor/splash-screen')
+    const { StatusBar, Style } = await import('@capacitor/status-bar')
+    const { App } = await import('@capacitor/app')
+
     // Esconder splash screen apos carregar
     await SplashScreen.hide()
 
@@ -36,21 +38,19 @@ export async function initCapacitorApp() {
       if (canGoBack) {
         window.history.back()
       } else {
-        // Confirmar saida do app
-        // App.exitApp() // Descomente se quiser sair direto
+        // Sair do app
+        App.exitApp()
       }
     })
 
     // Listener para app state (foreground/background)
     App.addListener('appStateChange', ({ isActive }) => {
       console.log('[Capacitor] App state:', isActive ? 'foreground' : 'background')
-      // Pode pausar/retomar tracking, etc.
     })
 
     // Listener para deep links
     App.addListener('appUrlOpen', ({ url }) => {
       console.log('[Capacitor] Deep link:', url)
-      // Navegar para a rota correta baseado na URL
       const path = new URL(url).pathname
       if (path) {
         window.location.href = path
@@ -64,11 +64,16 @@ export async function initCapacitorApp() {
 }
 
 /**
- * Mostra a splash screen (util para loading states)
+ * Mostra a splash screen
  */
 export async function showSplash() {
   if (!isNativePlatform()) return
-  await SplashScreen.show({ autoHide: false })
+  try {
+    const { SplashScreen } = await import('@capacitor/splash-screen')
+    await SplashScreen.show({ autoHide: false })
+  } catch (err) {
+    console.error('[Capacitor] Erro ao mostrar splash:', err)
+  }
 }
 
 /**
@@ -76,7 +81,12 @@ export async function showSplash() {
  */
 export async function hideSplash() {
   if (!isNativePlatform()) return
-  await SplashScreen.hide()
+  try {
+    const { SplashScreen } = await import('@capacitor/splash-screen')
+    await SplashScreen.hide()
+  } catch (err) {
+    console.error('[Capacitor] Erro ao esconder splash:', err)
+  }
 }
 
 /**
@@ -89,16 +99,22 @@ export async function setStatusBar(options: {
 }) {
   if (!isNativePlatform()) return
 
-  if (options.style) {
-    await StatusBar.setStyle({
-      style: options.style === 'light' ? Style.Light : Style.Dark,
-    })
-  }
-  if (options.backgroundColor) {
-    await StatusBar.setBackgroundColor({ color: options.backgroundColor })
-  }
-  if (options.overlay !== undefined) {
-    await StatusBar.setOverlaysWebView({ overlay: options.overlay })
+  try {
+    const { StatusBar, Style } = await import('@capacitor/status-bar')
+
+    if (options.style) {
+      await StatusBar.setStyle({
+        style: options.style === 'light' ? Style.Light : Style.Dark,
+      })
+    }
+    if (options.backgroundColor) {
+      await StatusBar.setBackgroundColor({ color: options.backgroundColor })
+    }
+    if (options.overlay !== undefined) {
+      await StatusBar.setOverlaysWebView({ overlay: options.overlay })
+    }
+  } catch (err) {
+    console.error('[Capacitor] Erro ao configurar status bar:', err)
   }
 }
 
@@ -107,5 +123,11 @@ export async function setStatusBar(options: {
  */
 export async function getAppInfo() {
   if (!isNativePlatform()) return null
-  return await App.getInfo()
+  try {
+    const { App } = await import('@capacitor/app')
+    return await App.getInfo()
+  } catch (err) {
+    console.error('[Capacitor] Erro ao obter info do app:', err)
+    return null
+  }
 }

@@ -4,23 +4,15 @@ const config: CapacitorConfig = {
   appId: 'app.uppi.mobile',
   appName: 'Uppi',
 
-  // Aponta para a URL de producao (Vercel)
-  // O Capacitor carrega o site remoto em vez de arquivos locais
-  webDir: 'public',
-
-  server: {
-    // URL do app em producao — substitua pelo dominio real
-    url: process.env.CAPACITOR_SERVER_URL || 'https://uppi.vercel.app',
-    cleartext: false,
-    androidScheme: 'https',
-  },
+  // App NATIVO - carrega apenas localmente
+  // next export gera arquivos estáticos em 'out'
+  // Após 'npx cap sync', esses arquivos vão para android/app/src/main/assets/www
+  webDir: 'out',
 
   android: {
     useLegacyBridge: false,
     allowMixedContent: false,
     backgroundColor: '#FF6B00',
-    // Habilita deep links
-    appendUserAgent: 'UppiApp/1.0',
   },
 
   plugins: {

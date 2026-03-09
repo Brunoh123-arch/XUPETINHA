@@ -4,7 +4,6 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { GoogleMapsProvider } from '@/lib/google-maps/provider'
-import { useFcmPushNotifications } from '@/hooks/use-fcm-push-notifications'
 import { CapacitorProvider } from '@/components/capacitor-provider'
 
 // Lazy-loaded providers that are not needed during SSR prerendering
