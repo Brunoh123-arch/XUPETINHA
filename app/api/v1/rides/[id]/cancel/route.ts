@@ -189,7 +189,7 @@ export async function POST(
       },
     })
   } catch (error) {
-    console.error('[v0] Error cancelling ride:', error)
+    console.error('Error cancelling ride:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -63,7 +63,7 @@ class ReviewService {
         .single()
 
       if (error) {
-        console.error('[v0] Error submitting review:', error)
+        console.error('Error submitting review:', error)
         return { success: false, error: error.message }
       }
 
@@ -72,7 +72,7 @@ class ReviewService {
 
       return { success: true, review }
     } catch (error) {
-      console.error('[v0] Unexpected error submitting review:', error)
+      console.error('Unexpected error submitting review:', error)
       return { success: false, error: 'Erro inesperado' }
     }
   }
@@ -93,7 +93,7 @@ class ReviewService {
       if (error) throw error
       return { success: true, reviews: data }
     } catch (error) {
-      console.error('[v0] Error fetching reviews:', error)
+      console.error('Error fetching reviews:', error)
       return { success: false, error: 'Erro ao carregar avaliações', reviews: [] }
     }
   }
@@ -132,7 +132,7 @@ class ReviewService {
         rating_distribution: distribution
       }
     } catch (error) {
-      console.error('[v0] Error getting review stats:', error)
+      console.error('Error getting review stats:', error)
       return {
         average_rating: 0,
         total_reviews: 0,

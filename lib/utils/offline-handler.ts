@@ -93,14 +93,14 @@ export async function retryFetch<T>(
 
       // If max retries reached, throw error
       if (attempt > maxRetries) {
-        console.error('[v0] Max retries reached:', error)
+        console.error('Max retries reached:', error)
         throw lastError
       }
 
       // Calculate delay with exponential backoff
       const delay = retryDelay * Math.pow(backoffMultiplier, attempt - 1)
 
-      console.log(`[v0] Retry ${attempt}/${maxRetries} after ${delay}ms`)
+      // retry ${attempt}/${maxRetries} after ${delay}ms
 
       // Show toast on retry
       if (attempt === 1) {
@@ -223,7 +223,7 @@ class OfflineQueue {
         try {
           this.queue = JSON.parse(stored)
         } catch (error) {
-          console.error('[v0] Error loading offline queue:', error)
+          console.error('Error loading offline queue:', error)
         }
       }
     }

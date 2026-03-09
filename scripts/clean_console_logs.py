@@ -1,52 +1,59 @@
 #!/usr/bin/env python3
 """
 Remove o prefixo de debug '[v0] ' de todos os console.log/error/warn
-em arquivos .ts e .tsx do projeto.
+em arquivos .ts e .tsx do projeto, usando substituicao de string simples.
 """
 
 import os
-import re
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path("/vercel/share/v0-project")
+SKIP_DIRS = {".next", "node_modules", ".git", "scripts", "public"}
 
-SKIP_DIRS = {".next", "node_modules", ".git", "scripts"}
+# Todos os padroes de prefixo que aparecem nos arquivos
+REPLACEMENTS = [
+    ("'[v0] ', ",  ""),   # console.log('[v0] ', var)  -> console.log(var)
+    ('"[v0] ", ',  ""),   # variante aspas duplas
+    ("'[v0] '",    "''"), # console.log('[v0] ') -> console.log('')  — mas melhor remover
+    ('"[v0] "',    '""'),
+    # Padrao mais comum: console.log('[v0] Texto...', ...)
+    # A string '[v0] X' deve ter o prefixo removido do proprio conteudo
+]
 
-PATTERN = re.compile(r'''(console\.(log|error|warn|info)\()('[v0][v0]\])\s*''')
-# Match: console.log('[v0] ... ou console.error('[v0] ...
-# Substitui removendo o '[v0] ' do argumento e deixa o restante
-FULL_PATTERN = re.compile(
-    r"""(console\.(log|error|warn|info)\()'?\[v0\]\s*(.*?)""",
-    re.DOTALL
-)
-
-# Pattern mais simples e seguro: linha a linha
-LINE_PATTERN = re.compile(r"""(console\.(log|error|warn|info)\()'?\[v0\] ?""")
-
-def clean_file(path: Path) -> int:
-    text = path.read_text(encoding="utf-8")
-    new_text, count = LINE_PATTERN.subn(r'\1', text)
-    if count > 0:
-        path.write_text(new_text, encoding="utf-8")
-    return count
+def clean_line(line: str) -> str:
+    # Substitui '[v0] Qualquer texto' -> 'Qualquer texto' dentro de console calls
+    import re
+    # Aspas simples: '[v0] ...'
+    line = re.sub(r"'(\[v0\] )", "'", line)
+    # Aspas duplas: "[v0] ..."
+    line = re.sub(r'"(\[v0\] )', '"', line)
+    return line
 
 total_files = 0
-total_replacements = 0
+total_lines = 0
 
 for root, dirs, files in os.walk(ROOT):
-    # Pular diretorios desnecessarios
     dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
     for fname in files:
         if fname.endswith((".ts", ".tsx")):
             fpath = Path(root) / fname
             try:
-                n = clean_file(fpath)
-                if n > 0:
+                original = fpath.read_text(encoding="utf-8")
+                lines = original.splitlines(keepends=True)
+                new_lines = []
+                changed = 0
+                for line in lines:
+                    new_line = clean_line(line)
+                    if new_line != line:
+                        changed += 1
+                    new_lines.append(new_line)
+                if changed > 0:
+                    fpath.write_text("".join(new_lines), encoding="utf-8")
                     rel = fpath.relative_to(ROOT)
-                    print(f"  {rel}: {n} substituicao(oes)")
+                    print(f"  {rel}: {changed} linha(s)")
                     total_files += 1
-                    total_replacements += n
+                    total_lines += changed
             except Exception as e:
                 print(f"  ERRO em {fpath}: {e}")
 
-print(f"\nTotal: {total_replacements} substituicoes em {total_files} arquivos")
+print(f"\nTotal: {total_lines} linhas em {total_files} arquivos")

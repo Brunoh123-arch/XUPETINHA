@@ -52,10 +52,61 @@ export default function RideTrackingPage() {
   const mapRef = useRef<GoogleMapHandle>(null)
   const driverMarkerRef = useRef<google.maps.Marker | null>(null)
   const unsubRef = useRef<(() => void) | null>(null)
+  const lastLocationTimestampRef = useRef<number>(0)
+  const stalenessTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [locationStale, setLocationStale] = useState(false)
+  const [realtimeConnected, setRealtimeConnected] = useState(true)
+
+  /** Reinicia a subscription Realtime em caso de desconexao */
+  const reconnectRealtime = useCallback(() => {
+    if (unsubRef.current) { unsubRef.current(); unsubRef.current = null }
+    unsubRef.current = trackingService.subscribeToRideUpdates(rideId, (update) => {
+      setRealtimeConnected(true)
+      if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null }
+
+      if (update.status) {
+        setRide(prev => prev ? { ...prev, status: update.status as RideStatus } : null)
+        if (update.status === 'driver_arrived') { iosToast.success('Motorista chegou!'); triggerHaptic('heavy') }
+        else if (update.status === 'in_progress') { iosToast.info('Corrida iniciada!'); triggerHaptic('medium') }
+        else if (update.status === 'completed') {
+          trackingService.stopTracking()
+          iosToast.success('Corrida finalizada!')
+          triggerHaptic('heavy')
+          const destination = (roleRef.current) === 'driver' ? `/uppi/driver/ride/${rideId}/summary` : `/uppi/ride/${rideId}/review`
+          setTimeout(() => router.push(destination), 1500)
+        } else if (update.status === 'cancelled') {
+          trackingService.stopTracking()
+          iosToast.error('Corrida cancelada')
+          setTimeout(() => router.push('/uppi/home'), 2000)
+        }
+      }
+
+      if (update.driver_location) {
+        const loc = update.driver_location
+        lastLocationTimestampRef.current = Date.now()
+        setLocationStale(false)
+        setDriverLocation(loc)
+        updateDriverMarker(loc)
+        setRide(prev => { recalcEta(loc, prev); return prev })
+      }
+    })
+
+    // Detectar desconexao do Realtime — se nenhum update em 30s, reconectar
+    reconnectTimerRef.current = setTimeout(() => {
+      setRealtimeConnected(false)
+      iosToast.error('Reconectando ao rastreamento...')
+      reconnectRealtime()
+    }, 30_000)
+  }, [rideId, router]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadData()
-    return () => { unsubRef.current?.() }
+    return () => {
+      unsubRef.current?.()
+      if (stalenessTimerRef.current) clearInterval(stalenessTimerRef.current)
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current)
+    }
   }, [rideId])
 
   const loadData = async () => {
@@ -112,43 +163,16 @@ export default function RideTrackingPage() {
         trackingService.startDriverTracking(rideId, user.id)
       }
 
-      // Subscrever atualizações realtime
-      unsubRef.current = trackingService.subscribeToRideUpdates(rideId, (update) => {
-        if (update.status) {
-          setRide(prev => prev ? { ...prev, status: update.status as RideStatus } : null)
+      // Subscrever atualizações realtime com reconnect automático
+      reconnectRealtime()
 
-          if (update.status === 'driver_arrived') {
-            iosToast.success('Motorista chegou!')
-            triggerHaptic('heavy')
-          } else if (update.status === 'in_progress') {
-            iosToast.info('Corrida iniciada!')
-            triggerHaptic('medium')
-          } else if (update.status === 'completed') {
-            trackingService.stopTracking()
-            iosToast.success('Corrida finalizada!')
-            triggerHaptic('heavy')
-            // Redirect condicional por role (roleRef evita closure stale)
-            const destination = (roleRef.current ?? userRole) === 'driver'
-              ? `/uppi/driver/ride/${rideId}/summary`
-              : `/uppi/ride/${rideId}/review`
-            setTimeout(() => router.push(destination), 1500)
-          } else if (update.status === 'cancelled') {
-            trackingService.stopTracking()
-            iosToast.error('Corrida cancelada')
-            setTimeout(() => router.push('/uppi/home'), 2000)
-          }
+      // Verificar staleness da localização do motorista a cada 15s
+      stalenessTimerRef.current = setInterval(() => {
+        const secondsSinceUpdate = (Date.now() - lastLocationTimestampRef.current) / 1000
+        if (lastLocationTimestampRef.current > 0 && secondsSinceUpdate > 60) {
+          setLocationStale(true)
         }
-
-        if (update.driver_location) {
-          const loc = update.driver_location
-          setDriverLocation(loc)
-          updateDriverMarker(loc)
-          setRide(prev => {
-            recalcEta(loc, prev)
-            return prev
-          })
-        }
-      })
+      }, 15_000)
     } finally {
       setLoading(false)
     }
@@ -342,6 +366,19 @@ export default function RideTrackingPage() {
             </svg>
           </button>
 
+          {/* Aviso de localização desatualizada */}
+          {locationStale && (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-amber-500/90 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md flex items-center gap-1.5 z-30">
+              <div className="w-1.5 h-1.5 rounded-full bg-white opacity-75 animate-pulse" />
+              Localizacao desatualizada
+            </div>
+          )}
+          {!realtimeConnected && (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-red-500/90 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md flex items-center gap-1.5 z-30">
+              <div className="w-1.5 h-1.5 rounded-full bg-white opacity-75 animate-ping" />
+              Reconectando...
+            </div>
+          )}
           <div className={cn('px-4 py-2 rounded-full flex items-center gap-2 shadow-md', statusColor)}>
             {isActive && <div className="w-2 h-2 bg-white rounded-full animate-pulse" />}
             <span className="text-[13px] font-bold text-white">{statusLabel}</span>
