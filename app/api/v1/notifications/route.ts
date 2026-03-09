@@ -53,7 +53,8 @@ export async function POST(request: Request) {
         title,
         message,
         ride_id,
-        read: false,
+        // Usa is_read para consistência com notification-service e a notifications page
+        is_read: false,
       })
       .select()
       .single()
@@ -80,11 +81,12 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { notification_id, read } = body
+    const { notification_id, is_read } = body
 
+    // Padronizado para is_read (consistente com notification-service e a notifications page)
     const { data: notification, error } = await supabase
       .from('notifications')
-      .update({ read })
+      .update({ is_read, read_at: is_read ? new Date().toISOString() : null })
       .eq('id', notification_id)
       .eq('user_id', user.id)
       .select()

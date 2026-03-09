@@ -15,6 +15,8 @@ import { IOSInputEnhanced } from '@/components/ui/ios-input-enhanced'
 import { IOSChip } from '@/components/ui/ios-chip'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight, ArrowDownLeft, Plus, CreditCard, Wallet as WalletIcon, TrendingUp } from 'lucide-react'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
 
 interface Payment {
   id: string
@@ -38,6 +40,14 @@ export default function WalletPage() {
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [withdrawing, setWithdrawing] = useState(false)
   const [txFilter, setTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
+  const [addingMoney, setAddingMoney] = useState(false)
+  const [pixModal, setPixModal] = useState<{
+    externalId: string
+    qrCodeText: string
+    qrCodeImage: string | null
+    amountLabel: string
+    rideId: string
+  } | null>(null)
 
   useEffect(() => {
     loadWalletData()
@@ -113,31 +123,50 @@ export default function WalletPage() {
       return
     }
 
+    setAddingMoney(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Create wallet transaction
-      const { error } = await supabase
-        .from('wallet_transactions')
-        .insert({
-          user_id: user.id,
-          amount: validation.data!.amount,
-          type: 'credit',
-          description: 'Recarga via PIX'
+      // Buscar dados do usuário para o PIX
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, cpf')
+        .eq('id', user.id)
+        .single()
+
+      // Gerar PIX de recarga — NÃO credita direto, aguarda confirmação de pagamento
+      const result = await paymentService.createPixPayment({
+        amount: Math.round(validation.data!.amount * 100),
+        description: `Recarga de carteira Uppi - R$ ${validation.data!.amount.toFixed(2)}`,
+        payer_name: profile?.full_name || '',
+        payer_cpf: profile?.cpf || '',
+        ride_id: `wallet-topup-${user.id}-${Date.now()}`, // ID sintético para rastrear
+      })
+
+      if (result.success && result.qr_code_text) {
+        setShowAddMoney(false)
+        setAmount('')
+        setPixModal({
+          externalId: result.payment_id!,
+          qrCodeText: result.qr_code_text,
+          qrCodeImage: result.qr_code || null,
+          amountLabel: `R$ ${validation.data!.amount.toFixed(2)}`,
+          rideId: `wallet-topup-${user.id}`,
         })
-
-      if (error) throw error
-
-      await loadWalletData()
-      setShowAddMoney(false)
-      setAmount('')
-      triggerHaptic('success')
-      iosToast.success('Saldo adicionado')
+        haptics.notification('success')
+        iosToast.info('Escaneie o QR Code para confirmar a recarga')
+      } else {
+        // Fallback: se o PIX falhar, informar mas não creditar
+        triggerHaptic('error')
+        iosToast.error('Erro ao gerar PIX', 'Tente novamente em instantes')
+      }
     } catch (error) {
       console.error('[v0] Error adding money:', error)
       triggerHaptic('error')
-      iosToast.error('Erro ao adicionar saldo')
+      iosToast.error('Erro ao iniciar recarga')
+    } finally {
+      setAddingMoney(false)
     }
   }
 
@@ -541,16 +570,38 @@ export default function WalletPage() {
                 haptics.impactMedium()
                 handleAddMoney()
               }}
-              disabled={!amount || parseFloat(amount) <= 0}
+              disabled={!amount || parseFloat(amount) <= 0 || addingMoney}
               className="w-full h-[56px] rounded-[18px] bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold text-[17px] ios-press shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
-              Confirmar Recarga
+              {addingMoney ? 'Gerando PIX...' : 'Gerar PIX de Recarga'}
             </button>
           </div>
         </div>
       </IOSBottomSheet>
 
       <BottomNavigation />
+
+      {/* Modal PIX de recarga — só exibido após gerar PIX, saldo creditado via webhook */}
+      {pixModal && (
+        <PixModal
+          isOpen={!!pixModal}
+          onClose={() => {
+            setPixModal(null)
+            loadWalletData() // recarregar para verificar se o pagamento foi confirmado
+          }}
+          externalId={pixModal.externalId}
+          qrCodeText={pixModal.qrCodeText}
+          qrCodeImage={pixModal.qrCodeImage}
+          amountLabel={pixModal.amountLabel}
+          rideId={pixModal.rideId}
+          onPaymentConfirmed={() => {
+            setPixModal(null)
+            loadWalletData()
+            iosToast.success('Recarga confirmada! Saldo atualizado.')
+            haptics.notification('success')
+          }}
+        />
+      )}
     </div>
   )
 }

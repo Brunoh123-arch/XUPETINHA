@@ -526,14 +526,11 @@ export default function RideOffersPage() {
 
   // Realtime subscriptions using realtime-service
   useEffect(() => {
-    console.log('[v0] Setting up realtime subscriptions for offers')
-    
     // Subscribe to new offers
     const offersChannel = realtimeService.subscribeToPriceOffers(
       params.id,
       async (payload) => {
         if (payload.eventType === 'INSERT') {
-          console.log('[v0] New offer received:', payload.new)
           const fresh = await fetchOffers()
           setOffers(fresh)
 
@@ -561,7 +558,6 @@ export default function RideOffersPage() {
       params.id,
       (payload) => {
         if (payload.eventType === 'UPDATE') {
-          console.log('[v0] Ride updated:', payload.new)
           const updated = payload.new as any
           if (updated.status === 'accepted' && updated.driver_id) {
             router.push(`/uppi/ride/${params.id}/tracking`)
@@ -571,7 +567,6 @@ export default function RideOffersPage() {
     )
 
     return () => {
-      console.log('[v0] Cleaning up realtime subscriptions')
       realtimeService.unsubscribe(offersChannel)
       realtimeService.unsubscribe(rideChannel)
     }
@@ -597,12 +592,14 @@ export default function RideOffersPage() {
     router.push('/uppi/home')
   }
 
-  // Sort: best offer first, then by estimated arrival
-  const sortedOffers = [...offers].sort((a, b) => {
-    if (a.id === bestOffer) return -1
-    if (b.id === bestOffer) return 1
-    return (a.estimatedMinutes ?? 99) - (b.estimatedMinutes ?? 99)
-  })
+  // Sort: best offer first, then by estimated arrival — filtra expiradas no render
+  const sortedOffers = [...offers]
+    .filter(o => (o.timeRemaining == null || o.timeRemaining > 0))
+    .sort((a, b) => {
+      if (a.id === bestOffer) return -1
+      if (b.id === bestOffer) return 1
+      return (a.estimatedMinutes ?? 99) - (b.estimatedMinutes ?? 99)
+    })
 
   const isMoto = ride?.vehicle_type === 'moto'
 

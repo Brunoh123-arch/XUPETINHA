@@ -38,13 +38,12 @@ export default function DriverActiveRidePage() {
   const [cancelling, setCancelling] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const watchRef = useRef<number | null>(null)
 
   useEffect(() => {
     loadRide()
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
-      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current)
+      trackingService.stopTracking()
     }
   }, [rideId])
 
@@ -59,24 +58,18 @@ export default function DriverActiveRidePage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [ride?.status, ride?.started_at])
 
-  // GPS location broadcasting when active
+  // GPS location broadcasting delegado ao trackingService (evita watch duplicado)
   useEffect(() => {
     if (!userId || !ride) return
     if (!['accepted', 'driver_arrived', 'in_progress'].includes(ride.status)) return
 
-    watchRef.current = navigator.geolocation.watchPosition(
-      async (pos) => {
-        await supabase.from('driver_profiles').update({
-          current_lat: pos.coords.latitude,
-          current_lng: pos.coords.longitude,
-        }).eq('id', userId)
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-    )
+    // trackingService já gerencia o watchPosition internamente
+    trackingService.startDriverTracking(rideId, userId)
 
-    return () => { if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current) }
-  }, [userId, ride?.status])
+    return () => {
+      // Só para o tracking quando a corrida terminar, não a cada re-render
+    }
+  }, [userId, rideId, ride?.status])
 
   // Realtime subscription
   useEffect(() => {
@@ -134,21 +127,26 @@ export default function DriverActiveRidePage() {
 
     setUpdating(true)
     try {
-      const updates: Partial<Ride> = { status: cfg.nextStatus }
-      if (cfg.nextStatus === 'in_progress') updates.started_at = new Date().toISOString()
-      if (cfg.nextStatus === 'completed') updates.completed_at = new Date().toISOString()
+      // Usa a API de status para garantir notificações, email de relatório e timestamps corretos
+      const res = await fetch(`/api/v1/rides/${rideId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: cfg.nextStatus }),
+      })
 
-      const { error } = await supabase
-        .from('rides')
-        .update(updates)
-        .eq('id', rideId)
-
-      if (!error) {
-        setRide(prev => prev ? { ...prev, ...updates } : null)
+      if (res.ok) {
+        const updates: Partial<Ride> = { status: cfg.nextStatus }
+        if (cfg.nextStatus === 'in_progress') updates.started_at = new Date().toISOString()
         if (cfg.nextStatus === 'completed') {
+          updates.completed_at = new Date().toISOString()
+          trackingService.stopTracking()
           if (timerRef.current) clearInterval(timerRef.current)
           setTimeout(() => router.replace(`/uppi/driver/ride/${rideId}/summary`), 800)
         }
+        setRide(prev => prev ? { ...prev, ...updates } : null)
+      } else {
+        const err = await res.json().catch(() => ({}))
+        console.error('[v0] advanceStatus error:', err)
       }
     } finally {
       setUpdating(false)
@@ -159,11 +157,20 @@ export default function DriverActiveRidePage() {
     if (!ride || cancelling) return
     setCancelling(true)
     try {
-      await supabase.from('rides').update({
-        status: 'cancelled',
-        cancellation_reason: 'Cancelado pelo motorista',
-        cancelled_at: new Date().toISOString(),
-      }).eq('id', rideId)
+      const res = await fetch(`/api/v1/rides/${rideId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled', cancellation_reason: 'Cancelado pelo motorista' }),
+      })
+      if (!res.ok) {
+        // fallback direto
+        await supabase.from('rides').update({
+          status: 'cancelled',
+          cancellation_reason: 'Cancelado pelo motorista',
+          cancelled_at: new Date().toISOString(),
+        }).eq('id', rideId)
+      }
+      trackingService.stopTracking()
       router.replace('/uppi/driver')
     } finally {
       setCancelling(false)

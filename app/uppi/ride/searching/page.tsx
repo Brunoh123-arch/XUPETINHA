@@ -109,6 +109,14 @@ export default function SearchingDriverPage() {
     if (s) setRoute(JSON.parse(s))
     const r = sessionStorage.getItem('selectedRide')
     if (r) setSelectedRide(JSON.parse(r))
+
+    // Verificar se há corrida ativa em andamento (usuário voltou à tela)
+    const savedRideId = sessionStorage.getItem('activeRideId')
+    if (savedRideId) {
+      setRideId(savedRideId)
+      setStatus('searching')
+      sub(savedRideId)
+    }
   }, [])
 
   useEffect(() => { if (route.pickupCoords && selectedRide) createRide() }, [route.pickupCoords, selectedRide])
@@ -129,7 +137,9 @@ export default function SearchingDriverPage() {
         payment_method: pm[selectedRide.paymentMethod] || 'cash', vehicle_type: vt, status: 'pending',
       }).select().single()
       if (error) throw error
-      setRideId(data.id); setStatus('searching'); sub(data.id)
+      setRideId(data.id)
+      sessionStorage.setItem('activeRideId', data.id)
+      setStatus('searching'); sub(data.id)
     } catch { await fallbackAPI() }
   }
 
@@ -145,7 +155,12 @@ export default function SearchingDriverPage() {
         payment_method: selectedRide.paymentMethod || 'cash', vehicle_type: selectedRide.vehicleType,
       }) })
       const d = await res.json()
-      if (d.ride?.id) { setRideId(d.ride.id); setStatus('searching'); sub(d.ride.id) } else setStatus('searching')
+      if (d.ride?.id) {
+        setRideId(d.ride.id)
+        sessionStorage.setItem('activeRideId', d.ride.id)
+        setStatus('searching')
+        sub(d.ride.id)
+      } else setStatus('searching')
     } catch { setStatus('searching') }
   }
 
@@ -187,16 +202,33 @@ export default function SearchingDriverPage() {
         selectedRide?.paymentMethod === 'Pix'
 
       if (isPix) {
+        // Buscar dados do usuário para preenchimento do PIX
+        const { data: { user } } = await supabase.auth.getUser()
+        let payerName = ''
+        let payerCpf = ''
+
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, cpf')
+            .eq('id', user.id)
+            .single()
+          payerName = profile?.full_name || ''
+          payerCpf = profile?.cpf || ''
+        }
+
         // Gerar PIX antes de navegar para tracking
         const result = await paymentService.createPixPayment({
           amount: Math.round(offer.offered_price * 100),
           description: `Corrida Uppi - ${route.pickup} ate ${route.destination}`,
-          payer_name: '',
-          payer_cpf: '',
+          payer_name: payerName,
+          payer_cpf: payerCpf,
           ride_id: rideId,
         })
 
         if (result.success && result.qr_code_text) {
+          // Salvar payment_id no sessionStorage para recuperação no tracking
+          sessionStorage.setItem('activePaymentId', result.payment_id || '')
           setPixModal({
             externalId: result.payment_id!,
             qrCodeText: result.qr_code_text,
@@ -206,9 +238,11 @@ export default function SearchingDriverPage() {
           })
         } else {
           // Fallback: ir para tracking mesmo sem PIX gerado
+          sessionStorage.removeItem('activeRideId')
           router.push(`/uppi/ride/${rideId}/tracking`)
         }
       } else {
+        sessionStorage.removeItem('activeRideId')
         router.push(`/uppi/ride/${rideId}/tracking`)
       }
     } catch { alert('Erro ao aceitar oferta. Tente novamente.') }
@@ -223,6 +257,7 @@ export default function SearchingDriverPage() {
 
   const cancel = async () => {
     if (rideId) await supabase.from('rides').update({ status: 'cancelled', cancelled_at: new Date().toISOString(), cancellation_reason: 'Cancelado pelo passageiro' }).eq('id', rideId)
+    sessionStorage.removeItem('activeRideId')
     router.push('/uppi/home')
   }
 

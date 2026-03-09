@@ -43,6 +43,7 @@ export default function RideTrackingPage() {
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<'passenger' | 'driver' | null>(null)
+  const roleRef = useRef<'passenger' | 'driver' | null>(null)
   const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null)
   const [eta, setEta] = useState<number | null>(null)
   const [showSafetyMenu, setShowSafetyMenu] = useState(false)
@@ -74,6 +75,7 @@ export default function RideTrackingPage() {
       // Detectar role
       const userRole = rideData.driver_id === user.id ? 'driver' : 'passenger'
       setRole(userRole)
+      roleRef.current = userRole
 
       if (rideData.driver_id) {
         const [{ data: driverData }, { data: vehicleData }] = await Promise.all([
@@ -123,7 +125,11 @@ export default function RideTrackingPage() {
             trackingService.stopTracking()
             iosToast.success('Corrida finalizada!')
             triggerHaptic('heavy')
-            setTimeout(() => router.push(`/uppi/ride/${rideId}/review`), 1500)
+            // Redirect condicional por role (roleRef evita closure stale)
+            const destination = (roleRef.current ?? userRole) === 'driver'
+              ? `/uppi/driver/ride/${rideId}/summary`
+              : `/uppi/ride/${rideId}/review`
+            setTimeout(() => router.push(destination), 1500)
           } else if (update.status === 'cancelled') {
             trackingService.stopTracking()
             iosToast.error('Corrida cancelada')

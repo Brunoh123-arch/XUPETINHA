@@ -65,6 +65,10 @@ export default function RideSelectPage() {
   const [showPreferences, setShowPreferences] = useState(false)
   const [couponCode, setCouponCode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('')
+  const [couponDiscount, setCouponDiscount] = useState(0)
+  const [appliedCouponCode, setAppliedCouponCode] = useState('')
+  const [couponError, setCouponError] = useState('')
+  const [applyingCoupon, setApplyingCoupon] = useState(false)
   const [waitTime] = useState('Sem tempo de espera')
   const [hasLuggage, setHasLuggage] = useState(false)
   const [hasPet, setHasPet] = useState(false)
@@ -259,7 +263,48 @@ export default function RideSelectPage() {
   }
 
   const selectedRide = rideOptions.find((r) => r.id === selected)
-  const selectedPrice = getPrice(selected)
+  const selectedPriceBase = getPrice(selected)
+  const selectedPrice = Math.max(0, Math.round((selectedPriceBase - couponDiscount) * 100) / 100)
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return
+    setApplyingCoupon(true)
+    setCouponError('')
+    try {
+      const res = await fetch('/api/v1/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim().toUpperCase() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCouponError(data.error || 'Cupom inválido')
+        return
+      }
+      // Calcular desconto: o cupom retorna o objeto da tabela user_coupons, precisamos do coupon_id
+      // Buscar detalhes do cupom para saber o discount_value e discount_type
+      const couponRes = await fetch(`/api/v1/coupons?code=${couponCode.trim().toUpperCase()}`)
+      if (couponRes.ok) {
+        const { coupons } = await couponRes.json()
+        const coupon = coupons?.[0]
+        if (coupon) {
+          let discount = 0
+          if (coupon.discount_type === 'percentage') {
+            discount = Math.round((selectedPriceBase * (coupon.discount_value / 100)) * 100) / 100
+          } else {
+            discount = Math.min(coupon.discount_value || 0, selectedPriceBase)
+          }
+          setCouponDiscount(discount)
+          setAppliedCouponCode(couponCode.trim().toUpperCase())
+        }
+      }
+      setShowCoupon(false)
+    } catch {
+      setCouponError('Erro ao aplicar cupom. Tente novamente.')
+    } finally {
+      setApplyingCoupon(false)
+    }
+  }
 
   return (
     <div className="h-dvh bg-background flex flex-col overflow-hidden relative">
@@ -526,6 +571,8 @@ export default function RideSelectPage() {
                     vehicleType: selected,
                     paymentMethod: paymentMethod || 'cash',
                     stops: route.stops || [],
+                    couponCode: appliedCouponCode || null,
+                    couponDiscount: couponDiscount || 0,
                   })
                 )
                 router.push('/uppi/ride/searching')
@@ -581,8 +628,12 @@ export default function RideSelectPage() {
                 </div>
               )}
               <div className="flex justify-between mb-3">
-                <span className="text-muted-foreground">Desconto de cupom</span>
-                <span className="font-medium text-foreground">R$ 0.00</span>
+                <span className="text-muted-foreground">
+                  {appliedCouponCode ? `Cupom (${appliedCouponCode})` : 'Desconto de cupom'}
+                </span>
+                <span className={`font-medium ${couponDiscount > 0 ? 'text-emerald-600' : 'text-foreground'}`}>
+                  {couponDiscount > 0 ? `-R$ ${couponDiscount.toFixed(2)}` : 'R$ 0.00'}
+                </span>
               </div>
               <div className="bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl py-3 px-5 flex items-center justify-between">
                 <span className="text-white font-semibold">Preço total</span>
@@ -667,16 +718,20 @@ export default function RideSelectPage() {
 
             <button
               type="button"
-              disabled={!couponCode.trim()}
-              onClick={() => setShowCoupon(false)}
+              disabled={!couponCode.trim() || applyingCoupon}
+              onClick={handleApplyCoupon}
               className={`w-full py-4 rounded-xl font-semibold text-base transition-colors ${
-                couponCode.trim()
+                couponCode.trim() && !applyingCoupon
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-secondary text-muted-foreground'
               }`}
             >
-              Aplicar
+              {applyingCoupon ? 'Verificando...' : 'Aplicar'}
             </button>
+
+            {couponError && (
+              <p className="text-red-500 text-sm text-center mt-2">{couponError}</p>
+            )}
 
             <button
               type="button"
