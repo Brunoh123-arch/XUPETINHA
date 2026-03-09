@@ -2,9 +2,14 @@ import { createClient } from '@/lib/supabase/client'
 
 export interface ReviewData {
   ride_id: string
-  rater_id: string
-  rated_id: string
-  score: number
+  // Aceita tanto os campos canônicos (rater_id/rated_id) quanto os aliases
+  // usados pela review page (reviewer_id/reviewee_id)
+  rater_id?: string
+  rated_id?: string
+  reviewer_id?: string
+  reviewee_id?: string
+  score?: number
+  rating?: number
   comment?: string
   tags?: string[]
   is_anonymous?: boolean
@@ -28,16 +33,28 @@ class ReviewService {
 
   async submitReview(data: ReviewData) {
     try {
-      console.log('[v0] Submitting review:', data)
+      // Normaliza aliases: reviewer_id → rater_id, reviewee_id → rated_id
+      const raterId = data.rater_id || data.reviewer_id
+      const ratedId = data.rated_id || data.reviewee_id
+      // Normaliza aliases: rating → score
+      const score = data.score ?? data.rating ?? 0
+
+      if (!raterId || !ratedId) {
+        return { success: false, error: 'IDs de avaliador e avaliado são obrigatórios' }
+      }
+
+      if (score < 1 || score > 5) {
+        return { success: false, error: 'Nota deve ser entre 1 e 5' }
+      }
 
       // Insert review
       const { data: review, error } = await this.supabase
         .from('ratings')
         .insert({
           ride_id: data.ride_id,
-          rater_id: data.rater_id,
-          rated_id: data.rated_id,
-          score: data.score,
+          rater_id: raterId,
+          rated_id: ratedId,
+          score,
           comment: data.comment || null,
           is_anonymous: data.is_anonymous ?? false,
           category_ratings: data.category_ratings ?? null,
@@ -51,7 +68,7 @@ class ReviewService {
       }
 
       // Update rated user's rating
-      await this.updateUserRating(data.rated_id)
+      await this.updateUserRating(ratedId)
 
       return { success: true, review }
     } catch (error) {
@@ -83,10 +100,11 @@ class ReviewService {
 
   async getReviewStats(userId: string): Promise<ReviewStats> {
     try {
+      // Usa a coluna correta: 'score' (não 'rating') e o FK correto: 'rated_id' (não 'reviewee_id')
       const { data, error } = await this.supabase
         .from('ratings')
-        .select('rating')
-        .eq('reviewee_id', userId)
+        .select('score')
+        .eq('rated_id', userId)
 
       if (error) throw error
 
@@ -99,12 +117,13 @@ class ReviewService {
         }
       }
 
-      const sum = data.reduce((acc, r) => acc + r.rating, 0)
+      const sum = data.reduce((acc, r) => acc + (r.score ?? 0), 0)
       const average = sum / total
 
       const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
       data.forEach(r => {
-        distribution[r.rating as keyof typeof distribution]++
+        const key = (r.score ?? 0) as keyof typeof distribution
+        if (key >= 1 && key <= 5) distribution[key]++
       })
 
       return {
@@ -136,14 +155,15 @@ class ReviewService {
 
   async hasUserReviewedRide(userId: string, rideId: string) {
     try {
-      const { data, error } = await this.supabase
+      // Usa o FK correto: 'rater_id' (não 'reviewer_id')
+      const { data } = await this.supabase
         .from('ratings')
         .select('id')
-        .eq('reviewer_id', userId)
+        .eq('rater_id', userId)
         .eq('ride_id', rideId)
-        .single()
+        .maybeSingle()
 
-      return { hasReviewed: !!data, error: error?.message }
+      return { hasReviewed: !!data, error: null }
     } catch (error) {
       return { hasReviewed: false, error: null }
     }

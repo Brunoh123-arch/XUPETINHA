@@ -134,9 +134,9 @@ export default function ReviewPage() {
 
       const result = await reviewService.submitReview({
         ride_id: params.id as string,
-        reviewer_id: currentUser.id,
-        reviewee_id: reviewedUser.id,
-        rating,
+        rater_id: currentUser.id,
+        rated_id: reviewedUser.id,
+        score: rating,
         comment: comment.trim() || undefined,
         tags: selectedTags.length > 0 ? selectedTags : undefined,
       })
