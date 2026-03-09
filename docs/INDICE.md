@@ -1,9 +1,9 @@
 # UPPI - Indice Completo do Projeto
 
-**Ultima atualizacao:** 06/03/2026
-**Versao:** 15.0
-**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 182 total / RLS policies corrigidas) + API (57 routes) + Auth + Realtime (8 tabelas) + Admin
-**Supabase:** mstnqzgsdnlsajuaezhs — schema corrigido em 06/03/2026 — colunas rides renomeadas para pickup_*/dropoff_*, tabelas driver_profiles/driver_locations/price_offers/notifications/wallet_transactions criadas
+**Ultima atualizacao:** 09/03/2026
+**Versao:** 16.0
+**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 79 com RLS / 35 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
+**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — 80 tabelas, 35 com Realtime, 42 RPCs callable
 
 ---
 
@@ -396,29 +396,19 @@ package.json                                 Dependencias completas
 
 ---
 
-## 5. Banco de Dados - Estado Real (02/03/2026)
+## 5. Banco de Dados - Estado Real (09/03/2026 — jpnwxqjrhzaobnugjnyx)
 
-| Categoria              | Quantidade | Observacao                                              |
-|------------------------|-----------|--------------------------------------------------------------|
-| Tabelas (schema public)| 74        | Criadas via 4 migrations no Supabase (02/03/2026)           |
-| Tabelas (pg_catalog)   | 64        | Catalog interno do PostgreSQL                               |
-| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth                              |
-| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage                           |
-| Tabelas (information_schema) | 4   | Views do sistema PostgreSQL                                 |
-| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime                          |
-| Tabelas (migrations)   | 1         | supabase_migrations                                         |
-| Tabelas (vault)        | 1         | Segredos criptografados                                     |
-| **Total geral**        | **176**   | Todos os schemas — verificado via SQL em 02/03/2026         |
-| RLS Policies           | 98+       | Todas as 74 tabelas com RLS habilitado               |
-| Funcoes SQL (RPC)      | 15        | find_nearby_drivers, calculate_wallet_balance, etc.  |
-| Triggers               | 24+       | updated_at, rating, streaks, etc.                    |
-| Indexes                | 60+       | Performance em busca e filtros                       |
-| Realtime (publicadas)  | 8         | rides, driver_locations, messages, notifications,    |
-|                        |           | price_offers, support_messages, ride_tracking,       |
-|                        |           | ride_offers                                          |
-| system_settings        | 6 registros | Populado via migration (001_core_tables)            |
-| pricing_rules          | 6 registros | 6 tipos de veiculo                                  |
-| rating_categories      | 4 registros | Direcao, Trajeto, Respeito, Comportamento           |
+| Categoria              | Quantidade | Observacao |
+|------------------------|-----------|------------|
+| Tabelas (schema public)| **80**    | Verificadas via SQL em 09/03/2026 |
+| Tabelas com RLS ativo  | **79**    | Exceto spatial_ref_sys (PostGIS sistema) |
+| Tabelas com Realtime   | **35**    | Verificadas via pg_publication_tables |
+| RPCs callable          | **42**    | Excluindo funcoes PostGIS internas |
+| Trigger functions      | 25+       | Incluindo triggers de corrida, gamificacao e cascata |
+| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth |
+| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage |
+| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime |
+| Tabelas (vault)        | 1         | Segredos criptografados |
 
 ### Migrations aplicadas no Supabase (pjlbixnzjndezoscbhej)
 

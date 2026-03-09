@@ -1,25 +1,14 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 06/03/2026
-**Versao:** 16.0
-**Banco:** Supabase PostgreSQL 15+ com PostGIS 3.3.7
-**Projeto Supabase:** mstnqzgsdnlsajuaezhs (projeto ativo em 06/03/2026)
-**Migrations aplicadas:** 4 (001 a 004) + correcoes manuais em 06/03/2026
-**Tabelas totais:** 182 (todos os schemas)
-**Tabelas no schema public (dominio):** 80 (6 novas criadas em 06/03/2026)
-**Tabelas pg_catalog (PostgreSQL interno):** 64
-**Tabelas auth (Supabase):** 21
-**Tabelas storage (Supabase):** 8
-**Tabelas information_schema:** 4
-**Tabelas realtime (Supabase):** 3
-**Tabelas supabase_migrations:** 1
-**Tabelas vault:** 1
-**RLS policies ativas:** 155+ (em 80 tabelas — corrigida em 06/03/2026)
-**Triggers ativos:** 20 (schema public)
-**Funcoes RPC callable:** 15
-**Tabelas com Realtime:** 8+ (rides, price_offers, notifications, driver_locations adicionadas em 06/03/2026)
-**Extensoes instaladas:** 7 (postgis, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql)
-**Analise detalhada:** docs/03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md
+**Ultima Atualizacao:** 09/03/2026
+**Versao:** 17.0
+**Banco:** Supabase PostgreSQL 15+ com PostGIS
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx (ativo — verificado em 09/03/2026)
+**Tabelas no schema public:** 80 (verificadas via SQL em 09/03/2026)
+**Tabelas com RLS ativo:** 79 (exceto spatial_ref_sys — sistema PostGIS)
+**Tabelas com Realtime:** 35 (verificadas via pg_publication_tables)
+**RPCs de negocio callable:** 42 (excluindo funcoes PostGIS internas)
+**Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
 ---
 
@@ -27,331 +16,928 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **80** | Dominio da aplicacao — 74 via migrations + 6 criadas manualmente em 06/03/2026 |
-| pg_catalog | 64 | Catalog interno do PostgreSQL (tabelas do sistema) |
-| auth | 21 | Gerenciadas pelo Supabase Auth (users, sessions, tokens, etc.) |
-| storage | 8 | Gerenciadas pelo Supabase Storage (objects, buckets, etc.) |
-| information_schema | 4 | Views do sistema PostgreSQL |
+| **public** | **80** | Dominio da aplicacao UPPI |
+| auth | 21 | Gerenciadas pelo Supabase Auth |
+| storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
 | supabase_migrations | 1 | Controle interno de migracoes |
 | vault | 1 | Segredos criptografados |
-| **Total geral** | **182** | Atualizado em 06/03/2026 |
-
-### Schema public — tabelas por grupo (80 total)
-
-**6 tabelas criadas manualmente em 06/03/2026:**
-- `driver_profiles` — perfil do motorista com veiculo, is_verified, is_available, rating
-- `driver_locations` — localizacao em tempo real (lat, lng, heading, speed, accuracy)
-- `rides` — corridas (colunas renomeadas: origin_* → pickup_*, destination_* → dropoff_*)
-- `price_offers` — ofertas de preco do motorista para o passageiro
-- `notifications` — notificacoes em tempo real para passageiro e motorista
-- `wallet_transactions` — historico financeiro por usuario
-
-| Grupo | Tabelas |
-|-------|---------|
-| Nucleo | profiles, driver_profiles, rides, price_offers, messages, ratings, notifications, favorites |
-| Localizacao | driver_locations, ride_tracking, ride_stops, location_history, hot_zones |
-| Financeiro | user_wallets, wallet_transactions, payments, coupons, coupon_uses, user_coupons |
-| Motorista | driver_verifications, vehicles, driver_route_segments, drivers |
-| Social/Gamificacao | social_posts, social_post_likes, post_comments, social_follows, user_social_stats, leaderboard, user_achievements, referral_achievements |
-| Avaliacoes | reviews, driver_reviews, rating_categories, rating_helpful_votes, rating_reports |
-| Seguranca | emergency_contacts, emergency_alerts, ride_recordings, recording_consents, user_recording_preferences |
-| Corridas Especiais | group_rides, group_ride_participants, scheduled_rides, ride_offers |
-| Configuracoes | notification_preferences, user_sms_preferences, user_onboarding, push_subscriptions |
-| Suporte | support_tickets, support_messages |
-| Indicacoes | referrals |
-| Assinaturas | subscriptions, promotions |
-| Rotas | popular_routes, driver_popular_routes, route_history, address_search_history |
-| SMS | sms_templates, sms_deliveries, sms_logs |
-| Admin/Infra | admin_logs, pricing_rules, webhook_endpoints, webhook_deliveries, error_logs, system_settings, avatars, users, campaigns, faqs, legal_documents |
+| pg_catalog | 64 | Sistema interno do PostgreSQL |
+| information_schema | 4 | Views do sistema SQL |
 
 ---
 
-## 1. Campos Detalhados por Tabela (principais)
+## 1. Tabelas do Schema Public (80 tabelas — verificadas em 09/03/2026)
 
-### profiles (15 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK, FK auth.users |
-| email | text | — | UNIQUE |
-| full_name | text | — | |
-| phone | text | — | |
-| avatar_url | text | — | |
-| user_type | text | 'passenger' | passenger/driver/admin |
-| is_admin | boolean | false | |
-| is_banned | boolean | false | |
-| banned_at | timestamptz | — | |
-| ban_reason | text | — | |
-| rating | numeric(3,2) | 5.0 | Media calculada automaticamente |
-| total_rides | integer | 0 | Atualizado via update_user_rating() |
-| preferences | jsonb | {...} | haptic, animations, dark_mode, language |
-| created_at | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+### Grupo: Usuarios e Perfis
 
-### driver_profiles (27 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK, FK profiles |
-| vehicle_brand | text | — | |
-| vehicle_model | text | — | |
-| vehicle_plate | text | — | |
-| vehicle_color | text | — | |
-| vehicle_type | text | 'standard' | economy/premium/suv/moto |
-| vehicle_year | integer | — | |
-| is_verified | boolean | false | |
-| is_available | boolean | false | |
-| current_lat | float8 | — | Posicao atual |
-| current_lng | float8 | — | Posicao atual |
-| total_earnings | numeric | 0 | |
-| rating | numeric | 5.0 | |
-| total_rides | integer | 0 | |
-| cnh_number | text | — | |
-| cnh_expiry | date | — | |
-| document_url | text | — | |
-| last_verification_at | timestamptz | — | Ultima verificacao facial |
-| verification_photo_url | text | — | |
-| verification_status | text | 'pending' | pending/verified/failed/expired |
-| requires_verification | boolean | true | |
-| verification_attempts | integer | 0 | |
-| total_trips | integer | 0 | |
-| acceptance_rate | numeric(5,2) | 100.0 | |
-| online_hours | numeric(10,2) | 0 | |
-| created_at | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+#### profiles (25 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK, FK auth.users |
+| email | text | UNIQUE |
+| full_name | text | |
+| phone | text | |
+| avatar_url | text | |
+| user_type | text | passenger/driver/admin |
+| status | text | |
+| is_admin | boolean | false |
+| is_banned | boolean | false |
+| banned_at | timestamptz | |
+| ban_reason | text | |
+| rating | numeric(3,2) | Media calculada |
+| total_rides | integer | 0 |
+| referral_code | text | UNIQUE |
+| referred_by | text | |
+| fcm_token | text | Firebase push token |
+| preferences | jsonb | haptic, language, dark_mode |
+| current_mode | text | passenger/driver |
+| cpf | text | |
+| birth_date | date | |
+| bio | text | |
+| total_saved | numeric | |
+| referral_credits | numeric | |
+| trust_score | numeric | |
+| trust_level | text | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-### rides (29 colunas) — colunas renomeadas em 06/03/2026
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | gen_random_uuid() | PK |
-| passenger_id | uuid | — | FK profiles |
-| driver_id | uuid | — | FK profiles |
-| pickup_address | text | — | (era origin_address) |
-| dropoff_address | text | — | (era destination_address) |
-| pickup_lat | float8 | — | (era origin_lat) |
-| pickup_lng | float8 | — | (era origin_lng) |
-| dropoff_lat | float8 | — | (era destination_lat) |
-| dropoff_lng | float8 | — | (era destination_lng) |
-| distance_km | numeric | — | |
-| estimated_duration_minutes | integer | — | |
-| passenger_price_offer | numeric | — | |
-| final_price | numeric | 0 | |
-| status | text | 'searching' | searching/negotiating/accepted/in_progress/completed/cancelled |
-| payment_method | text | 'pix' | cash/pix/card/wallet |
-| vehicle_type | text | 'standard' | |
-| notes | text | — | |
-| rating_passenger | numeric(3,2) | — | |
-| rating_driver | numeric(3,2) | — | |
-| has_rated | boolean | false | |
-| accepted_at | timestamptz | — | |
-| arrived_at | timestamptz | — | |
-| started_at | timestamptz | — | |
-| completed_at | timestamptz | — | |
-| cancelled_at | timestamptz | — | |
-| cancellation_reason | text | — | |
-| created_at | timestamptz | now() | |
+**Realtime:** sim
 
-### price_offers (9 colunas) — CRIADA em 06/03/2026
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | gen_random_uuid() | PK |
-| ride_id | uuid | — | FK rides |
-| driver_id | uuid | — | FK auth.users |
-| offered_price | numeric(10,2) | — | Preco ofertado pelo motorista |
-| eta_minutes | integer | 5 | Tempo estimado de chegada |
-| message | text | — | Mensagem opcional |
-| status | text | 'pending' | pending/accepted/rejected/expired |
-| created_at | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+#### driver_profiles (37 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK, FK profiles |
+| vehicle_brand | text | |
+| vehicle_model | text | |
+| vehicle_plate | text | |
+| vehicle_color | text | |
+| vehicle_type | text | economy/premium/suv/moto |
+| vehicle_year | integer | |
+| vehicle_photo_url | text | |
+| is_verified | boolean | false |
+| is_available | boolean | false |
+| is_online | boolean | false |
+| rating | numeric | 5.0 |
+| total_rides | integer | 0 |
+| total_earnings | numeric | 0 |
+| current_lat | float8 | |
+| current_lng | float8 | |
+| cnh_number | text | |
+| cnh_expiry | date | |
+| cpf | text | |
+| pix_key | text | |
+| bank_account | text | |
+| bank_name | text | |
+| bank_agency | text | |
+| document_url | text | |
+| verification_status | text | pending/verified/failed/expired |
+| verification_photo_url | text | |
+| requires_verification | boolean | true |
+| verification_attempts | integer | 0 |
+| last_verification_at | timestamptz | |
+| acceptance_rate | numeric(5,2) | 100.0 |
+| trust_score | numeric | |
+| rejection_count | integer | |
+| mode | text | |
+| cancellation_count | integer | |
+| punctuality_rate | numeric | |
+| license_number | text | |
+| license_category | text | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-### driver_locations (9 colunas) — CRIADA em 06/03/2026
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | gen_random_uuid() | PK |
-| driver_id | uuid | — | FK auth.users (UNIQUE) |
-| latitude | float8 | — | |
-| longitude | float8 | — | |
-| heading | numeric | 0 | Direcao em graus |
-| speed | numeric | 0 | Velocidade km/h |
-| accuracy | numeric | 0 | Precisao em metros |
-| is_available | boolean | false | |
-| last_updated | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+**Realtime:** sim
 
-### ratings (18 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| ride_id | uuid | — | FK rides |
-| rater_id | uuid | — | Quem avaliou |
-| rated_id | uuid | — | Quem foi avaliado |
-| reviewer_id | uuid | — | Alias de rater_id (compatibilidade) |
-| reviewed_id | uuid | — | Alias de rated_id (compatibilidade) |
-| score | integer | — | 1-5 |
-| rating | integer | — | Alias de score (compatibilidade) |
-| comment | text | — | |
-| tags | text[] | '{}' | |
-| category_ratings | jsonb | — | Ex: {"conducao": 5, "pontualidade": 4} |
-| is_anonymous | boolean | false | |
-| response_text | text | — | Resposta do avaliado |
-| response_at | timestamptz | — | |
-| is_reported | boolean | false | |
-| report_reason | text | — | |
-| created_at | timestamptz | now() | |
+### Grupo: Corridas
 
-### wallet_transactions (12 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| user_id | uuid | — | FK profiles |
-| type | text | — | credit/debit/bonus/refund/withdrawal |
-| amount | numeric(12,2) | — | |
-| balance_after | numeric(12,2) | — | Saldo apos a transacao |
-| reference_id | uuid | — | ride_id, etc. |
-| reference_type | text | — | ride, withdrawal, bonus, etc. |
-| description | text | — | |
-| status | text | 'completed' | pending/completed/failed |
-| metadata | jsonb | '{}' | Dados extras |
-| created_at | timestamptz | now() | |
+#### rides (42 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| passenger_id | uuid | FK profiles |
+| driver_id | uuid | FK profiles |
+| pickup_address | text | |
+| pickup_lat | float8 | |
+| pickup_lng | float8 | |
+| dropoff_address | text | |
+| dropoff_lat | float8 | |
+| dropoff_lng | float8 | |
+| distance_km | numeric | |
+| estimated_duration_minutes | integer | |
+| passenger_price_offer | numeric | |
+| estimated_price | numeric | |
+| final_price | numeric | 0 |
+| payment_method | text | cash/pix/card/wallet |
+| vehicle_type | text | |
+| status | text | searching/negotiating/accepted/in_progress/completed/cancelled |
+| notes | text | |
+| scheduled_time | timestamptz | |
+| started_at | timestamptz | |
+| completed_at | timestamptz | |
+| cancelled_at | timestamptz | |
+| cancellation_reason | text | |
+| accepted_at | timestamptz | |
+| pickup_at | timestamptz | |
+| rating_by_passenger | numeric | |
+| rating_by_driver | numeric | |
+| surge_multiplier | numeric | |
+| coupon_code | text | |
+| coupon_discount | numeric | |
+| share_token | text | |
+| group_ride_id | uuid | FK group_rides |
+| is_shared | boolean | |
+| cancelled_by | text | |
+| ride_type | text | standard/intercity/delivery |
+| pickup_city | text | |
+| dropoff_city | text | |
+| delivery_type | text | |
+| driver_lat | float8 | |
+| driver_lng | float8 | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-### user_wallets (8 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| user_id | uuid | — | FK profiles (UNIQUE) |
-| balance | numeric(12,2) | 0 | |
-| reserved_balance | numeric(12,2) | 0 | |
-| pending_balance | numeric(12,2) | 0 | |
-| total_earned | numeric(12,2) | 0 | |
-| total_spent | numeric(12,2) | 0 | |
-| updated_at | timestamptz | now() | |
+**Realtime:** sim
 
-### notifications (11 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| user_id | uuid | — | FK profiles |
-| title | text | — | |
-| message | text | — | |
-| type | text | 'info' | info/warning/success/error |
-| data | jsonb | — | |
-| is_read | boolean | false | |
-| action_url | text | — | URL de acao |
-| image_url | text | — | |
-| expires_at | timestamptz | — | |
-| created_at | timestamptz | now() | |
+#### price_offers (10 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| driver_id | uuid | FK profiles |
+| offered_price | numeric(10,2) | |
+| message | text | |
+| status | text | pending/accepted/rejected/expired |
+| eta_minutes | integer | 5 |
+| expires_at | timestamptz | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-### support_tickets (12 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| user_id | uuid | — | FK profiles |
-| subject | text | — | |
-| description | text | — | |
-| status | text | 'open' | open/in_progress/resolved/closed |
-| priority | text | 'medium' | |
-| category | text | — | |
-| assigned_to | uuid | — | FK profiles (admin) |
-| resolved_at | timestamptz | — | |
-| notes | text | — | |
-| created_at | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+**Realtime:** sim
 
-### user_onboarding (11 colunas)
-| Coluna | Tipo | Default | Notas |
-|--------|------|---------|-------|
-| id | uuid | — | PK |
-| user_id | uuid | — | FK profiles |
-| step | text | — | |
-| completed | boolean | false | |
-| data | jsonb | — | |
-| step_completed | integer | 0 | |
-| completed_at | timestamptz | — | |
-| skipped | boolean | false | |
-| preferences | jsonb | '{}' | |
-| created_at | timestamptz | now() | |
-| updated_at | timestamptz | now() | |
+#### scheduled_rides (15 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| passenger_id | uuid | FK profiles |
+| driver_id | uuid | FK profiles |
+| ride_id | uuid | FK rides |
+| origin_address | text | |
+| origin_lat | float8 | |
+| origin_lng | float8 | |
+| dest_address | text | |
+| dest_lat | float8 | |
+| dest_lng | float8 | |
+| scheduled_at | timestamptz | |
+| estimated_price | numeric | |
+| vehicle_type | text | |
+| status | text | |
+| notes | text | |
+| driver_confirmed_at | timestamptz | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+### Grupo: Localizacao
+
+#### driver_locations (10 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| driver_id | uuid | FK profiles (UNIQUE) |
+| latitude | float8 | |
+| longitude | float8 | |
+| heading | numeric | Direcao em graus |
+| speed | numeric | Velocidade km/h |
+| accuracy | numeric | Precisao em metros |
+| is_available | boolean | false |
+| last_updated | timestamptz | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### ride_tracking (9 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| driver_id | uuid | FK profiles |
+| latitude | float8 | |
+| longitude | float8 | |
+| speed | numeric | |
+| heading | numeric | |
+| accuracy | numeric | |
+| timestamp | timestamptz | |
+| created_at | timestamptz | |
+
+**Realtime:** sim
+
+#### hot_zones (11 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| name | text | |
+| latitude | float8 | |
+| longitude | float8 | |
+| radius_meters | integer | |
+| intensity | numeric | 0-1 |
+| is_active | boolean | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### city_zones (14 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| name | text | |
+| type | text | |
+| lat | float8 | |
+| lng | float8 | |
+| radius_km | numeric | |
+| city | text | |
+| state | text | |
+| is_hot_zone | boolean | |
+| is_active | boolean | |
+| surge_factor | numeric | |
+| demand_index | numeric | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+### Grupo: Financeiro
+
+#### user_wallets (6 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles (UNIQUE) |
+| balance | numeric(12,2) | 0 |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### wallet_transactions (12 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| type | text | credit/debit/bonus/refund/withdrawal |
+| amount | numeric(12,2) | |
+| description | text | |
+| ride_id | uuid | |
+| status | text | pending/completed/failed |
+| reference_id | uuid | |
+| reference_type | text | ride/withdrawal/bonus |
+| pix_key | text | |
+| metadata | jsonb | |
+| balance_after | numeric(12,2) | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### payments (12 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| user_id | uuid | FK profiles |
+| driver_id | uuid | FK profiles |
+| amount | numeric | |
+| payment_method | text | |
+| status | text | |
+| provider_ref | text | |
+| pix_qr_code | text | |
+| pix_copy_paste | text | |
+| platform_fee | numeric | |
+| driver_earnings | numeric | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### coupons (14 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| code | text | UNIQUE |
+| description | text | |
+| discount_type | text | percentage/fixed |
+| discount_value | numeric | |
+| min_ride_value | numeric | |
+| max_discount | numeric | |
+| usage_limit | integer | |
+| usage_count | integer | 0 |
+| current_uses | integer | 0 |
+| max_uses | integer | |
+| is_reusable | boolean | |
+| valid_from | timestamptz | |
+| valid_until | timestamptz | |
+| is_active | boolean | true |
+| created_at | timestamptz | |
+
+#### coupon_uses (6 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| coupon_id | uuid | FK coupons |
+| user_id | uuid | FK profiles |
+| ride_id | uuid | FK rides |
+| discount | numeric | |
+| used_at | timestamptz | |
+
+#### user_coupons (8 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| coupon_id | uuid | FK coupons |
+| used | boolean | false |
+| used_at | timestamptz | |
+| expires_at | timestamptz | |
+| ride_id | uuid | |
+| created_at | timestamptz | |
+
+#### driver_withdrawals (14 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| driver_id | uuid | FK profiles |
+| amount | numeric | |
+| pix_key | text | |
+| pix_key_type | text | |
+| bank_name | text | |
+| status | text | pending/approved/rejected/processed |
+| requested_at | timestamptz | |
+| processed_at | timestamptz | |
+| processed_by | uuid | |
+| rejection_reason | text | |
+| wallet_tx_id | uuid | |
+| notes | text | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+### Grupo: Comunicacao
+
+#### messages (7 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| sender_id | uuid | FK profiles |
+| content | text | |
+| type | text | |
+| read | boolean | false |
+| created_at | timestamptz | |
+
+**Realtime:** sim
+
+#### notifications (10 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| title | text | |
+| message | text | |
+| type | text | info/warning/success/error |
+| data | jsonb | |
+| metadata | jsonb | |
+| is_read | boolean | false |
+| read_at | timestamptz | |
+| created_at | timestamptz | |
+
+**Realtime:** sim
+
+#### notification_preferences (14 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles (UNIQUE) |
+| push_enabled | boolean | true |
+| sms_enabled | boolean | false |
+| email_enabled | boolean | true |
+| ride_updates | boolean | true |
+| promotions | boolean | true |
+| social | boolean | true |
+| achievements | boolean | true |
+| quiet_hours_start | time | |
+| quiet_hours_end | time | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+#### push_subscriptions (9 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| endpoint | text | |
+| auth_key | text | |
+| p256dh_key | text | |
+| device_type | text | |
+| is_active | boolean | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+#### user_push_tokens (7 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| token | text | |
+| platform | text | android/ios/web |
+| is_active | boolean | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+### Grupo: Avaliacoes
+
+#### ratings (17 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| rater_id | uuid | Quem avaliou |
+| rated_id | uuid | Quem foi avaliado |
+| reviewer_id | uuid | Alias de rater_id |
+| reviewed_id | uuid | Alias de rated_id |
+| score | integer | 1-5 |
+| stars | integer | Alias de score |
+| comment | text | |
+| tags | text[] | |
+| category_ratings | jsonb | |
+| is_anonymous | boolean | false |
+| rater_type | text | passenger/driver |
+| rated_type | text | passenger/driver |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### driver_reviews (20 colunas)
+Avaliacoes bidirecionais completas com campos para passageiro e motorista.
+
+**Realtime:** sim
+
+#### reviews (12 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| ride_id | uuid | FK rides |
+| reviewer_id | uuid | FK profiles |
+| reviewed_id | uuid | FK profiles |
+| rating | integer | 1-5 |
+| comment | text | |
+| tags | text[] | |
+| is_public | boolean | true |
+| is_flagged | boolean | false |
+| flag_reason | text | |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+#### rating_categories (6 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| name | text | |
+| label | text | |
+| icon | text | |
+| user_type | text | passenger/driver |
+| is_active | boolean | true |
+| order_index | integer | |
+
+### Grupo: Social e Gamificacao
+
+#### social_posts (12 colunas)
+| Coluna | Tipo | Notas |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | FK profiles |
+| content | text | |
+| type | text | savings/achievement/ride_milestone/referral |
+| title | text | |
+| image_url | text | |
+| ride_id | uuid | |
+| likes_count | integer | 0 |
+| comments_count | integer | 0 |
+| visibility | text | public/friends/private |
+| is_pinned | boolean | false |
+| is_active | boolean | true |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+
+**Realtime:** sim
+
+#### social_post_likes (4 colunas)
+| Coluna | Notas |
+|--------|-------|
+| id | PK |
+| post_id | FK social_posts |
+| user_id | FK profiles |
+| created_at | UNIQUE(post_id, user_id) |
+
+**Realtime:** sim
+
+#### social_follows (4 colunas)
+**Realtime:** sim
+
+#### user_social_stats (5 colunas)
+posts_count, likes_received, comments_received, updated_at
+
+#### post_comments (7 colunas)
+id, post_id, user_id, parent_id, content, likes_count, is_active, created_at
+
+#### post_likes (4 colunas)
+id, post_id, user_id, created_at
+
+#### leaderboard (14 colunas)
+| Coluna | Notas |
+|--------|-------|
+| id | PK |
+| user_id | FK profiles |
+| user_type | passenger/driver |
+| period | weekly/monthly/all_time |
+| score | |
+| rank | |
+| rides_count | |
+| rating_avg | |
+| total_spent | |
+| total_earned | |
+| total_rides | |
+| rating | |
+| period_start | |
+| period_end | |
+| updated_at | |
+
+**Realtime:** sim
+
+#### user_achievements (9 colunas)
+id, user_id, achievement_id, title, description, icon, points, unlocked_at, credits_earned
+
+**Realtime:** sim
+
+#### referral_achievements (7 colunas)
+id, user_id, achievement_id, title, description, icon, reward_credits, unlocked_at
+
+### Grupo: Motorista e Documentos
+
+#### driver_verifications (10 colunas)
+| Coluna | Notas |
+|--------|-------|
+| id | PK |
+| driver_id | FK profiles |
+| type | cnh/vehicle/face/insurance |
+| photo_url | |
+| status | pending/approved/rejected |
+| rejection_reason | |
+| reviewed_by | uuid |
+| reviewed_at | timestamptz |
+| expires_at | timestamptz |
+| created_at | timestamptz |
+
+#### vehicles (13 colunas)
+id, driver_id, brand, model, year, color, plate, type, is_primary, document_url, insurance_url, is_verified, verified_at, created_at, updated_at
+
+### Grupo: Seguranca
+
+#### emergency_contacts (9 colunas)
+id, user_id, name, phone, relationship, contact_user_id, can_track_rides, notify_on_start, notify_on_end, is_primary, created_at
+
+**Realtime:** sim
+
+#### emergency_alerts (11 colunas)
+id, user_id, ride_id, type, status, lat, lng, location, notes, resolved_at, created_at
+
+**Realtime:** sim
+
+#### ride_recordings (21 colunas)
+id, ride_id, user_id, file_url, storage_path, duration_sec, duration_seconds, size_bytes, file_size_bytes, status, recording_type, is_flagged, flag_reason, reviewed_by, reviewed_at, encryption_key, encryption_iv, encryption_auth_tag, created_at, updated_at
+
+#### recording_consents (5 colunas)
+id, ride_id, user_id, consented, consented_at
+
+#### user_recording_preferences (7 colunas)
+user_id (PK), enabled, auto_record, notify_on_record, retention_days, created_at, updated_at
+
+### Grupo: Corridas Especiais
+
+#### group_rides (11 colunas)
+id, organizer_id, ride_id, name, max_passengers, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, scheduled_time, status, created_at
+
+**Realtime:** sim
+
+#### group_ride_members (5 colunas)
+id, group_ride_id, user_id, status, joined_at
+
+**Realtime:** sim
+
+#### group_ride_participants (10 colunas)
+id, group_id, user_id, role, status, pickup_address, pickup_lat, pickup_lng, joined_at, created_at
+
+**Realtime:** sim
+
+#### intercity_rides (21 colunas)
+id, passenger_id, driver_id, origin_city, origin_state, origin_address, dest_city, dest_state, dest_address, distance_km, departure_time, estimated_arrival, available_seats, booked_seats, price_per_seat, vehicle_type, allow_pets, allow_luggage, status, notes, created_at, updated_at
+
+**Realtime:** sim
+
+#### intercity_bookings (7 colunas)
+id, intercity_ride_id, passenger_id, seats, total_price, status, created_at
+
+**Realtime:** sim
+
+### Grupo: Delivery
+
+#### delivery_orders (24 colunas)
+id, user_id, driver_id, pickup_address, pickup_lat, pickup_lng, dropoff_address, dropoff_lat, dropoff_lng, recipient_name, recipient_phone, package_description, package_size, package_weight_kg, is_fragile, requires_signature, estimated_price, final_price, status, tracking_code, notes, photo_on_delivery_url, delivered_at, cancelled_at, created_at, updated_at
+
+**Realtime:** sim
+
+### Grupo: Suporte
+
+#### support_tickets (12 colunas)
+| Coluna | Notas |
+|--------|-------|
+| id | PK |
+| user_id | FK profiles |
+| topic | |
+| status | open/in_progress/resolved/closed |
+| priority | low/medium/high/urgent |
+| category | |
+| ride_id | FK rides |
+| assigned_to | uuid (admin) |
+| resolved_at | timestamptz |
+| created_at | timestamptz |
+| updated_at | timestamptz |
+
+**Realtime:** sim
+
+#### support_messages (9 colunas)
+id, ticket_id, sender_id, sender_type (user/admin), sender_name, message, attachments (jsonb), is_admin, read_at, created_at
+
+**Realtime:** sim
+
+### Grupo: Indicacoes
+
+#### referrals (11 colunas)
+id, referrer_id, referred_id, referral_code, code, status, reward_amount, reward_paid, first_ride_completed, created_at, completed_at
+
+### Grupo: Assinaturas e Promocoes
+
+#### subscriptions (12 colunas)
+id, user_id, plan (basic/premium/vip), status, started_at, expires_at, cancelled_at, price, payment_id, auto_renew, discount_rides, priority_support, cashback_percent, created_at
+
+**Realtime:** sim
+
+#### promotions (13 colunas)
+id, title, description, type, value, is_percentage, code, max_uses, used_count, min_ride_value, valid_from, valid_until, is_active, banner_url, created_at, updated_at
+
+#### promo_banners (18 colunas)
+id, title, subtitle, image_url, action_url, action_label, bg_color, text_color, is_active, target, start_at, end_at, priority, clicks, impressions, created_by, created_at, updated_at
+
+**Realtime:** sim
+
+### Grupo: Rotas e Enderecos
+
+#### popular_routes (11 colunas)
+id, start_address, end_address, start_latitude, start_longitude, end_latitude, end_longitude, usage_count, avg_price, avg_duration, created_at, updated_at
+
+#### address_search_history (14 colunas)
+id, user_id, address, latitude, longitude, search_type, use_count, last_used_at, formatted_address, place_id, street_name, street_number, neighborhood, created_at
+
+#### address_history (7 colunas)
+id, user_id, address, latitude, longitude, search_type, created_at
+
+#### favorites (8 colunas)
+id, user_id, label, address, lat, lng, icon, created_at
+
+#### favorite_drivers (4 colunas)
+id, passenger_id, driver_id, created_at
+
+### Grupo: SMS
+
+#### sms_templates (7 colunas)
+id, name, type, content, variables (jsonb), is_active, created_at, updated_at
+
+#### sms_deliveries (20+ colunas)
+id, user_id, phone, phone_number, message, type, status, provider, provider_id, provider_message_id, cost, cost_cents, segments, error_message, failed_at, retry_count, sent_at, delivered_at, created_at, updated_at
+
+**Realtime:** sim
+
+#### sms_logs (8 colunas)
+id, delivery_id, event, provider_status, error_code, error_message, raw_payload, created_at
+
+#### user_sms_preferences (10 colunas)
+user_id (PK), phone, ride_start, ride_end, promotions, security, is_verified, verified_at, created_at, updated_at
+
+### Grupo: Precificacao e Configuracao
+
+#### pricing_rules (14 colunas)
+id, name, vehicle_type, base_fare, per_km, per_minute, minimum_fare, surge_multiplier, city, is_active, priority, created_at, updated_at
+
+#### surge_pricing (16 colunas)
+id, zone_name, zone_lat, zone_lng, radius_km, multiplier, reason, active_from, active_until, days_of_week, is_active, auto_calculated, demand_level, created_by, created_at, updated_at
+
+**Realtime:** sim
+
+#### app_config (8 colunas)
+id, key, value, description, category, updated_by, created_at, updated_at
+
+#### system_settings (8 colunas)
+id, key, value, description, is_public, updated_by, created_at, updated_at
+
+#### platform_metrics (17 colunas)
+id, date, total_rides, completed_rides, cancelled_rides, total_revenue, platform_revenue, driver_payouts, active_drivers, new_users, new_drivers, avg_ride_value, avg_wait_minutes, peak_hour, created_at, updated_at
+
+### Grupo: Admin e Logs
+
+#### admin_logs (9 colunas)
+id, admin_id, action, target_type, target_id, details (jsonb), ip_address, user_agent, created_at
+
+#### error_logs (7 colunas)
+id, user_id, error_type, message, stack, context (jsonb), created_at
+
+**Realtime:** sim
+
+#### campaigns (13 colunas)
+id, name, type, status, audience, content, scheduled_at, started_at, completed_at, sent_count, open_count, click_count, created_by, created_at, updated_at
+
+### Grupo: Legal e Conteudo
+
+#### faqs (9 colunas)
+id, question, answer, category, user_type, order_index, is_active, helpful_count, created_at
+
+#### legal_documents (9 colunas)
+id, type, title, content, version, is_active, published_at, created_at, updated_at
+
+### Grupo: Auth e Seguranca
+
+#### email_otps (6 colunas)
+id, email, otp, expires_at, used, created_at
+
+#### user_2fa (9 colunas)
+id, user_id, is_enabled, secret, backup_codes, enabled_at, last_used_at, created_at
+
+#### user_settings (15 colunas)
+user_id (PK), notifications_rides, notifications_promotions, notifications_chat, notifications_system, recording_enabled, recording_auto, two_factor_enabled, biometric_enabled, share_location_family, dark_mode, language, haptic_enabled, map_provider, updated_at
+
+#### user_onboarding (9 colunas)
+id, user_id, current_step, completed, completed_at, steps_done (jsonb), data (jsonb), created_at, updated_at
+
+#### family_members (9 colunas)
+id, user_id, name, phone, relationship, can_track_rides, notify_on_start, notify_on_end, is_primary, created_at
+
+### Grupo: Webhooks
+
+#### webhook_endpoints (10 colunas)
+id, name, url, secret, events (array), is_active, headers (jsonb), created_by, created_at, updated_at
+
+#### webhook_deliveries (10 colunas)
+id, endpoint_id, event, payload (jsonb), status, status_code, response_body, attempt, error_message, delivered_at, created_at
+
+**Realtime:** sim
+
+### PostGIS (sistema)
+
+#### spatial_ref_sys
+Sistema de coordenadas de referencia do PostGIS. Nao tem RLS.
 
 ---
 
-## 2. Enums (Tipos Customizados)
+## 2. Tabelas com Realtime Ativo (35 tabelas)
 
-```sql
--- Tipo de usuario
-user_type: 'passenger' | 'driver' | 'admin' | 'both'
+Verificadas via `pg_publication_tables` em 09/03/2026:
 
--- Status da corrida
-ride_status: 'searching' | 'pending' | 'negotiating' | 'accepted' | 'in_progress' | 'completed' | 'cancelled'
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, wallet_transactions, webhook_deliveries, user_wallets
 
--- Status da oferta
-offer_status: 'pending' | 'accepted' | 'rejected' | 'expired'
+---
 
--- Metodo de pagamento
-payment_method: 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'wallet'
+## 3. RPCs de Negocio (42 funcoes — excluindo PostGIS)
 
--- Tipo de veiculo
-vehicle_type: 'economy' | 'standard' | 'electric' | 'premium' | 'suv' | 'moto'
+### Corridas e Motorista
+| Funcao | Descricao |
+|--------|-----------|
+| `find_nearby_drivers` | Motoristas proximos por lat/lng e raio |
+| `create_ride` | Criar corrida atomicamente |
+| `accept_ride` | Motorista aceita corrida |
+| `start_ride` | Iniciar corrida |
+| `complete_ride` | Finalizar corrida (2 versoes) |
+| `cancel_ride` | Cancelar corrida |
+| `submit_price_offer` | Motorista envia oferta de preco |
+| `accept_price_offer` | Passageiro aceita oferta |
+| `upsert_driver_location` | Upsert localizacao do motorista (2 versoes) |
+| `get_driver_active_ride` | Corrida ativa do motorista |
+| `get_available_scheduled_rides` | Corridas agendadas disponiveis |
+| `driver_accept_scheduled_ride` | Motorista aceita corrida agendada |
+| `handle_driver_cancellation` | Processar cancelamento pelo motorista |
+| `estimate_ride_price` | Estimar preco de corrida |
+| `get_surge_multiplier` | Fator de surge pricing da zona |
 
--- Tipo de transacao
-transaction_type: 'credit' | 'debit' | 'refund' | 'cashback' | 'withdrawal' | 'bonus' | 'transfer'
+### Financeiro
+| Funcao | Descricao |
+|--------|-----------|
+| `calculate_wallet_balance` | Saldo da carteira |
+| `get_wallet_balance` | Saldo formatado |
+| `get_full_wallet_statement` | Extrato completo |
+| `request_withdrawal` | Solicitar saque (2 versoes) |
+| `request_withdrawal_v2` | Saque com validacoes v2 |
+| `admin_approve_withdrawal` | Admin aprova saque |
+| `admin_reject_withdrawal` | Admin rejeita saque |
+| `admin_process_withdrawal` | Admin processa saque |
+| `get_pending_withdrawals` | Saques pendentes |
+| `get_user_payment_summary` | Resumo de pagamentos do usuario |
+| `apply_coupon` | Aplicar cupom |
+| `apply_coupon_to_ride` | Aplicar cupom a corrida |
+| `redeem_coupon` | Resgatar cupom |
 
--- Status de verificacao do motorista
-verification_status: 'pending' | 'verified' | 'failed' | 'expired'
+### Usuarios e Perfil
+| Funcao | Descricao |
+|--------|-----------|
+| `get_full_profile` | Perfil completo com todos os joins |
+| `get_driver_stats` | Estatisticas do motorista |
+| `get_driver_dashboard_stats` | Stats do dashboard do motorista |
+| `get_driver_home_data` | Dados da home do motorista |
+| `get_passenger_home_data` | Dados da home do passageiro |
+| `get_referral_stats` | Estatisticas de indicacao |
+| `generate_referral_code` | Gerar codigo de indicacao |
+| `submit_rating` | Submeter avaliacao |
+| `check_ride_reviewed` | Verificar se corrida foi avaliada |
+| `get_pending_reviews` | Avaliacoes pendentes |
 
--- Status de suporte
-support_status: 'open' | 'in_progress' | 'resolved' | 'closed'
+### Social e Gamificacao
+| Funcao | Descricao |
+|--------|-----------|
+| `get_social_feed` | Feed social paginado |
+| `get_leaderboard` | Ranking (3 versoes/overloads) |
+| `get_leaderboard_full` | Ranking completo com metadados |
+| `refresh_leaderboard` | Atualizar ranking |
+| `check_and_award_achievements` | Verificar e conceder conquistas |
+| `check_and_grant_achievements` | Conceder conquistas |
+| `check_and_grant_referral_achievements` | Conquistas por indicacao |
+| `process_referral_reward` | Processar recompensa de indicacao |
+| `check_referral_on_complete` | Checar referral ao completar corrida |
+
+### Admin e Plataforma
+| Funcao | Descricao |
+|--------|-----------|
+| `get_admin_financial_summary` | Resumo financeiro para admin |
+| `get_rides_revenue_by_day` | Receita de corridas por dia |
+| `get_driver_wallet_balance` | Saldo do motorista (admin) |
+| `snapshot_platform_metrics` | Snapshot de metricas da plataforma |
+| `admin_ban_user` | Banir usuario |
+| `admin_verify_driver` | Verificar motorista |
+| `send_notification` | Enviar notificacao |
+| `mark_all_notifications_read` | Marcar todas as notificacoes como lidas |
+| `get_app_config` | Configuracoes da app |
+| `get_popular_routes` | Rotas populares |
+| `get_ride_history` | Historico de corridas |
+| `get_ride_history_paginated` | Historico paginado |
+| `get_ride_with_details` | Corrida com detalhes completos |
+| `create_support_ticket` | Criar ticket de suporte |
+| `reply_support_ticket` | Responder ticket |
+| `create_emergency_alert` | Criar alerta de emergencia |
+| `record_address_search` | Registrar busca de endereco |
+| `search_address_history` | Buscar historico de enderecos |
+| `book_intercity_seat` | Reservar assento intercity |
+
+### Triggers e Helpers (internos)
+handle_new_user, handle_new_profile, handle_new_profile_wallet, handle_new_user_settings, handle_new_sms_prefs, handle_new_recording_prefs, handle_ride_completed, sync_driver_wallet_on_complete, auto_create_payment_on_complete, update_acceptance_rate (2), update_leaderboard_on_complete, trigger_check_achievements_on_complete, trigger_snapshot_on_complete, trigger_update_trust_score, update_trust_score, update_user_rating (2), update_updated_at_column, increment_comment_count, decrement_comment_count, increment/update post likes/comments
+
+---
+
+## 4. Fluxo Principal de Corrida
+
+```
+profiles (passenger)
+  → rides INSERT (status: 'searching')
+  → Realtime canal rides-{vehicleType} (motoristas recebem)
+  → price_offers INSERT por motoristas (submit_price_offer)
+  → Realtime canal offers-{rideId} (passageiro recebe)
+  → accept_price_offer() — atomico
+  → rides UPDATE (status: 'accepted', driver_id definido)
+  → ride_tracking INSERT (GPS ao vivo — canal tracking-{rideId})
+  → rides UPDATE (status: 'in_progress')
+  → complete_ride() — finaliza corrida
+  → payments INSERT (auto_create_payment_on_complete trigger)
+  → wallet_transactions INSERT (sync_driver_wallet_on_complete)
+  → ratings INSERT (submit_rating)
+  → update_user_rating() automatico
+  → check_and_award_achievements() automatico
+  → update_leaderboard_on_complete() automatico
 ```
 
 ---
 
-## 3. Funcoes SQL (RPC) — 15 funcoes ativas
-
-| Funcao | Parametros | Retorno | Descricao |
-|--------|-----------|---------|-----------|
-| `find_nearby_drivers` | lat, lng, radius_km, vehicle_type | TABLE | Motoristas proximos com distancia e ETA |
-| `calculate_wallet_balance` | user_id | numeric | Saldo atual da carteira |
-| `update_user_rating` | user_id | void | Recalcula rating medio no perfil |
-| `get_driver_stats` | driver_id | jsonb | Estatisticas consolidadas do motorista |
-| `get_ride_with_details` | ride_id | jsonb | Corrida com todos os joins |
-| `needs_facial_verification` | driver_id | boolean | Se precisa de re-verificacao facial |
-| `respond_to_rating` | rating_id, response | void | Responder a uma avaliacao |
-| `get_category_ratings` | user_id | jsonb | Ratings agrupados por categoria |
-| `accept_price_offer` | offer_id, ride_id | void | Aceitar oferta atomicamente |
-| `update_driver_location` | driver_id, lat, lng, heading, speed | void | Upsert GPS do motorista |
-| `get_platform_stats` | — | jsonb | Estatisticas globais |
-| `get_user_stats` | user_id | jsonb | Estatisticas de um usuario |
-| `get_social_feed` | user_id, limit, offset | TABLE | Feed social personalizado |
-| `get_leaderboard` | period, metric, limit | TABLE | Ranking por periodo/metrica |
-| `get_hot_zones` | lat, lng, radius | TABLE | Zonas de alta demanda proximas |
-
----
-
-## 4. Realtime — 8 tabelas com publicacao ativa
-
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE rides;
-ALTER PUBLICATION supabase_realtime ADD TABLE driver_locations;
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE price_offers;
-ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE ride_tracking;
-ALTER PUBLICATION supabase_realtime ADD TABLE ride_offers;
-```
-
-### Channels usados no codigo
-| Channel | Tabela | Evento | Uso |
-|---------|--------|--------|-----|
-| `offers-{rideId}` | price_offers | INSERT | Passageiro recebe ofertas em tempo real |
-| `chat-{rideId}` | messages | INSERT/UPDATE | Chat bidirecional |
-| `rides-{vehicleType}` | rides | INSERT | Motorista ve novas corridas |
-| `notifications-{userId}` | notifications | INSERT | Notificacoes push in-app |
-| `admin-rides` | rides | ALL | Monitor do painel admin |
-| `support-{ticketId}` | support_messages | INSERT | Chat de suporte |
-| `tracking-{rideId}` | ride_tracking | INSERT | GPS historico em tempo real |
-
----
-
-## 5. Indexes de Performance
+## 5. Indexes de Performance (principais)
 
 ```sql
 -- rides
@@ -359,115 +945,36 @@ CREATE INDEX idx_rides_passenger_status ON rides(passenger_id, status);
 CREATE INDEX idx_rides_driver_status ON rides(driver_id, status);
 CREATE INDEX idx_rides_created_at ON rides(created_at DESC);
 
--- ratings
-CREATE INDEX idx_ratings_reviewed_id ON ratings(reviewed_id);
-CREATE INDEX idx_ratings_reviewer_id ON ratings(reviewer_id);
-CREATE INDEX idx_ratings_category ON ratings(rated_id) WHERE category_ratings IS NOT NULL;
-
--- wallet
-CREATE INDEX idx_wallet_tx_user_status ON wallet_transactions(user_id, status);
+-- driver_locations
+CREATE INDEX idx_driver_locations_available ON driver_locations(is_available) WHERE is_available = true;
 
 -- notifications
 CREATE INDEX idx_notifications_user_read ON notifications(user_id, is_read);
 
--- driver_locations
-CREATE INDEX idx_driver_locations_available ON driver_locations(is_available) WHERE is_available = true;
+-- wallet_transactions
+CREATE INDEX idx_wallet_tx_user ON wallet_transactions(user_id, status);
 
 -- profiles
 CREATE INDEX idx_profiles_user_type ON profiles(user_type);
 
 -- driver_profiles
 CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_verified);
-
--- driver_verifications
-CREATE INDEX idx_driver_verifications_created ON driver_verifications(created_at DESC);
 ```
 
 ---
 
-## 6. Queries Principais
+## 6. Consolidado Final (09/03/2026)
 
-### Buscar motoristas proximos (via RPC)
-```sql
-SELECT * FROM find_nearby_drivers(
-  pickup_lat  := -23.5505,
-  pickup_lng  := -46.6333,
-  radius_km   := 5,
-  vehicle_type_filter := NULL
-);
-```
-
-### Atualizar localizacao do motorista
-```sql
--- Usar a funcao RPC
-SELECT update_driver_location(
-  p_driver_id := :driver_id,
-  p_lat       := :latitude,
-  p_lng       := :longitude,
-  p_heading   := :heading,
-  p_speed     := :speed
-);
-```
-
-### Saldo da carteira
-```sql
-SELECT calculate_wallet_balance(:user_id);
-```
-
-### Estatisticas do motorista
-```sql
-SELECT get_driver_stats(:driver_id);
-```
+| Metrica | Valor |
+|---------|-------|
+| Projeto Supabase | jpnwxqjrhzaobnugjnyx |
+| Tabelas public | 80 |
+| Tabelas com RLS | 79 |
+| Tabelas com Realtime | 35 |
+| RPCs de negocio | 42 |
+| Trigger functions | 20+ |
+| Extensoes instaladas | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
 ---
 
-## 7. RLS Policies Ativas (principais)
-
-```sql
--- profiles: usuario ve/edita apenas o proprio perfil
-CREATE POLICY "profiles_own" ON profiles FOR ALL
-  USING (auth.uid() = id);
-
--- profiles: admin ve todos
-CREATE POLICY "profiles_admin" ON profiles FOR SELECT
-  USING (EXISTS(SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
-
--- rides: passageiro ve suas corridas
-CREATE POLICY "rides_passenger" ON rides FOR SELECT
-  USING (passenger_id = auth.uid());
-
--- rides: motorista ve corridas assignadas a ele
-CREATE POLICY "rides_driver" ON rides FOR SELECT
-  USING (driver_id = auth.uid());
-
--- notifications: usuario ve apenas as proprias
-CREATE POLICY "notifications_own" ON notifications FOR ALL
-  USING (user_id = auth.uid());
-
--- ratings: insert apenas pelo rater_id ou reviewer_id
-CREATE POLICY "ratings_own_insert" ON ratings FOR INSERT
-  WITH CHECK (rater_id = auth.uid() OR reviewer_id = auth.uid());
-```
-
----
-
-## 8. Fluxo Principal de Corrida
-
-```
-profiles (passenger)
-  → rides INSERT (status: 'searching')
-  → Realtime: rides canal 'rides-{vehicleType}' (motoristas recebem)
-  → price_offers INSERT (motoristas lancam precos)
-  → Realtime: price_offers canal 'offers-{rideId}' (passageiro recebe)
-  → rides UPDATE (status: 'accepted', driver_id definido)
-  → ride_tracking INSERT (GPS ao vivo — canal 'tracking-{rideId}')
-  → rides UPDATE (status: 'in_progress', accepted_at/arrived_at)
-  → rides UPDATE (status: 'completed', completed_at)
-  → payments INSERT (processamento do pagamento)
-  → ratings INSERT (avaliacao mutua)
-  → update_user_rating() (atualiza media do perfil)
-```
-
----
-
-**Atualizado em 02/03/2026** — Supabase pjlbixnzjndezoscbhej: 4 migrations aplicadas, 74 tabelas public verificadas, 15 RPCs, seeds executados
+**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx
