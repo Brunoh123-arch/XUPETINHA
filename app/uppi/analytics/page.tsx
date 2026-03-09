@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
 
       const { data: rides } = await supabase
         .from('rides')
-        .select('*, price_offers!inner(*)')
+        .select('id, passenger_id, driver_id, final_price, passenger_price_offer, status, created_at, completed_at, distance_km')
         .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)
         .eq('status', 'completed')
         .gte('created_at', oneYearAgo.toISOString())

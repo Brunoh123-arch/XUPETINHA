@@ -89,54 +89,46 @@ export default function ClubUppiPage() {
 
   useEffect(() => {
     async function fetchSubscription() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('plan, status')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single()
-      if (data) setCurrentPlan(data.plan)
+      try {
+        const res = await fetch('/api/v1/subscriptions')
+        if (res.ok) {
+          const { subscription } = await res.json()
+          if (subscription?.status === 'active') {
+            setCurrentPlan(subscription.plan)
+          }
+        }
+      } catch {
+        // silently fail
+      }
     }
     fetchSubscription()
-  }, [supabase])
+  }, [])
 
   const handleSubscribe = async () => {
     setSubscribing(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
+      const res = await fetch('/api/v1/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: selectedPlan }),
+      })
+
+      if (res.status === 401) {
         router.push('/onboarding/create-account')
         return
       }
 
-      const plan = plans.find(p => p.id === selectedPlan)
-      if (!plan) return
-
-      const now = new Date()
-      const expires = new Date(now)
-      expires.setMonth(expires.getMonth() + 1)
-
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan: selectedPlan,
-          status: 'active',
-          started_at: now.toISOString(),
-          expires_at: expires.toISOString(),
-          auto_renew: true,
-          discount_rides: plan.discount,
-          priority_support: selectedPlan !== 'basic',
-          cashback_percent: plan.cashback,
-        }, { onConflict: 'user_id' })
-
-      if (!error) {
+      if (res.ok) {
         setShowSuccess(true)
         setCurrentPlan(selectedPlan)
+        triggerHaptic('success')
         setTimeout(() => setShowSuccess(false), 3000)
+      } else {
+        const err = await res.json()
+        iosToast.error(err.error || 'Erro ao assinar plano')
       }
+    } catch {
+      iosToast.error('Erro ao processar assinatura')
     } finally {
       setSubscribing(false)
     }
