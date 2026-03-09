@@ -124,45 +124,41 @@ export default function SearchingDriverPage() {
   useEffect(() => { timerRef.current = setInterval(() => setSearchTime(p => p + 1), 1000); return () => { if (timerRef.current) clearInterval(timerRef.current) } }, [])
 
   const createRide = async () => {
+    if (!route.pickupCoords || !route.destinationCoords || !selectedRide) return
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user || !route.pickupCoords || !route.destinationCoords || !selectedRide) { await fallbackAPI(); return }
-      const vt = selectedRide.vehicleType
-      const pm: Record<string, string> = { Pix: 'pix', Dinheiro: 'cash', Cartao: 'credit_card', cash: 'cash' }
-      const { data, error } = await supabase.from('rides').insert({
-        passenger_id: user.id, pickup_address: route.pickup, dropoff_address: route.destination,
-        pickup_lat: route.pickupCoords.lat, pickup_lng: route.pickupCoords.lng,
-        dropoff_lat: route.destinationCoords.lat, dropoff_lng: route.destinationCoords.lng,
-        passenger_price_offer: selectedRide.price, distance_km: selectedRide.distanceKm,
-        estimated_duration_minutes: parseInt(selectedRide.durationText) || 15,
-        payment_method: pm[selectedRide.paymentMethod] || 'cash', vehicle_type: vt, status: 'pending',
-      }).select().single()
-      if (error) throw error
-      setRideId(data.id)
-      sessionStorage.setItem('activeRideId', data.id)
-      setStatus('searching'); sub(data.id)
-    } catch { await fallbackAPI() }
-  }
-
-  const fallbackAPI = async () => {
-    try {
-      if (!route.pickupCoords || !route.destinationCoords || !selectedRide) return
-      const res = await fetch('/api/v1/rides', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-        pickup_address: route.pickup, dropoff_address: route.destination,
-        pickup_lat: route.pickupCoords.lat, pickup_lng: route.pickupCoords.lng,
-        dropoff_lat: route.destinationCoords.lat, dropoff_lng: route.destinationCoords.lng,
-        passenger_price_offer: selectedRide.price, distance_km: selectedRide.distanceKm,
-        estimated_duration_minutes: parseInt(selectedRide.durationText) || 15,
-        payment_method: selectedRide.paymentMethod || 'cash', vehicle_type: selectedRide.vehicleType,
-      }) })
+      const pm: Record<string, string> = { Pix: 'pix', Dinheiro: 'cash', Cartao: 'credit_card', cash: 'cash', pix: 'pix', credit_card: 'credit_card' }
+      // Sempre usa a API server-side: notifica motoristas próximos, valida, registra
+      const res = await fetch('/api/v1/rides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pickup_address: route.pickup,
+          dropoff_address: route.destination,
+          pickup_lat: route.pickupCoords.lat,
+          pickup_lng: route.pickupCoords.lng,
+          dropoff_lat: route.destinationCoords.lat,
+          dropoff_lng: route.destinationCoords.lng,
+          passenger_price_offer: selectedRide.price,
+          distance_km: selectedRide.distanceKm,
+          estimated_duration_minutes: parseInt(selectedRide.durationText) || 15,
+          payment_method: pm[selectedRide.paymentMethod] || 'cash',
+          vehicle_type: selectedRide.vehicleType,
+        }),
+      })
       const d = await res.json()
-      if (d.ride?.id) {
-        setRideId(d.ride.id)
-        sessionStorage.setItem('activeRideId', d.ride.id)
-        setStatus('searching')
-        sub(d.ride.id)
-      } else setStatus('searching')
-    } catch { setStatus('searching') }
+      if (!res.ok || !d.ride?.id) {
+        iosToast.error(d.error || 'Erro ao criar corrida')
+        setStatus('error')
+        return
+      }
+      setRideId(d.ride.id)
+      sessionStorage.setItem('activeRideId', d.ride.id)
+      setStatus('searching')
+      sub(d.ride.id)
+    } catch (err) {
+      console.error('createRide error:', err)
+      setStatus('error')
+    }
   }
 
   const sub = (id: string) => {

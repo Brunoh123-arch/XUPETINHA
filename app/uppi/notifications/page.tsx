@@ -76,32 +76,33 @@ export default function NotificationsPage() {
   }
 
   const markAsRead = async (notificationId: string) => {
-    const result = await notificationService.markAsRead(notificationId)
-    if (result.success) {
-      setNotifications(
-        notifications.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
-        )
-      )
+    // Optimistic update
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+    )
+    // Persist via API (PATCH padronizado)
+    try {
+      await fetch('/api/v1/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notification_id: notificationId, is_read: true }),
+      })
+    } catch (err) {
+      console.error('markAsRead error:', err)
     }
   }
 
   const markAllAsRead = async () => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+    // Persist todas via notificationService (usa Supabase client com RLS)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-
-      setNotifications(notifications.map((n) => ({ ...n, is_read: true })))
-    } catch {}
+      await notificationService.markAllAsRead(user.id)
+    } catch (err) {
+      console.error('markAllAsRead error:', err)
+    }
   }
 
   const getNotificationIcon = (type: string) => {

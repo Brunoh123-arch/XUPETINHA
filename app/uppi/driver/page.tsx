@@ -169,16 +169,34 @@ export default function DriverPage() {
     setTogglingOnline(true)
     const newOnline = !isOnline
     try {
-      if (newOnline && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          await fetch('/api/v1/driver/location', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, is_available: true }) })
-        })
-      } else if (userId) {
-        await supabase.from('driver_locations').update({ is_available: false }).eq('driver_id', userId)
-        await supabase.from('driver_profiles').update({ is_available: false }).eq('id', userId)
+      // Usa API server-side que valida motorista verificado e atualiza is_available
+      const res = await fetch('/api/v1/driver/mode', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newOnline ? 'driver' : 'passenger' }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        iosToast.error(data.error || 'Erro ao alterar modo')
+        return
       }
+
       setIsOnline(newOnline)
-      if (newOnline) loadAvailableRides()
+
+      if (newOnline) {
+        // Atualiza localização ao ficar online
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            fetch('/api/v1/driver/location', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, is_available: true }),
+            })
+          })
+        }
+        loadAvailableRides()
+      }
     } finally {
       setTogglingOnline(false)
     }

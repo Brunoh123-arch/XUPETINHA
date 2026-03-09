@@ -59,6 +59,21 @@ export default function DriverHotZonesPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/onboarding/splash'); return }
 
+      // Obtém localização do usuário de forma assíncrona para o fallback
+      let geoLat: number | null = userLat
+      let geoLng: number | null = userLng
+      if (geoLat === null && navigator.geolocation) {
+        try {
+          const pos = await new Promise<GeolocationPosition>((res, rej) =>
+            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 })
+          )
+          geoLat = pos.coords.latitude
+          geoLng = pos.coords.longitude
+          setUserLat(geoLat)
+          setUserLng(geoLng)
+        } catch { /* sem GPS */ }
+      }
+
       const { data: hz } = await supabase
         .from('hot_zones')
         .select('id, name, latitude, longitude, radius_meters, intensity')
@@ -66,13 +81,12 @@ export default function DriverHotZonesPage() {
         .order('intensity', { ascending: false })
 
       if (hz) {
-        setHotZones(hz)
-        // Mapear hot_zones do banco para DemandZone
+        setHotZones(hz as HotZone[])
         const mapped: DemandZone[] = hz.map(z => ({
           id: z.id,
           lat: z.latitude,
           lng: z.longitude,
-          radius: z.radius_meters ?? 500,
+          radius: (z as any).radius_meters ?? 500,
           intensity: typeof z.intensity === 'number' ? z.intensity : 0.5,
           label: z.name,
           ride_count: 0,
@@ -80,9 +94,8 @@ export default function DriverHotZonesPage() {
           peak_hour: '—',
         }))
 
-        // Se o banco estiver vazio, usar fallback baseado na localização do usuário
-        if (mapped.length === 0 && userLat !== null && userLng !== null) {
-          setZones(buildFallbackZones(userLat!, userLng!))
+        if (mapped.length === 0 && geoLat !== null && geoLng !== null) {
+          setZones(buildFallbackZones(geoLat, geoLng))
         } else {
           setZones(mapped)
         }
