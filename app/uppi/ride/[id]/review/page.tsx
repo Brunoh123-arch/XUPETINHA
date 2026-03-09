@@ -121,7 +121,7 @@ export default function ReviewPage() {
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      iosToast.warning('Selecione uma avaliação', 'Toque nas estrelas para avaliar')
+      iosToast.warning('Selecione uma avaliacao', { description: 'Toque nas estrelas para avaliar' })
       return
     }
 
@@ -146,12 +146,12 @@ export default function ReviewPage() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        iosToast.error('Erro ao enviar avaliação', err.error || 'Tente novamente')
+        iosToast.error('Erro ao enviar avaliacao', { description: err.error || 'Tente novamente' })
         return
       }
 
       haptic.success()
-      iosToast.success('Avaliação enviada!', 'Obrigado pelo feedback')
+      iosToast.success('Avaliacao enviada!', { description: 'Obrigado pelo feedback' })
 
       setTimeout(() => {
         if (reviewType === 'driver_to_passenger') {
@@ -160,10 +160,9 @@ export default function ReviewPage() {
           router.push('/uppi/history')
         }
       }, 1500)
-    } catch (error) {
-      console.error('[v0] Error submitting review:', error)
+    } catch {
       haptic.error()
-      iosToast.error('Erro ao enviar', 'Tente novamente')
+      iosToast.error('Erro ao enviar', { description: 'Tente novamente' })
     } finally {
       setSubmitting(false)
     }

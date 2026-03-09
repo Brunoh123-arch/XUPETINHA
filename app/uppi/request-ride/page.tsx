@@ -13,6 +13,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import type { PaymentMethod, VehicleType } from '@/lib/types/database'
 import { rideService } from '@/lib/services/ride-service'
 import { optimizeRoute } from '@/lib/google-maps/route-optimizer'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
 
 function RequestRideContent() {
   const searchParams = useSearchParams()
@@ -26,10 +28,58 @@ function RequestRideContent() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const [walletBalance, setWalletBalance] = useState<number>(0)
+  const [pixTopupModal, setPixTopupModal] = useState<{
+    externalId: string
+    qrCodeText: string
+    qrCodeImage: string | null
+    amountLabel: string
+    rideId: string
+  } | null>(null)
+  // Dados pendentes da corrida para criar após recarga bem-sucedida
+  const [pendingRidePayload, setPendingRidePayload] = useState<Parameters<typeof rideService.createRideRequest>[0] | null>(null)
 
   const estimatedDistance = 5.2
   const estimatedDuration = 15
   const suggestedPrice = 18.50
+
+  // Carregar saldo da carteira ao montar
+  useEffect(() => {
+    const loadBalance = async () => {
+      try {
+        const res = await fetch('/api/v1/wallet')
+        if (res.ok) {
+          const { balance } = await res.json()
+          setWalletBalance(typeof balance === 'number' ? balance : 0)
+        }
+      } catch {
+        // Não bloqueia o fluxo se falhar
+      }
+    }
+    loadBalance()
+  }, [])
+
+  // Após pagamento PIX de recarga confirmado — criar corrida com os dados pendentes
+  const handleTopupPaid = async () => {
+    setPixTopupModal(null)
+    iosToast.success('Recarga confirmada! Criando sua corrida...')
+
+    if (!pendingRidePayload) return
+
+    try {
+      const result = await rideService.createRideRequest(pendingRidePayload)
+      if (!result.success || !result.ride) {
+        iosToast.error(result.error || 'Erro ao criar solicitação')
+        return
+      }
+      router.push(`/uppi/ride/${result.ride.id}/offers`)
+    } catch {
+      iosToast.error('Erro inesperado ao criar corrida')
+    } finally {
+      setPendingRidePayload(null)
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,8 +162,7 @@ function RequestRideContent() {
       const routeResult = await optimizeRoute(pickupCoords, dropoffCoords)
       const optimizedRoute = routeResult.recommended
 
-      // Create ride with negotiation enabled
-      const result = await rideService.createRideRequest({
+      const ridePayload = {
         pickup_address: pickupAddress,
         pickup_lat: pickupCoords.lat,
         pickup_lng: pickupCoords.lng,
@@ -126,7 +175,59 @@ function RequestRideContent() {
         payment_method: paymentMethod,
         vehicle_type: vehicleType,
         notes: notes || undefined,
-      })
+      }
+
+      // Verificar saldo se pagamento via carteira
+      if (paymentMethod === 'wallet') {
+        const offerValue = parseFloat(priceOffer)
+        if (walletBalance < offerValue) {
+          const deficit = offerValue - walletBalance
+          const deficitCents = Math.ceil(deficit * 100)
+
+          // Buscar dados do usuário para o PIX
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name, cpf')
+            .eq('id', user.id)
+            .single()
+
+          // Gerar PIX com o valor exato que falta (pode ser um valor maior que eles queiram)
+          // Usamos o valor da corrida completo para simplificar o processo
+          const topupAmount = Math.ceil(offerValue * 100) // centavos do valor total da corrida
+          const pixResult = await paymentService.createPixPayment({
+            amount: topupAmount,
+            description: `Recarga para corrida Uppi - R$ ${offerValue.toFixed(2)}`,
+            payer_name: profile?.full_name || '',
+            payer_cpf: profile?.cpf || '',
+            ride_id: `wallet-topup-${user.id}-${Date.now()}`,
+          })
+
+          if (pixResult.success && pixResult.qr_code_text) {
+            // Salvar payload da corrida para criar após pagamento confirmado
+            setPendingRidePayload(ridePayload)
+            setPixTopupModal({
+              externalId: pixResult.payment_id!,
+              qrCodeText: pixResult.qr_code_text,
+              qrCodeImage: pixResult.qr_code || null,
+              amountLabel: `R$ ${offerValue.toFixed(2)}`,
+              rideId: `wallet-topup-${user.id}`,
+            })
+            setLoading(false)
+            iosToast.info(
+              `Saldo insuficiente`,
+              `Faltam R$ ${deficit.toFixed(2)}. Pague com PIX para continuar.`
+            )
+            return
+          } else {
+            iosToast.error('Saldo insuficiente', { description: 'Adicione saldo na carteira e tente novamente.' })
+            setLoading(false)
+            return
+          }
+        }
+      }
+
+      // Create ride with negotiation enabled
+      const result = await rideService.createRideRequest(ridePayload)
 
       if (!result.success || !result.ride) {
         iosToast.error(result.error || 'Erro ao criar solicitação')
@@ -144,6 +245,21 @@ function RequestRideContent() {
   }
 
   return (
+    <>
+    {/* Modal PIX de recarga quando saldo insuficiente */}
+    {pixTopupModal && (
+      <PixModal
+        externalId={pixTopupModal.externalId}
+        qrCodeImage={pixTopupModal.qrCodeImage}
+        qrCodeText={pixTopupModal.qrCodeText}
+        amountLabel={pixTopupModal.amountLabel}
+        onClose={() => {
+          setPixTopupModal(null)
+          setPendingRidePayload(null)
+        }}
+        onPaid={handleTopupPaid}
+      />
+    )}
     <div className="h-dvh overflow-y-auto bg-background ios-scroll">
       {/* Header - iOS style */}
       <header className="bg-card/80 ios-blur-heavy border-b border-border/40 sticky top-0 z-30">
@@ -333,7 +449,7 @@ function RequestRideContent() {
                   </div>
                 </Label>
               </div>
-              <div className="flex items-center space-x-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center space-x-3 bg-blue-50 p-4 rounded-lg border border-blue-200 mb-2">
                 <RadioGroupItem value="credit_card" id="credit" className="border-blue-600 text-blue-600" />
                 <Label htmlFor="credit" className="flex-1 cursor-pointer text-blue-900">
                   <div className="flex items-center gap-3">
@@ -344,6 +460,46 @@ function RequestRideContent() {
                   </div>
                 </Label>
               </div>
+              {/* Opção Carteira com indicador de saldo */}
+              <div className={`flex items-center space-x-3 p-4 rounded-lg border mb-2 transition-all ${
+                paymentMethod === 'wallet'
+                  ? 'bg-emerald-50 border-emerald-400'
+                  : 'bg-blue-50 border-blue-200'
+              }`}>
+                <RadioGroupItem value="wallet" id="wallet" className="border-emerald-600 text-emerald-600" />
+                <Label htmlFor="wallet" className="flex-1 cursor-pointer text-blue-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <div>
+                        <span className="font-medium">Carteira Uppi</span>
+                        <p className="text-xs text-emerald-700 font-semibold mt-0.5">
+                          Saldo: R$ {walletBalance.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Aviso de saldo insuficiente inline */}
+                    {paymentMethod === 'wallet' && priceOffer && walletBalance < parseFloat(priceOffer || '0') && (
+                      <span className="text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 rounded-full px-2 py-0.5">
+                        Saldo insuficiente
+                      </span>
+                    )}
+                  </div>
+                </Label>
+              </div>
+              {/* Mensagem explicativa quando saldo insuficiente na carteira */}
+              {paymentMethod === 'wallet' && priceOffer && walletBalance < parseFloat(priceOffer || '0') && (
+                <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 mt-1">
+                  <svg className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs text-orange-700 leading-relaxed">
+                    Seu saldo atual é <strong>R$ {walletBalance.toFixed(2)}</strong>. Ao solicitar, um QR Code PIX será gerado para completar o pagamento de <strong>R$ {parseFloat(priceOffer).toFixed(2)}</strong>.
+                  </p>
+                </div>
+              )}
             </RadioGroup>
           </div>
 
@@ -369,8 +525,9 @@ function RequestRideContent() {
         </form>
       </main>
     </div>
-  )
-}
+    </>
+    )
+  }
 
 export default function RequestRidePage() {
   return (

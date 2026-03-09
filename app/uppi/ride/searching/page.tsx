@@ -7,6 +7,7 @@ import { RouteMap } from '@/components/route-map'
 import { createClient } from '@/lib/supabase/client'
 import { PixModal } from '@/components/pix-modal'
 import { paymentService } from '@/lib/services/payment-service'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 interface RouteData {
   pickup: string
@@ -193,7 +194,7 @@ export default function SearchingDriverPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(err.error || 'Erro ao aceitar oferta')
+        iosToast.error(err.error || 'Erro ao aceitar oferta')
         return
       }
 
@@ -245,18 +246,42 @@ export default function SearchingDriverPage() {
         sessionStorage.removeItem('activeRideId')
         router.push(`/uppi/ride/${rideId}/tracking`)
       }
-    } catch { alert('Erro ao aceitar oferta. Tente novamente.') }
+    } catch { iosToast.error('Erro ao aceitar oferta. Tente novamente.') }
     finally { setAcceptingId(null) }
   }
 
   const reject = async (offer: OfferWithDriver) => {
-    await supabase.from('price_offers').update({ status: 'rejected' }).eq('id', offer.id)
+    try {
+      await fetch(`/api/v1/offers/${offer.id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }).catch(() => {
+        // Fallback direto no banco
+        return supabase.from('price_offers').update({ status: 'rejected' }).eq('id', offer.id)
+      })
+    } catch { /* silent */ }
     setOffers(prev => prev.filter(o => o.id !== offer.id))
     if (offers.length <= 1) { setStatus('searching'); setSheetUp(false) }
   }
 
   const cancel = async () => {
-    if (rideId) await supabase.from('rides').update({ status: 'cancelled', cancelled_at: new Date().toISOString(), cancellation_reason: 'Cancelado pelo passageiro' }).eq('id', rideId)
+    if (rideId) {
+      try {
+        // Cancelar via API para notificar motoristas que fizeram ofertas
+        const res = await fetch(`/api/v1/rides/${rideId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'cancelled', reason: 'Cancelado pelo passageiro na busca' }),
+        })
+        if (!res.ok) throw new Error('API failed')
+      } catch {
+        // Fallback direto no banco
+        await supabase
+          .from('rides')
+          .update({ status: 'cancelled', cancelled_at: new Date().toISOString(), cancellation_reason: 'Cancelado pelo passageiro' })
+          .eq('id', rideId)
+      }
+    }
     sessionStorage.removeItem('activeRideId')
     router.push('/uppi/home')
   }

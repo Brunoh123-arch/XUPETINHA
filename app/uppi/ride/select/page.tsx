@@ -25,6 +25,7 @@ import { RouteMap } from '@/components/route-map'
 import { createClient } from '@/lib/supabase/client'
 import { paymentService } from '@/lib/services/payment-service'
 import { PixModal } from '@/components/pix-modal'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 // Price per km for each vehicle type (R$)
 const PRICE_PER_KM: Record<VehicleType, number> = {
@@ -263,10 +264,10 @@ export default function RideSelectPage() {
             amountLabel: `R$ ${(topupAmount / 100).toFixed(2)}`,
           })
         } else {
-          alert('Saldo insuficiente na carteira. Adicione saldo antes de continuar.')
+          iosToast.error('Saldo insuficiente', { description: 'Adicione saldo na carteira antes de continuar.' })
         }
       } catch {
-        alert('Erro ao verificar saldo. Tente novamente.')
+        iosToast.error('Erro ao verificar saldo. Tente novamente.')
       } finally {
         setCheckingBalance(false)
       }

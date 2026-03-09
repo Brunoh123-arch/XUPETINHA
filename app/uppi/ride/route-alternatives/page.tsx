@@ -100,8 +100,6 @@ export default function RouteAlternativesPage() {
         p_radius_km: 2.0
       })
 
-      console.log('[v0] Popular routes found:', popularRoutes?.length || 0)
-
       // Adicionar badge de rota popular nas rotas do Google que coincidem
       const enrichedRoutes = googleRoutes.map((route: RouteAlternative) => {
         const matchingPopular = popularRoutes?.find((pr: any) => 

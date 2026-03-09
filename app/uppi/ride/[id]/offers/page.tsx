@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { realtimeService } from '@/lib/services/realtime-service'
 import type { Ride } from '@/lib/types/database'
 import { triggerHaptic } from '@/hooks/use-haptic'
+import { iosToast } from '@/lib/utils/ios-toast'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
 
 interface DriverInfo {
   id: string
@@ -445,6 +448,13 @@ export default function RideOffersPage() {
   const [newOfferToast, setNewOfferToast] = useState<{ name: string; price: number } | null>(null)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const prevOfferCount = useRef(0)
+  const [pixModal, setPixModal] = useState<{
+    externalId: string
+    qrCodeText: string
+    qrCodeImage: string | null
+    amountLabel: string
+    rideId: string
+  } | null>(null)
 
   // Countdown timer tick
   useEffect(() => {
@@ -582,22 +592,62 @@ export default function RideOffersPage() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        alert(res.status === 409 ? 'Esta oferta não está mais disponível.' : (err.error || 'Erro ao aceitar oferta.'))
+        iosToast.error(
+          res.status === 409
+            ? 'Esta oferta nao esta mais disponivel.'
+            : (err.error || 'Erro ao aceitar oferta.')
+        )
         const fresh = await fetchOffers()
         setOffers(fresh)
         return
       }
+
+      triggerHaptic('heavy')
+
+      // Se pagamento PIX, gerar QR Code inline antes de redirecionar
+      if (ride?.payment_method === 'pix') {
+        iosToast.info('Gerando PIX...')
+        const pixResult = await paymentService.createPixPayment({
+          amount: Math.round(offer.offered_price * 100),
+          description: `Corrida Uppi - ${ride?.pickup_address} para ${ride?.dropoff_address}`,
+          ride_id: params.id as string,
+        })
+        if (pixResult.success && pixResult.qr_code_text) {
+          setPixModal({
+            externalId: pixResult.payment_id!,
+            qrCodeText: pixResult.qr_code_text,
+            qrCodeImage: pixResult.qr_code || null,
+            amountLabel: `R$ ${offer.offered_price.toFixed(2)}`,
+            rideId: params.id as string,
+          })
+          return // Aguarda confirmação do PIX antes de navegar
+        } else {
+          iosToast.error('Nao foi possivel gerar o PIX. Indo para acompanhamento...')
+        }
+      }
+
       router.push(`/uppi/ride/${params.id}/tracking`)
-    } catch (e) {
-      console.error('Error accepting offer:', e)
-      alert('Erro de conexão. Tente novamente.')
+    } catch {
+      iosToast.error('Erro de conexao. Tente novamente.')
     } finally {
       setAcceptingId(null)
     }
   }
 
   const handleCancel = async () => {
-    await supabase.from('rides').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', params.id)
+    try {
+      await fetch(`/api/v1/rides/${params.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'cancelled', reason: 'Cancelado pelo passageiro na tela de ofertas' }),
+      })
+    } catch {
+      // Fallback direto no banco se API falhar
+      await supabase
+        .from('rides')
+        .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+        .eq('id', params.id)
+    }
     router.push('/uppi/home')
   }
 
@@ -624,6 +674,23 @@ export default function RideOffersPage() {
   }
 
   return (
+    <>
+    {pixModal && (
+      <PixModal
+        externalId={pixModal.externalId}
+        qrCodeText={pixModal.qrCodeText}
+        qrCodeImage={pixModal.qrCodeImage}
+        amountLabel={pixModal.amountLabel}
+        onClose={() => {
+          setPixModal(null)
+          router.push(`/uppi/ride/${pixModal.rideId}/tracking`)
+        }}
+        onPaid={() => {
+          setPixModal(null)
+          router.push(`/uppi/ride/${pixModal.rideId}/tracking`)
+        }}
+      />
+    )}
     <div className="h-dvh overflow-hidden bg-neutral-50 flex flex-col relative">
       {/* New offer toast */}
       <NewOfferToast
@@ -730,21 +797,22 @@ export default function RideOffersPage() {
                 type="button"
                 onClick={handleCancel}
                 className="flex-1 h-[46px] rounded-[14px] bg-red-500 text-[15px] font-bold text-white ios-press transition-colors"
-              >
-                Sim, cancelar
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowCancelConfirm(true)}
-            className="w-full h-[48px] rounded-[14px] bg-neutral-100 text-red-500 text-[16px] font-bold ios-press transition-colors"
           >
-            Cancelar solicitacao
+            Sim, cancelar
           </button>
-        )}
+        </div>
       </div>
-    </div>
+    ) : (
+      <button
+        type="button"
+        onClick={() => setShowCancelConfirm(true)}
+        className="w-full h-[48px] rounded-[14px] bg-neutral-100 text-red-500 text-[16px] font-bold ios-press transition-colors"
+      >
+        Cancelar solicitacao
+      </button>
+    )}
+  </div>
+</div>
+    </>
   )
 }

@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 export interface PixPaymentRequest {
   amount: number // em centavos (ex: 2500 = R$ 25,00)
   description: string
-  payer_name: string
-  payer_cpf: string
+  payer_name?: string
+  payer_cpf?: string
   ride_id: string
 }
 
@@ -27,58 +27,36 @@ export interface PaymentStatus {
 }
 
 class PaymentService {
-  private paradiseApiUrl = 'https://multi.paradisepags.com/api/v1/transaction.php'
-  private get apiKey() { return process.env.PARADISE_API_KEY || process.env.NEXT_PUBLIC_GATEWAY_PARADISE_API_KEY || '' }
-  private get productHash() { return process.env.PARADISE_PRODUCT_HASH || '' }
-
   /**
-   * Cria um pagamento PIX via Paradise e retorna o QR Code
+   * Cria um pagamento PIX via proxy server-side (/api/v1/payments/pix).
+   * As chaves Paradise ficam apenas no servidor — nunca no bundle do cliente.
    */
   async createPixPayment(request: PixPaymentRequest): Promise<PixPaymentResponse> {
     try {
-      const response = await fetch(this.paradiseApiUrl, {
+      const res = await fetch('/api/v1/payments/pix', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': this.apiKey,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: request.amount,
-          description: request.description || 'Pagamento PIX',
-          reference: `RIDE-${request.ride_id}-${Date.now()}`,
-          source: 'api_externa',
-          customer: {
-            name: request.payer_name,
-            document: request.payer_cpf,
-          },
+          description: request.description || 'Pagamento Uppi',
+          payer_name: request.payer_name || '',
+          payer_cpf: request.payer_cpf || '',
+          ride_id: request.ride_id,
         }),
       })
 
-      const data = await response.json()
+      const data = await res.json()
 
-      if (!response.ok || data.status !== 'success') {
-        return { success: false, error: data.message || 'Erro ao gerar PIX. Tente novamente.' }
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Erro ao gerar PIX. Tente novamente.' }
       }
-
-      const tx = data.data
-      const supabase = createClient()
-      await supabase.from('payments').insert({
-        id: String(tx.transaction_id),
-        ride_id: request.ride_id,
-        amount: request.amount / 100,
-        payment_method: 'pix',
-        status: 'pending',
-        pix_qr_code: tx.qr_code_base64,
-        pix_qr_code_text: tx.qr_code,
-        expires_at: tx.expires_at,
-      }).throwOnError().catch(() => {})
 
       return {
         success: true,
-        payment_id: String(tx.transaction_id),
-        qr_code: tx.qr_code_base64,
-        qr_code_text: tx.qr_code,
-        expires_at: tx.expires_at,
+        payment_id: data.payment_id,
+        qr_code: data.qr_code || undefined,
+        qr_code_text: data.qr_code_text || undefined,
+        expires_at: data.expires_at || undefined,
       }
     } catch {
       return { success: false, error: 'Erro ao processar pagamento' }

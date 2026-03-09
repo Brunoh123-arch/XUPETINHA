@@ -1,10 +1,13 @@
 'use client'
 
+'use client'
+
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { Ride } from '@/lib/types/database'
+import { iosToast } from '@/lib/utils/ios-toast'
 
 const CANCEL_REASONS = [
   { id: 'changed_mind', label: 'Mudei de ideia', description: 'Não preciso mais da corrida' },
@@ -89,17 +92,23 @@ export default function CancelRidePage() {
       if (res.ok) {
         const data = await res.json()
 
-        // Mostrar feedback de reembolso antes de redirecionar
+        // Feedback contextual de reembolso via toast
         if (data.refund?.status === 'refunded' && data.refund.amount > 0) {
-          alert(`Corrida cancelada.\n\nReembolso: R$ ${data.refund.amount.toFixed(2)} creditados na sua carteira Uppi.`)
+          iosToast.success('Corrida cancelada', {
+            description: `R$ ${data.refund.amount.toFixed(2)} reembolsados na sua Carteira Uppi.`,
+          })
         } else if (data.refund?.status === 'pending_refund') {
-          alert('Corrida cancelada.\n\nSeu reembolso PIX está sendo processado e será creditado na sua carteira em breve.')
+          iosToast.info('Corrida cancelada', {
+            description: 'Seu reembolso PIX esta sendo processado e sera creditado em breve.',
+          })
+        } else {
+          iosToast.success('Corrida cancelada com sucesso.')
         }
 
-        router.replace('/uppi/home')
+        setTimeout(() => router.replace('/uppi/home'), 1200)
       } else {
         const err = await res.json()
-        alert(err.error || 'Erro ao cancelar corrida')
+        iosToast.error(err.error || 'Erro ao cancelar corrida')
       }
     } finally {
       setCancelling(false)

@@ -45,7 +45,7 @@ export default function DriverDocumentsPage() {
             vehicle_year: String(data.vehicle_year || ''),
             vehicle_plate: data.vehicle_plate || '',
             vehicle_color: data.vehicle_color || '',
-            license_number: data.cnh_number || '',
+            license_number: data.license_number || '',
           })
         }
       }

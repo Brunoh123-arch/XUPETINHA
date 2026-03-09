@@ -150,7 +150,7 @@ export default function WalletPage() {
       } else {
         // Fallback: se o PIX falhar, informar mas não creditar
         triggerHaptic('error')
-        iosToast.error('Erro ao gerar PIX', 'Tente novamente em instantes')
+        iosToast.error('Erro ao gerar PIX', { description: 'Tente novamente em instantes' })
       }
     } catch (error) {
       console.error('[v0] Error adding money:', error)
@@ -577,20 +577,18 @@ export default function WalletPage() {
 
       <BottomNavigation />
 
-      {/* Modal PIX de recarga — só exibido após gerar PIX, saldo creditado via webhook */}
+      {/* Modal PIX de recarga — saldo creditado após confirmação via polling */}
       {pixModal && (
         <PixModal
-          isOpen={!!pixModal}
-          onClose={() => {
-            setPixModal(null)
-            loadWalletData() // recarregar para verificar se o pagamento foi confirmado
-          }}
           externalId={pixModal.externalId}
           qrCodeText={pixModal.qrCodeText}
           qrCodeImage={pixModal.qrCodeImage}
           amountLabel={pixModal.amountLabel}
-          rideId={pixModal.rideId}
-          onPaymentConfirmed={() => {
+          onClose={() => {
+            setPixModal(null)
+            loadWalletData() // recarregar para verificar se o pagamento foi confirmado
+          }}
+          onPaid={() => {
             setPixModal(null)
             loadWalletData()
             iosToast.success('Recarga confirmada! Saldo atualizado.')
