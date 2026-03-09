@@ -28,7 +28,7 @@ export async function GET(request: Request) {
       .from('hot_zones')
       .select('*')
       .eq('is_active', true)
-      .order('danger_level', { ascending: false })
+      .order('intensity', { ascending: false })
 
     if (error) {
       return NextResponse.json({ error: 'Failed to fetch hot zones' }, { status: 500 })

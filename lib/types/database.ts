@@ -455,10 +455,13 @@ export interface HotZone {
   name: string
   latitude: number
   longitude: number
-  radius: number
-  danger_level: 'low' | 'medium' | 'high' | 'critical'
+  /** Raio em metros */
+  radius_meters: number
+  /** Intensidade de demanda: 0.0 (baixa) a 1.0 (altíssima) */
+  intensity: number
   is_active: boolean
   created_at: string
+  updated_at?: string
 }
 
 export interface PopularRoute {
