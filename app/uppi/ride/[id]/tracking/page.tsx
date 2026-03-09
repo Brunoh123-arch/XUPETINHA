@@ -71,10 +71,14 @@ export default function RideTrackingPage() {
         else if (update.status === 'in_progress') { iosToast.info('Corrida iniciada!'); triggerHaptic('medium') }
         else if (update.status === 'completed') {
           trackingService.stopTracking()
-          iosToast.success('Corrida finalizada!')
           triggerHaptic('heavy')
-          const destination = (roleRef.current) === 'driver' ? `/uppi/driver/ride/${rideId}/summary` : `/uppi/ride/${rideId}/review`
-          setTimeout(() => router.push(destination), 1500)
+          if (roleRef.current === 'driver') {
+            iosToast.success('Corrida finalizada!')
+            setTimeout(() => router.push(`/uppi/driver/ride/${rideId}/summary`), 1500)
+          } else {
+            iosToast.success('Chegamos! Hora de pagar.')
+            setTimeout(() => router.push(`/uppi/ride/${rideId}/payment`), 1500)
+          }
         } else if (update.status === 'cancelled') {
           trackingService.stopTracking()
           iosToast.error('Corrida cancelada')

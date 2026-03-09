@@ -1,242 +1,20 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { triggerHaptic } from '@/hooks/use-haptic'
+import { PixModal } from '@/components/pix-modal'
+import { paymentService } from '@/lib/services/payment-service'
 
-// ------------------------------------------------------------------
-// PIX Modal — exibe QR code e faz polling de status
-// ------------------------------------------------------------------
-interface PixModalProps {
-  plan: (typeof plans)[0]
-  onSuccess: () => void
-  onClose: () => void
+interface PixData {
+  externalId: string
+  qrCodeText: string
+  qrCodeImage: string | null
+  amountLabel: string
 }
 
-function PixModal({ plan, onSuccess, onClose }: PixModalProps) {
-  const [step, setStep] = useState<'loading' | 'qr' | 'polling' | 'success' | 'error'>('loading')
-  const [qrBase64, setQrBase64] = useState<string | null>(null)
-  const [qrText, setQrText] = useState<string | null>(null)
-  const [paymentId, setPaymentId] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [secondsLeft, setSecondsLeft] = useState(300) // 5 min expiry
-  const [errorMsg, setErrorMsg] = useState('')
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const stopPolling = useCallback(() => {
-    if (pollingRef.current) clearInterval(pollingRef.current)
-    if (timerRef.current) clearInterval(timerRef.current)
-  }, [])
-
-  // Gerar cobranca PIX
-  useEffect(() => {
-    async function generate() {
-      try {
-        const res = await fetch('/api/v1/payments/pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: Math.round(plan.price * 100), // em centavos
-            description: `Club Uppi — Plano ${plan.name}`,
-          }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Erro ao gerar PIX')
-        setQrBase64(data.qr_code)
-        setQrText(data.qr_code_text)
-        setPaymentId(data.payment_id)
-        setStep('qr')
-        startTimer()
-        startPolling(data.payment_id)
-      } catch (err: unknown) {
-        setErrorMsg(err instanceof Error ? err.message : 'Erro ao gerar cobrança PIX')
-        setStep('error')
-      }
-    }
-    generate()
-    return stopPolling
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  function startTimer() {
-    timerRef.current = setInterval(() => {
-      setSecondsLeft(s => {
-        if (s <= 1) {
-          stopPolling()
-          setStep('error')
-          setErrorMsg('PIX expirado. Gere um novo para tentar novamente.')
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-  }
-
-  function startPolling(pid: string) {
-    pollingRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/pix/status?hash=${pid}`)
-        const data = await res.json()
-        if (data.status === 'paid') {
-          stopPolling()
-          setStep('success')
-          // Ativar subscription no banco
-          await fetch('/api/v1/subscriptions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan: plan.id }),
-          })
-          triggerHaptic('success')
-          setTimeout(() => onSuccess(), 1800)
-        }
-      } catch {
-        // silencioso — continua tentando
-      }
-    }, 3000) // checar a cada 3s
-  }
-
-  async function copyCode() {
-    if (!qrText) return
-    await navigator.clipboard.writeText(qrText)
-    setCopied(true)
-    triggerHaptic('light')
-    setTimeout(() => setCopied(false), 2500)
-  }
-
-  const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0')
-  const seconds = String(secondsLeft % 60).padStart(2, '0')
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div
-        className="w-full max-w-md bg-card rounded-t-[28px] pb-safe-offset-6 px-5 pt-5 animate-ios-slide-up"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Handle */}
-        <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
-
-        {step === 'loading' && (
-          <div className="flex flex-col items-center py-10 gap-4">
-            <div className="w-12 h-12 border-4 border-border border-t-primary rounded-full animate-spin" />
-            <p className="text-[15px] text-muted-foreground font-medium">Gerando cobrança PIX...</p>
-          </div>
-        )}
-
-        {step === 'qr' && (
-          <>
-            <div className="text-center mb-5">
-              <p className="text-[18px] font-bold text-foreground">Pague com PIX</p>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                Plano {plan.name} — <span className="font-semibold text-foreground">R$ {plan.price.toFixed(2).replace('.', ',')}</span>/mes
-              </p>
-            </div>
-
-            {/* Timer */}
-            <div className="flex items-center justify-center gap-1.5 mb-4">
-              <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-[13px] font-mono font-bold text-amber-500">{minutes}:{seconds}</span>
-              <span className="text-[12px] text-muted-foreground">para o PIX expirar</span>
-            </div>
-
-            {/* QR Code */}
-            {qrBase64 ? (
-              <div className="flex justify-center mb-4">
-                <div className="bg-white p-4 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`data:image/png;base64,${qrBase64}`}
-                    alt="QR Code PIX"
-                    className="w-48 h-48"
-                    crossOrigin="anonymous"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-center mb-4">
-                <div className="w-48 h-48 bg-secondary rounded-[20px] flex items-center justify-center">
-                  <div className="w-10 h-10 border-4 border-border border-t-primary rounded-full animate-spin" />
-                </div>
-              </div>
-            )}
-
-            {/* Copia e cola */}
-            {qrText && (
-              <button
-                type="button"
-                onClick={copyCode}
-                className="w-full flex items-center gap-3 bg-secondary rounded-[16px] px-4 py-3.5 ios-press mb-4"
-              >
-                <div className="flex-1 text-left">
-                  <p className="text-[12px] text-muted-foreground mb-0.5">PIX Copia e Cola</p>
-                  <p className="text-[13px] text-foreground font-mono truncate">{qrText.slice(0, 36)}...</p>
-                </div>
-                <div className={`shrink-0 px-3 py-1.5 rounded-[10px] text-[13px] font-bold transition-all ${
-                  copied ? 'bg-emerald-500 text-white' : 'bg-primary text-primary-foreground'
-                }`}>
-                  {copied ? 'Copiado!' : 'Copiar'}
-                </div>
-              </button>
-            )}
-
-            {/* Instrucoes */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-[14px] p-3.5 mb-5">
-              <p className="text-[13px] text-blue-700 dark:text-blue-300 leading-relaxed">
-                Abra o app do seu banco, escaneie o QR ou cole o codigo PIX. A assinatura e ativada automaticamente apos o pagamento.
-              </p>
-            </div>
-
-            <p className="text-[12px] text-muted-foreground/60 text-center">Aguardando confirmação do pagamento...</p>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full mt-3 py-3 text-[15px] text-muted-foreground font-medium ios-press"
-            >
-              Cancelar
-            </button>
-          </>
-        )}
-
-        {step === 'success' && (
-          <div className="flex flex-col items-center py-8 gap-3">
-            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <p className="text-[20px] font-bold text-foreground">Pagamento confirmado!</p>
-            <p className="text-[14px] text-muted-foreground text-center">
-              Plano <span className="font-bold text-foreground">{plan.name}</span> ativado com sucesso. Seus beneficios ja estao disponiveis.
-            </p>
-          </div>
-        )}
-
-        {step === 'error' && (
-          <div className="flex flex-col items-center py-8 gap-4">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-            </div>
-            <p className="text-[18px] font-bold text-foreground">Erro no pagamento</p>
-            <p className="text-[14px] text-muted-foreground text-center">{errorMsg}</p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-primary text-primary-foreground px-8 py-3 rounded-[14px] text-[15px] font-bold ios-press"
-            >
-              Fechar
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
 const plans = [
   {
@@ -315,7 +93,8 @@ export default function ClubUppiPage() {
   const router = useRouter()
   const [selectedPlan, setSelectedPlan] = useState('premium')
   const [currentPlan, setCurrentPlan] = useState<string | null>(null)
-  const [showPix, setShowPix] = useState(false)
+  const [pixData, setPixData] = useState<PixData | null>(null)
+  const [generatingPix, setGeneratingPix] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
@@ -335,18 +114,44 @@ export default function ClubUppiPage() {
     fetchSubscription()
   }, [])
 
-  function handleSubscribe() {
+  async function handleSubscribe() {
+    if (!activePlan) return
     triggerHaptic('medium')
-    setShowPix(true)
+    setGeneratingPix(true)
+    try {
+      const result = await paymentService.createPixPayment({
+        amount: Math.round(activePlan.price * 100),
+        description: `Club Uppi — Plano ${activePlan.name}`,
+        ride_id: `club-${selectedPlan}-${Date.now()}`,
+      })
+      if (!result.success || !result.qr_code_text) {
+        iosToast.error(result.error || 'Erro ao gerar cobranca PIX')
+        return
+      }
+      setPixData({
+        externalId: result.payment_id!,
+        qrCodeText: result.qr_code_text,
+        qrCodeImage: result.qr_code || null,
+        amountLabel: `R$ ${activePlan.price.toFixed(2).replace('.', ',')}`,
+      })
+    } catch {
+      iosToast.error('Erro ao processar pagamento')
+    } finally {
+      setGeneratingPix(false)
+    }
   }
 
-  function handlePixSuccess() {
-    setCurrentPlan(selectedPlan)
-    setShowPix(false)
-    setShowSuccess(true)
-    iosToast.success(`Plano ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} ativado!`, {
-      description: 'Seus beneficios ja estao disponiveis em todas as corridas.',
+  async function handlePixPaid() {
+    // Ativar subscription apos confirmacao do pagamento
+    await fetch('/api/v1/subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: selectedPlan }),
     })
+    setCurrentPlan(selectedPlan)
+    setPixData(null)
+    setShowSuccess(true)
+    triggerHaptic('success')
     setTimeout(() => setShowSuccess(false), 4000)
   }
 
@@ -496,19 +301,24 @@ export default function ClubUppiPage() {
             <button
               type="button"
               onClick={handleSubscribe}
-              disabled={currentPlan === selectedPlan}
+              disabled={currentPlan === selectedPlan || generatingPix}
               className={`w-full py-4 rounded-[16px] text-[17px] font-bold text-center ios-press transition-all duration-200 ${
                 currentPlan === selectedPlan
                   ? 'bg-secondary text-muted-foreground'
                   : `bg-gradient-to-r ${activePlan.color} text-white shadow-lg ${activePlan.shadow}`
               } disabled:opacity-50`}
             >
-              {currentPlan === selectedPlan ? (
+              {generatingPix ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />
+                  Gerando PIX...
+                </span>
+              ) : currentPlan === selectedPlan ? (
                 'Plano atual ativo'
               ) : currentPlan ? (
-                `Trocar para ${activePlan.name} - R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
+                `Trocar para ${activePlan.name} — R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
               ) : (
-                `Assinar com PIX - R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
+                `Assinar com PIX — R$ ${activePlan.price.toFixed(2).replace('.', ',')}/mes`
               )}
             </button>
 
@@ -539,12 +349,15 @@ export default function ClubUppiPage() {
         </div>
       </main>
 
-      {/* PIX Modal */}
-      {showPix && activePlan && (
+      {/* PIX Modal oficial com QR Code, polling e copia e cola */}
+      {pixData && (
         <PixModal
-          plan={activePlan}
-          onSuccess={handlePixSuccess}
-          onClose={() => setShowPix(false)}
+          externalId={pixData.externalId}
+          qrCodeText={pixData.qrCodeText}
+          qrCodeImage={pixData.qrCodeImage}
+          amountLabel={pixData.amountLabel}
+          onClose={() => setPixData(null)}
+          onPaid={handlePixPaid}
         />
       )}
 
