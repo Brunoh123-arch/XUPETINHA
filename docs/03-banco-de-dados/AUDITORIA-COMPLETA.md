@@ -9,12 +9,13 @@
 
 ## SUMARIO EXECUTIVO
 
-| Item | Quantidade |
-|------|------------|
+| Item | Valor |
+|------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no banco public (real) | 80 |
-| Tabelas com RLS ativo | 79 |
-| Tabelas com Realtime | 35 |
+| Tabelas com RLS ativo | 79 (exceto spatial_ref_sys — PostGIS) |
+| Tabelas COM Realtime | **39** (verificado via pg_publication_tables) |
+| Tabelas SEM Realtime | **41** |
 | RPCs callable (negocio) | 42 |
 | Trigger functions | 25+ |
 | API Routes (arquivos route.ts) | 57+ |
@@ -441,19 +442,45 @@
 
 ## SECAO 3: PONTOS DE ATENCAO (auditoria 09/03/2026)
 
-### Inconsistencias identificadas
+### 3.1 Tabelas duplicadas — mesmo conceito, dois nomes
 
-1. **user_wallets**: Tem apenas 5 colunas reais (id, user_id, balance, created_at, updated_at). O codigo pode referenciar reserved_balance, pending_balance, total_earned, total_spent que nao existem no banco real.
+| Tabela A | Tabela B | Problema | Decisao |
+|---|---|---|---|
+| `post_likes` (sem RT) | `social_post_likes` (com RT) | Schema identico: post_id, user_id, created_at | Usar `social_post_likes` — ja tem Realtime e politicas corretas |
+| `group_ride_members` (FK: group_ride_id) | `group_ride_participants` (FK: group_id) | Mesmo conceito, FK com nome diferente | APIs devem usar `group_ride_participants` (mais completa: tem role, pickup_*) |
 
-2. **ratings**: Tem campos duplicados (rater_id/reviewer_id, rated_id/reviewed_id, score/stars) — manter compatibilidade ao escrever queries.
+### 3.2 Colunas duplicadas dentro da mesma tabela
 
-3. **sms_deliveries**: Tem campos duplicados (phone/phone_number, cost/cost_cents, provider_id/provider_message_id) — resultado de migrations incrementais.
+| Tabela | Par duplicado | Coluna correta |
+|---|---|---|
+| `ratings` | `rater_id` / `reviewer_id` | `rater_id` |
+| `ratings` | `rated_id` / `reviewed_id` | `rated_id` |
+| `ratings` | `score` / `stars` | `score` |
+| `driver_reviews` | `driver_id` / `driver_id_ref` | `driver_id` |
+| `ride_recordings` | `duration_sec` / `duration_seconds` | `duration_seconds` |
+| `ride_recordings` | `size_bytes` / `file_size_bytes` | `file_size_bytes` |
+| `sms_deliveries` | `phone` / `phone_number` | `phone` |
+| `sms_deliveries` | `cost` / `cost_cents` | `cost` |
+| `coupons` | `usage_limit` / `max_uses` | `max_uses` |
+| `coupons` | `usage_count` / `current_uses` | `current_uses` |
 
-4. **ride_recordings**: Tem duration_sec e duration_seconds (duplicados), size_bytes e file_size_bytes (duplicados) — usar os campos mais novos (duration_seconds, file_size_bytes).
+### 3.3 Colunas que o codigo referencia mas NAO existem no banco
 
-5. **support_tickets**: Coluna e `topic` (nao `subject` como em versoes antigas).
+| Tabela | Coluna inexistente | O que existe |
+|---|---|---|
+| `user_wallets` | `reserved_balance` | apenas `balance` |
+| `user_wallets` | `pending_balance` | apenas `balance` |
+| `user_wallets` | `total_earned` | apenas `balance` |
+| `user_wallets` | `total_spent` | apenas `balance` |
+| `support_tickets` | `subject` | coluna e `topic` |
 
-6. **profiles**: Campos novos vs codigo antigo — trust_score, trust_level, current_mode, cpf, birth_date, bio, total_saved, referral_credits podem nao estar mapeados no codigo mais antigo.
+### 3.4 Realtime — contagem corrigida
+
+Documentos anteriores mencionavam **35 tabelas** com Realtime. A contagem correta via SQL em 09/03/2026 e **39 tabelas**. As 4 adicionais que nao estavam listadas antes: `user_wallets`, `social_follows`, `social_post_likes`, `group_ride_participants`.
+
+### 3.5 profiles: campos novos possivelmente nao mapeados em codigo antigo
+
+`trust_score`, `trust_level`, `current_mode`, `cpf`, `birth_date`, `bio`, `total_saved`, `referral_credits` — campos adicionados em migrations recentes que podem nao estar tipados em interfaces TypeScript antigas.
 
 ---
 

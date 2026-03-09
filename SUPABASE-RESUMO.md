@@ -12,7 +12,7 @@
 PROJETO:   jpnwxqjrhzaobnugjnyx
 TABELAS:   80 (schema public)
 RLS:       79 tabelas (exceto spatial_ref_sys)
-REALTIME:  35 tabelas
+REALTIME:  39 tabelas (verificado via pg_publication_tables)
 RPCs:      42 funcoes callable
 TRIGGERS:  25+ functions
 ```

@@ -57,7 +57,7 @@
 
 ### Realtime Publications (35 tabelas)
 
-Verificadas via `pg_publication_tables` em 09/03/2026:
+Verificadas via `pg_publication_tables` em 09/03/2026 — **39 tabelas**:
 
 ```
 city_zones, delivery_orders, driver_locations, driver_profiles,
@@ -68,8 +68,23 @@ notifications, payments, price_offers, profiles, promo_banners,
 ratings, ride_tracking, rides, scheduled_rides, sms_deliveries,
 social_follows, social_post_likes, social_posts, subscriptions,
 support_messages, support_tickets, surge_pricing, user_achievements,
-user_push_tokens, wallet_transactions, webhook_deliveries, user_wallets
+user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries
 ```
+
+### Tabelas SEM Realtime (41 tabelas — correto, nao precisam de escuta)
+```
+address_history, address_search_history, admin_logs, app_config,
+campaigns, coupon_uses, coupons, driver_verifications, email_otps,
+family_members, faqs, favorite_drivers, favorites, legal_documents,
+notification_preferences, platform_metrics, popular_routes, post_comments,
+post_likes (*), pricing_rules, promotions, push_subscriptions,
+rating_categories, recording_consents, referral_achievements, referrals,
+reviews, ride_recordings, sms_logs, sms_templates, spatial_ref_sys (PostGIS),
+system_settings, user_2fa, user_coupons, user_onboarding,
+user_recording_preferences, user_settings, user_sms_preferences,
+user_social_stats, vehicles, webhook_endpoints
+```
+(*) `post_likes` e duplicata de `social_post_likes` (que ja tem Realtime).
 
 ### Triggers no schema public (20+ triggers)
 
@@ -211,7 +226,7 @@ SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'TWILIO_AUTH_T
 | Tabelas totais (todos schemas) | ~182 |
 | Tabelas dominio (public) | 80 |
 | Tabelas com RLS | 79 |
-| Tabelas com Realtime | 35 |
+| Tabelas com Realtime | 39 |
 | RPCs callable | 42 |
 | Trigger functions | 25+ |
 | Schemas ativos | 8 |

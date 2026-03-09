@@ -22,12 +22,10 @@
 
 - [x] **80 tabelas no schema public**
 - [x] **79 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
-- [x] **35 tabelas com Realtime publicado** (verificado via pg_publication_tables)
-- [x] **42 RPCs de negocio callable**
-- [x] **25+ trigger functions ativas**
+- [x] **39 tabelas com Realtime publicado** (verificado via pg_publication_tables em 09/03/2026)
 
-### Tabelas com Realtime (35)
-city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, wallet_transactions, webhook_deliveries, user_wallets
+### Tabelas COM Realtime (39)
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries
 
 ---
 
@@ -148,14 +146,26 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 
 ## Pontos de Atencao
 
-### Campos que NAO existem no banco (verificado em 09/03/2026)
-- `user_wallets`: reserved_balance, pending_balance, total_earned, total_spent — **NAO EXISTEM**
-- `support_tickets`: subject — campo e `topic` no banco real
+### Tabelas duplicadas (mesmo conceito)
+- `post_likes` + `social_post_likes` — usar **social_post_likes** (tem Realtime e RLS corretas)
+- `group_ride_members` + `group_ride_participants` — usar **group_ride_participants** (mais completa)
 
-### Campos duplicados no banco (resultado de migrations incrementais)
-- `ratings`: rater_id/reviewer_id (usar rater_id), score/stars (usar score)
-- `ride_recordings`: duration_sec/duration_seconds (usar duration_seconds)
-- `sms_deliveries`: phone/phone_number, cost/cost_cents
+### Campos que NAO existem no banco (verificado via SQL em 09/03/2026)
+- `user_wallets`: reserved_balance, pending_balance, total_earned, total_spent — **NAO EXISTEM**
+- `support_tickets`: subject — campo correto e **`topic`**
+
+### Campos duplicados — usar a coluna da direita
+| Tabela | Evitar | Usar |
+|---|---|---|
+| ratings | reviewer_id | rater_id |
+| ratings | reviewed_id | rated_id |
+| ratings | stars | score |
+| driver_reviews | driver_id_ref | driver_id |
+| ride_recordings | duration_sec | duration_seconds |
+| ride_recordings | size_bytes | file_size_bytes |
+| sms_deliveries | phone_number | phone |
+| sms_deliveries | cost_cents | cost |
+| coupons | usage_limit / usage_count | max_uses / current_uses |
 
 ---
 
