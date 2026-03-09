@@ -14,8 +14,8 @@
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no banco public (real) | 80 |
 | Tabelas com RLS ativo | 79 (exceto spatial_ref_sys — PostGIS) |
-| Tabelas COM Realtime | **39** (verificado via pg_publication_tables) |
-| Tabelas SEM Realtime | **41** |
+| Tabelas COM Realtime | **43** (verificado via pg_publication_tables, pós migration 026) |
+| Tabelas SEM Realtime | **37** |
 | RPCs callable (negocio, excl. PostGIS) | 58 (verificado via information_schema.routines em 09/03/2026) |
 | Trigger functions | 25+ |
 | API Routes (arquivos route.ts) | 57+ |

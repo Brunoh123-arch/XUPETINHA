@@ -22,10 +22,10 @@
 
 - [x] **80 tabelas no schema public**
 - [x] **79 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
-- [x] **39 tabelas com Realtime publicado** (verificado via pg_publication_tables em 09/03/2026)
+- [x] **43 tabelas com Realtime publicado** (verificado via pg_publication_tables, pós migration 026)
 
-### Tabelas COM Realtime (39)
-city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, price_offers, profiles, promo_banners, ratings, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries
+### Tabelas COM Realtime (43)
+city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries
 
 ---
 
@@ -35,7 +35,7 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 - [x] `lib/supabase/server.ts` — Cliente servidor
 - [x] `lib/supabase/admin.ts` — Cliente admin (service role)
 - [x] `lib/supabase/config.ts` — Configuracoes
-- [x] `proxy.ts` — Middleware de autenticacao (Next.js 16)
+- [x] `middleware.ts` — Middleware de autenticacao (Next.js 16 compativel)
 
 ---
 

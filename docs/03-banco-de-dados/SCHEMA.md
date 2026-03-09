@@ -6,7 +6,7 @@
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx (ativo — verificado em 09/03/2026)
 **Tabelas no schema public:** 80 (verificadas via SQL em 09/03/2026)
 **Tabelas com RLS ativo:** 79 (exceto spatial_ref_sys — sistema PostGIS)
-**Tabelas com Realtime:** 39 (verificadas via pg_publication_tables em 09/03/2026)
+**Tabelas com Realtime:** 43 (verificadas via pg_publication_tables, pós migration 026 em 09/03/2026)
 **RPCs de negocio callable:** 58 (excluindo funcoes PostGIS internas — verificado via SQL em 09/03/2026)
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 

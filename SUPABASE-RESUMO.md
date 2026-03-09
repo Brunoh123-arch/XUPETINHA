@@ -12,7 +12,7 @@
 PROJETO:   jpnwxqjrhzaobnugjnyx
 TABELAS:   80 (schema public)
 RLS:       79 tabelas (exceto spatial_ref_sys)
-REALTIME:  39 tabelas (verificado via pg_publication_tables em 09/03/2026)
+REALTIME:  43 tabelas (verificado via pg_publication_tables em 09/03/2026 pós migration 026)
 RPCs:      58 funcoes de negocio callable (excluindo PostGIS)
 TRIGGERS:  25+ functions
 ```
@@ -25,7 +25,7 @@ TRIGGERS:  25+ functions
 - [x] Login/Signup com email
 - [x] Reset de senha
 - [x] OAuth (Google, GitHub, etc)
-- [x] Middleware de protecao (proxy.ts — Next.js 16)
+- [x] Middleware de protecao (middleware.ts — Next.js 16 compativel)
 - [x] Refresh automatico de tokens
 - [x] Trigger automatico: on_auth_user_created cria profiles + wallet + settings
 
@@ -36,29 +36,28 @@ TRIGGERS:  25+ functions
 - [x] Indexes otimizados
 - [x] PostGIS instalado (find_nearby_drivers usa ST_Distance)
 
-### Realtime (39 tabelas — verificado via pg_publication_tables em 09/03/2026)
+### Realtime (43 tabelas — verificado via pg_publication_tables, pós migration 026)
 - [x] rides, price_offers, driver_locations, driver_profiles, driver_reviews
 - [x] messages, notifications, support_messages, support_tickets
 - [x] payments, wallet_transactions, user_wallets, driver_withdrawals
-- [x] social_posts, social_post_likes, social_follows
+- [x] social_posts, social_post_likes, social_follows, post_likes, post_comments
 - [x] ratings, leaderboard, user_achievements, user_push_tokens
 - [x] group_rides, group_ride_members, group_ride_participants
 - [x] intercity_rides, intercity_bookings, delivery_orders
 - [x] scheduled_rides, ride_tracking, hot_zones, city_zones, surge_pricing
 - [x] emergency_alerts, emergency_contacts, sms_deliveries
-- [x] subscriptions, promo_banners
+- [x] subscriptions, promo_banners, referrals, favorite_drivers
 - [x] profiles, error_logs, webhook_deliveries
 
-### Tabelas SEM Realtime (41 tabelas — correto, nao precisam de escuta em tempo real)
+### Tabelas SEM Realtime (37 tabelas — nao precisam de escuta em tempo real)
 address_history, address_search_history, admin_logs, app_config, campaigns,
 coupon_uses, coupons, driver_verifications, email_otps, family_members, faqs,
-favorite_drivers, favorites, legal_documents, notification_preferences,
-platform_metrics, popular_routes, post_comments, post_likes, pricing_rules,
-promotions, push_subscriptions, rating_categories, recording_consents,
-referral_achievements, referrals, reviews, ride_recordings, sms_logs, sms_templates,
-spatial_ref_sys, system_settings, user_2fa, user_coupons, user_onboarding,
-user_recording_preferences, user_settings, user_sms_preferences, user_social_stats,
-vehicles, webhook_endpoints
+favorites, legal_documents, notification_preferences, platform_metrics,
+popular_routes, pricing_rules, promotions, push_subscriptions, rating_categories,
+recording_consents, referral_achievements, reviews, ride_recordings, sms_logs,
+sms_templates, spatial_ref_sys, system_settings, user_2fa, user_coupons,
+user_onboarding, user_recording_preferences, user_settings, user_sms_preferences,
+user_social_stats, vehicles, webhook_endpoints
 
 ### RPCs Disponiveis (58 funcoes de negocio — verificado via SQL em 09/03/2026)
 
@@ -134,7 +133,7 @@ lib/supabase/
   admin.ts           Cliente admin (service role)
   config.ts          Configuracoes
 
-proxy.ts             Middleware autenticacao (Next.js 16)
+middleware.ts         Middleware autenticacao (Next.js 16 compativel)
 ```
 
 ---
