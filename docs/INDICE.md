@@ -2,8 +2,8 @@
 
 **Ultima atualizacao:** 09/03/2026
 **Versao:** 16.0
-**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 79 com RLS / 35 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
-**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — 80 tabelas, 35 com Realtime, 42 RPCs callable
+**Arquitetura:** Frontend + Backend + Banco (80 tabelas public / 79 com RLS / 43 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
+**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — 80 tabelas, 43 com Realtime, 58 RPCs callable, 150 politicas RLS, 211 indices
 
 ---
 
@@ -28,8 +28,8 @@ docs/
     VERSIONAMENTO.md                         Padrao /api/v1/, middleware, headers de versao
 
   03-banco-de-dados/
-    AUDITORIA-COMPLETA.md                    Schema alvo completo (73 tabelas, 98+ RLS, 45+ RPC)
-    SCHEMA.md                                Estado real (73 tabelas ativas em 02/03/2026) +
+    AUDITORIA-COMPLETA.md                    Schema real completo (80 tabelas, 43 Realtime, 58 RPCs)
+    SCHEMA.md                                Estado real (80 tabelas — verificado 09/03/2026) +
                                              campos detalhados, RLS, indexes, funcoes SQL
 
   04-infraestrutura/

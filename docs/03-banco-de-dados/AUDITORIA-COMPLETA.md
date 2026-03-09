@@ -14,9 +14,11 @@
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no banco public (real) | 80 |
 | Tabelas com RLS ativo | 79 (exceto spatial_ref_sys — PostGIS) |
-| Tabelas COM Realtime | **43** (verificado via pg_publication_tables, pós migration 026) |
+| Tabelas COM Realtime | **43** (verificado via pg_publication_tables — migrations 022-026) |
 | Tabelas SEM Realtime | **37** |
-| RPCs callable (negocio, excl. PostGIS) | 58 (verificado via information_schema.routines em 09/03/2026) |
+| RPCs callable (negocio, excl. PostGIS) | **58** (verificado via information_schema.routines em 09/03/2026) |
+| Politicas RLS consolidadas | **150** (migrations 026-028) |
+| Indices de performance | **211** (migrations 026-027: +27 novos) |
 | Trigger functions | 25+ |
 | API Routes (arquivos route.ts) | 57+ |
 | Endpoints HTTP totais | 92+ |
@@ -184,10 +186,10 @@
 - **RLS:** sim | **Realtime:** sim
 
 **post_comments** — 7 colunas (com parent_id para threads)
-- **RLS:** sim | **Realtime:** nao
+- **RLS:** sim | **Realtime:** sim (adicionado migration 026)
 
 **post_likes** — 4 colunas
-- **RLS:** sim | **Realtime:** nao
+- **RLS:** sim | **Realtime:** sim (adicionado migration 026)
 
 **user_social_stats** — 5 colunas (posts_count, likes_received, comments_received)
 - **RLS:** sim | **Realtime:** nao
@@ -290,7 +292,7 @@
 ### 13. Indicacoes e Fidelidade (6 tabelas)
 
 **referrals** — 11 colunas (referrer_id, referred_id, referral_code, status, reward_amount, reward_paid...)
-- **RLS:** sim | **Realtime:** nao
+- **RLS:** sim | **Realtime:** sim (adicionado migration 026)
 
 **subscriptions** — 12 colunas
 - id, user_id, plan, status, started_at, expires_at, cancelled_at, price, payment_id, auto_renew, discount_rides, priority_support, cashback_percent, created_at
@@ -304,7 +306,7 @@
 - **RLS:** sim | **Realtime:** sim
 
 **favorite_drivers** — 4 colunas
-- **RLS:** sim | **Realtime:** nao
+- **RLS:** sim | **Realtime:** sim (adicionado migration 026)
 
 **campaigns** — 13 colunas
 - **RLS:** sim | **Realtime:** nao
@@ -426,7 +428,7 @@
 
 ---
 
-## SECAO 2: RPCs DE NEGOCIO (42 funcoes)
+## SECAO 2: RPCs DE NEGOCIO (58 funcoes — verificado via information_schema.routines em 09/03/2026)
 
 ### Por categoria
 
@@ -474,9 +476,9 @@
 | `user_wallets` | `total_spent` | apenas `balance` |
 | `support_tickets` | `subject` | coluna e `topic` |
 
-### 3.4 Realtime — contagem corrigida
+### 3.4 Realtime — contagem definitiva (migration 026)
 
-Documentos anteriores mencionavam **35 tabelas** com Realtime. A contagem correta via SQL em 09/03/2026 e **39 tabelas**. As 4 adicionais que nao estavam listadas antes: `user_wallets`, `social_follows`, `social_post_likes`, `group_ride_participants`.
+Documentos anteriores mencionavam 35 ou 39 tabelas com Realtime. A contagem real verificada via `pg_publication_tables` apos migration 026 e **43 tabelas**. As adicionadas na migration 026: `post_likes`, `post_comments`, `favorite_drivers`, `referrals`, `subscriptions`.
 
 ### 3.5 profiles: campos novos possivelmente nao mapeados em codigo antigo
 

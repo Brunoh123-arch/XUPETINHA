@@ -2,7 +2,7 @@
 
 **Ultima Atualizacao:** 09/03/2026
 **Versao:** 21.0
-**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas, 35 com Realtime, 42 RPCs
+**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas, 43 com Realtime, 58 RPCs, 150 politicas RLS, 211 indices
 
 ---
 
@@ -13,8 +13,10 @@
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no Banco (public) | 80 |
 | Tabelas com RLS ativo | 79 |
-| Tabelas com Realtime | 35 |
-| RPCs callable | 42 |
+| Tabelas com Realtime | **43** |
+| RPCs callable | **58** |
+| Politicas RLS | **150** |
+| Indices de performance | **211** |
 | Paginas (page.tsx) | 152 |
 | API route.ts | 57+ |
 | Endpoints HTTP | 92+ |
