@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "470554921028",
+    "firebase_url": "https://uppi-digital-default-rtdb.firebaseio.com",
+    "project_id": "uppi-digital",
+    "storage_bucket": "uppi-digital.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470554921028:android:6e5b47262956a359355411",
+        "android_client_info": {
+          "package_name": "app.uppi.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "470554921028-763q1adqc1e34ddl1mhd4aalqgget566.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB0JCokMRjMJhtFrtCLLRJY6zFyEnULfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "470554921028-763q1adqc1e34ddl1mhd4aalqgget566.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
