@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { apiLimiter, rateLimitResponse } from '@/lib/utils/rate-limit'
 
 const PARADISE_API_URL = 'https://multi.paradisepags.com/api/v1/transaction.php'
 
@@ -16,6 +17,10 @@ function getParadiseHash() {
  * Mantém as chaves de API fora do cliente.
  */
 export async function POST(request: NextRequest) {
+  // Rate limit: 5 cobranças PIX por minuto por IP
+  const rlResult = apiLimiter.check(request, 5)
+  if (!rlResult.success) return rateLimitResponse(rlResult)
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {

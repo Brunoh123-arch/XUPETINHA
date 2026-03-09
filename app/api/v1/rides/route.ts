@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { rideRequestSchema } from '@/lib/validations/schemas'
 import { successResponse, errorResponse, requireAuth, handleApiError } from '@/lib/api-utils'
+import { apiLimiter, rateLimitResponse } from '@/lib/utils/rate-limit'
+import { sendFcmToTokens } from '@/lib/firebase-admin'
 
 export async function POST(request: Request) {
+  // Rate limit: 10 corridas por minuto por IP
+  const rlResult = apiLimiter.check(request, 10)
+  if (!rlResult.success) return rateLimitResponse(rlResult)
+
   try {
     const user = await requireAuth()
     const body = await request.json()
@@ -42,20 +48,37 @@ export async function POST(request: Request) {
       return errorResponse('Erro ao criar corrida: ' + error.message, 500)
     }
 
-    // Notificar motoristas próximos
+    // Notificar motoristas próximos via FCM
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/v1/notifications/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'ride',
-          title: 'Nova corrida disponível',
-          body: `De ${data.pickup_address} para ${data.dropoff_address}`,
-          ride_id: ride.id,
-        }),
-      })
+      const supabase2 = await createClient()
+
+      // Buscar motoristas verificados e disponíveis com FCM token
+      const { data: nearbyDrivers } = await supabase2
+        .from('driver_profiles')
+        .select('id')
+        .eq('is_verified', true)
+        .eq('is_available', true)
+
+      if (nearbyDrivers && nearbyDrivers.length > 0) {
+        const driverIds = nearbyDrivers.map((d: { id: string }) => d.id)
+
+        const { data: pushTokens } = await supabase2
+          .from('user_push_tokens')
+          .select('token')
+          .in('user_id', driverIds)
+          .eq('is_active', true)
+
+        if (pushTokens && pushTokens.length > 0) {
+          await sendFcmToTokens(
+            pushTokens.map((t: { token: string }) => t.token),
+            'Nova corrida disponivel',
+            `De ${data.pickup_address} para ${data.dropoff_address} — R$ ${data.passenger_price_offer?.toFixed(2) ?? '?'}`,
+            { ride_id: ride.id, type: 'new_ride', vehicle_type: data.vehicle_type || 'economy' }
+          )
+        }
+      }
     } catch {
-      // falha silenciosa — notificação não é crítica
+      // Falha silenciosa — push nao e critico
     }
 
     return successResponse(ride, 'Corrida criada com sucesso')
@@ -65,6 +88,10 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  // Rate limit: 30 buscas por minuto por IP
+  const rlGet = apiLimiter.check(request, 30)
+  if (!rlGet.success) return rateLimitResponse(rlGet)
+
   try {
     const user = await requireAuth()
     const { searchParams } = new URL(request.url)

@@ -99,10 +99,24 @@ export default function DriverPage() {
       setUserId(user.id)
 
       const [{ data: driverProfile }, { data: profile }, { data: favData }] = await Promise.all([
-        supabase.from('driver_profiles').select('vehicle_type, is_available, acceptance_rate, trust_score').eq('id', user.id).single(),
+        supabase.from('driver_profiles').select('vehicle_type, is_available, acceptance_rate, trust_score, is_verified').eq('id', user.id).single(),
         supabase.from('profiles').select('full_name').eq('id', user.id).single(),
         supabase.from('favorite_drivers').select('id', { count: 'exact' }).eq('driver_id', user.id),
       ])
+
+      // Sem perfil de motorista → redirecionar para cadastro
+      if (!driverProfile) {
+        router.replace('/uppi/driver/register')
+        return
+      }
+
+      // Perfil nao verificado → mostrar aviso e redirecionar
+      if (!driverProfile.is_verified) {
+        iosToast.info('Seu cadastro de motorista esta em analise. Aguarde a aprovacao.')
+        router.replace('/uppi/driver/register')
+        return
+      }
+
       if (driverProfile?.trust_score) setTrustScore(driverProfile.trust_score)
       if (favData) setFavoritePassengers(favData.length)
 
