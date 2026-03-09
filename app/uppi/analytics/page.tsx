@@ -64,25 +64,32 @@ export default function AnalyticsPage() {
   const calculateTotal = (rides: any[], userId: string, type: 'passenger' | 'driver') => {
     return rides
       .filter(ride => type === 'passenger' ? ride.passenger_id === userId : ride.driver_id === userId)
-      .reduce((sum, ride) => sum + (ride.price_offers?.[0]?.amount || 0), 0)
+      .reduce((sum, ride) => {
+        const price = Number(ride.final_price) || Number(ride.passenger_price_offer) || 0
+        // motorista recebe 85% do valor
+        return sum + (type === 'driver' ? price * 0.85 : price)
+      }, 0)
   }
 
   const calculateMonthlyStats = (rides: any[], userId: string, userType: string) => {
-    const monthsData: any = {}
-    
+    const monthsData: Record<string, { month: string; rides: number; amount: number }> = {}
+
     rides.forEach(ride => {
       const date = new Date(ride.created_at)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      
+      const price = Number(ride.final_price) || Number(ride.passenger_price_offer) || 0
+
       if (!monthsData[monthKey]) {
         monthsData[monthKey] = { month: monthKey, rides: 0, amount: 0 }
       }
-      
+
       monthsData[monthKey].rides++
-      monthsData[monthKey].amount += ride.price_offers?.[0]?.amount || 0
+      monthsData[monthKey].amount += userType === 'driver' ? price * 0.85 : price
     })
 
-    return Object.values(monthsData).slice(0, 6).reverse()
+    return Object.values(monthsData)
+      .sort((a, b) => a.month.localeCompare(b.month))
+      .slice(-6)
   }
 
   if (loading) {
