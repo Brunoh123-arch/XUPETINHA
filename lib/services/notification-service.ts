@@ -37,7 +37,7 @@ class NotificationService {
         body:     notification.body,
         type:     notification.type,
         data:     notification.data ?? {},
-        is_read:  false,
+        read:     false,
       })
 
       if (error) throw error
