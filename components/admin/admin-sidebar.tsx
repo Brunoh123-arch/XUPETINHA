@@ -44,6 +44,9 @@ import {
   Megaphone,
   FileText,
   KeyRound,
+  Zap,
+  Map,
+  Banknote,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -88,6 +91,7 @@ const navGroups = [
     label: 'Operacoes',
     items: [
       { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
+      { href: '/admin/withdrawals', icon: Banknote, label: 'Saques' },
       { href: '/admin/payments', icon: CreditCard, label: 'Pagamentos' },
       { href: '/admin/cupons', icon: Ticket, label: 'Cupons' },
       { href: '/admin/promotions', icon: Megaphone, label: 'Campanhas' },
@@ -102,6 +106,8 @@ const navGroups = [
   {
     label: 'Sistema',
     items: [
+      { href: '/admin/surge', icon: Zap, label: 'Tarifa Dinamica' },
+      { href: '/admin/zones', icon: Map, label: 'Zonas da Cidade' },
       { href: '/admin/webhooks', icon: Webhook, label: 'Webhooks' },
       { href: '/admin/recordings', icon: Mic, label: 'Gravacoes' },
       { href: '/admin/logs', icon: AlertTriangle, label: 'Logs de Erro' },
