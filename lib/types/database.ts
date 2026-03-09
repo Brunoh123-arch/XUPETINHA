@@ -23,6 +23,16 @@ export interface Profile {
   is_banned: boolean
   banned_at?: string
   ban_reason?: string
+  status?: 'active' | 'inactive' | 'suspended'
+  rating?: number
+  total_rides?: number
+  current_mode?: 'passenger' | 'driver' | 'admin'
+  referral_code?: string
+  referred_by?: string
+  cpf?: string
+  birth_date?: string
+  bio?: string
+  total_saved?: number
   preferences?: {
     haptic?: boolean
     animations?: boolean
@@ -40,7 +50,7 @@ export interface DriverProfile {
   vehicle_model: string
   vehicle_plate: string
   vehicle_color: string
-  vehicle_type: VehicleType
+  vehicle_type: VehicleType | string
   vehicle_year?: number
   is_verified: boolean
   is_available: boolean
@@ -49,6 +59,12 @@ export interface DriverProfile {
   total_earnings?: number
   rating?: number
   total_rides?: number
+  acceptance_rate?: number
+  trust_score?: number
+  rejection_count?: number
+  mode?: 'passenger' | 'driver'
+  license_number?: string
+  license_category?: string
   cnh_number?: string
   cnh_expiry?: string
   document_url?: string
@@ -151,7 +167,13 @@ export interface Notification {
   message: string
   type: string
   data?: any
-  read: boolean
+  metadata?: any
+  /** Alias consistente com o banco (is_read) */
+  is_read: boolean
+  /** Backward compat — algumas partes ainda usam read */
+  read?: boolean
+  read_at?: string
+  ride_id?: string
   created_at: string
 }
 
