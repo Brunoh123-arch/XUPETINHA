@@ -150,7 +150,7 @@ export function parseDeepLink(url: string): { type: 'ride' | 'coupon'; data: any
 
     return null
   } catch (error) {
-    console.error('[v0] Error parsing deep link:', error)
+    console.error('Error parsing deep link:', error)
     return null
   }
 }

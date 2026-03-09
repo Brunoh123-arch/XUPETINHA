@@ -94,7 +94,7 @@ export default function WalletPage() {
         setTransactions(apiTxs || [])
       }
     } catch (error) {
-      console.error('[v0] Error loading wallet:', error)
+      console.error('Error loading wallet:', error)
     } finally {
       setLoading(false)
     }
@@ -153,7 +153,7 @@ export default function WalletPage() {
         iosToast.error('Erro ao gerar PIX', { description: 'Tente novamente em instantes' })
       }
     } catch (error) {
-      console.error('[v0] Error adding money:', error)
+      console.error('Error adding money:', error)
       triggerHaptic('error')
       iosToast.error('Erro ao iniciar recarga')
     } finally {

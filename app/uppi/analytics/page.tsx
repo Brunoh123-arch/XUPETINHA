@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
       
       setMonthlyData(monthly)
     } catch (error) {
-      console.error('[v0] Error loading analytics:', error)
+      console.error('Error loading analytics:', error)
     } finally {
       setLoading(false)
     }

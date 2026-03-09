@@ -109,7 +109,7 @@ export default function ChatPage() {
       if (error) throw error
       setMessages(data || [])
     } catch (err) {
-      console.error('[v0] Error loading chat:', err)
+      console.error('Error loading chat:', err)
       iosToast.error('Erro ao carregar conversa')
     } finally {
       setLoading(false)
@@ -138,7 +138,7 @@ export default function ChatPage() {
       if (error) throw error
       setNewMessage('')
     } catch (err) {
-      console.error('[v0] Error sending message:', err)
+      console.error('Error sending message:', err)
       haptic.error()
       iosToast.error('Erro ao enviar mensagem')
     } finally {

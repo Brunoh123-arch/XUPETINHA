@@ -58,14 +58,14 @@ export function trackEvent(
 ) {
   // Only track in production or if explicitly enabled
   if (process.env.NODE_ENV !== 'production' && !process.env.NEXT_PUBLIC_ENABLE_ANALYTICS) {
-    console.log('[v0] Analytics (dev):', event, properties)
+    // dev: analytics silently skipped
     return
   }
 
   try {
     track(event, properties)
   } catch (error) {
-    console.error('[v0] Analytics error:', error)
+    console.error('Analytics error:', error)
   }
 }
 

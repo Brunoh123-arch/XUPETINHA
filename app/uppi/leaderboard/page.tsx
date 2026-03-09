@@ -44,7 +44,7 @@ export default function LeaderboardPage() {
       setLeaderboard(data.leaderboard || [])
       setUserRank(data.userRank || null)
     } catch (error) {
-      console.error('[v0] Error fetching leaderboard:', error)
+      console.error('Error fetching leaderboard:', error)
       iosToast.error('Erro ao carregar ranking')
     } finally {
       setLoading(false)

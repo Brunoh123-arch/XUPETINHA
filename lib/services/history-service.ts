@@ -18,7 +18,7 @@ export const historyService = {
       .range(offset, offset + limit - 1)
 
     if (error) {
-      console.error('[v0] Error fetching ride history:', error)
+      console.error('Error fetching ride history:', error)
       return { success: false, error: error.message }
     }
 
@@ -46,7 +46,7 @@ export const historyService = {
       .single()
 
     if (error) {
-      console.error('[v0] Error fetching ride details:', error)
+      console.error('Error fetching ride details:', error)
       return { success: false, error: error.message }
     }
 
@@ -63,7 +63,7 @@ export const historyService = {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('[v0] Error fetching favorites:', error)
+      console.error('Error fetching favorites:', error)
       return { success: false, error: error.message }
     }
 

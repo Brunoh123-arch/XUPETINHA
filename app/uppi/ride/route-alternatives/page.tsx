@@ -122,7 +122,7 @@ export default function RouteAlternativesPage() {
       setAlternatives(enrichedRoutes)
       setSelectedRoute(0) // Select cheapest by default
     } catch (error) {
-      console.error('[v0] Error fetching alternatives:', error)
+      console.error('Error fetching alternatives:', error)
     } finally {
       setLoading(false)
     }

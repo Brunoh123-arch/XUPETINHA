@@ -21,7 +21,7 @@ class GeolocationService {
   async getCurrentPosition(options?: GeolocationOptions): Promise<Coordinates | null> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        console.error('[v0] Geolocation not supported')
+        console.error('Geolocation not supported')
         resolve(null)
         return
       }
@@ -46,7 +46,7 @@ class GeolocationService {
           resolve(coords)
         },
         (error) => {
-          console.error('[v0] Geolocation error:', error.message)
+          console.error('Geolocation error:', error.message)
           resolve(null)
         },
         defaultOptions
