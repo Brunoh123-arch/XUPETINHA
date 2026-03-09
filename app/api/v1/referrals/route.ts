@@ -5,38 +5,15 @@ export async function GET() {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user's referrals
-    const { data: referrals, error } = await supabase
-      .from('referrals')
-      .select(`
-        *,
-        referred:profiles!referrals_referred_id_fkey(id, full_name, avatar_url, created_at)
-      `)
-      .eq('referrer_id', user.id)
-      .order('created_at', { ascending: false })
-
+    // Usa RPC que retorna stats completos + lista de indicados
+    const { data, error } = await supabase.rpc('get_referral_stats', { p_user_id: user.id })
     if (error) throw error
 
-    // Get user's referral code and stats
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('referral_code, total_referrals, referral_credits')
-      .eq('id', user.id)
-      .single()
-
-    return NextResponse.json({
-      referrals: referrals || [],
-      referral_code: profile?.referral_code,
-      total_referrals: profile?.total_referrals || 0,
-      referral_credits: profile?.referral_credits || 0,
-    })
+    return NextResponse.json(data)
   } catch (error) {
-    console.error('[API] Error fetching referrals:', error)
+    console.error('[referrals GET]', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

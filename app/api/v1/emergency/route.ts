@@ -1,93 +1,52 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { authLimiter, rateLimitResponse } from '@/lib/utils/rate-limit'
 
 export async function POST(request: Request) {
   try {
+    // Limite restrito: 3 por janela para evitar spam de SOS
+    const rlResult = authLimiter.check(request, 3)
+    if (!rlResult.success) return rateLimitResponse(rlResult)
+
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { type, ride_id, location_lat, location_lng, location_address, description, audio_url } = body
+    const { ride_id, location_lat, location_lng, location_address, description } = body
 
-    // Create emergency alert
-    const { data: alert, error } = await supabase
-      .from('emergency_alerts')
-      .insert({
-        user_id: user.id,
-        ride_id: ride_id || null,
-        type: type || 'sos',
-        location_lat,
-        location_lng,
-        location_address,
-        description,
-        audio_url,
-      })
-      .select()
-      .single()
+    // Usar RPC que também notifica contatos de emergência cadastrados
+    const { data, error } = await supabase.rpc('create_emergency_alert', {
+      p_user_id: user.id,
+      p_ride_id: ride_id || null,
+      p_lat:     location_lat || null,
+      p_lng:     location_lng || null,
+      p_message: description || 'Emergência! Preciso de ajuda.',
+    })
 
-    if (error) throw error
+    if (error) {
+      console.error('[emergency POST] rpc error:', error)
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
 
-    // Get emergency contacts
-    const { data: contacts } = await supabase
-      .from('emergency_contacts')
-      .select('*')
-      .eq('user_id', user.id)
-
-    // Get user profile
+    // Também notificar admins via tabela
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, phone')
+      .select('full_name')
       .eq('id', user.id)
       .single()
 
-    // In production, send SMS to emergency contacts here
-    // For now, we'll just log and create notifications
-    if (contacts && contacts.length > 0) {
-      const notificationPromises = contacts.map((contact) => 
-        supabase.from('notifications').insert({
-          user_id: user.id,
-          title: '🚨 Alerta de Emergencia',
-          message: `${profile?.full_name} ativou o botao SOS. Localizacao: ${location_address || 'Desconhecida'}`,
-          type: 'emergency',
-          data: {
-            alert_id: alert.id,
-            contact_name: contact.name,
-            contact_phone: contact.phone,
-          },
-        })
-      )
-      
-      await Promise.all(notificationPromises)
-
-      // Mark contacts as notified
-      await supabase
-        .from('emergency_alerts')
-        .update({ contacts_notified: true })
-        .eq('id', alert.id)
-    }
-
-    // Send notification to admin
     await supabase.from('notifications').insert({
       user_id: user.id,
-      title: '🚨 Alerta SOS Ativado',
-      message: `Usuario ${profile?.full_name} ativou alerta de emergencia`,
+      title: 'SOS Ativado',
+      body: `Usuário ${profile?.full_name} ativou alerta de emergência. Localização: ${location_address || 'Desconhecida'}`,
       type: 'admin_alert',
-      data: {
-        alert_id: alert.id,
-        user_id: user.id,
-      },
+      data: { alert_id: data?.alert_id, user_id: user.id, ride_id },
     })
 
-    return NextResponse.json({
-      success: true,
-      alert,
-      contacts_notified: contacts?.length || 0,
-    })
-  } catch {
+    return NextResponse.json({ success: true, alert_id: data?.alert_id }, { status: 201 })
+  } catch (err) {
+    console.error('[emergency POST]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
