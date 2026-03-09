@@ -13,7 +13,6 @@ import { Star, ArrowLeft, Check } from 'lucide-react'
 import { useHaptic } from '@/hooks/use-haptic'
 import { iosToast } from '@/lib/utils/ios-toast'
 import type { Ride, Profile } from '@/lib/types/database'
-import { reviewService } from '@/lib/services/review-service'
 
 const PASSENGER_TAGS = [
   { id: 'educado', label: 'Educado', icon: '😊' },
@@ -132,17 +131,22 @@ export default function ReviewPage() {
       setSubmitting(true)
       haptic.medium()
 
-      const result = await reviewService.submitReview({
-        ride_id: params.id as string,
-        rater_id: currentUser.id,
-        rated_id: reviewedUser.id,
-        score: rating,
-        comment: comment.trim() || undefined,
-        tags: selectedTags.length > 0 ? selectedTags : undefined,
+      // Usar a API /api/v1/reviews que grava corretamente em driver_reviews
+      const res = await fetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ride_id: params.id as string,
+          rating,
+          comment: comment.trim() || undefined,
+          tags: selectedTags.length > 0 ? selectedTags : undefined,
+          review_type: reviewType,
+        }),
       })
 
-      if (!result.success) {
-        iosToast.error('Erro ao enviar avaliação', result.error || 'Tente novamente')
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        iosToast.error('Erro ao enviar avaliação', err.error || 'Tente novamente')
         return
       }
 
@@ -150,7 +154,11 @@ export default function ReviewPage() {
       iosToast.success('Avaliação enviada!', 'Obrigado pelo feedback')
 
       setTimeout(() => {
-        router.push('/uppi/history')
+        if (reviewType === 'driver_to_passenger') {
+          router.push('/uppi/driver')
+        } else {
+          router.push('/uppi/history')
+        }
       }, 1500)
     } catch (error) {
       console.error('[v0] Error submitting review:', error)

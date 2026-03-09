@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -19,7 +20,7 @@ export async function POST(
     const { data: ride, error: rideError } = await supabase
       .from('rides')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (rideError || !ride) {
@@ -32,46 +33,62 @@ export async function POST(
     }
 
     // Verificar se a corrida pode ser cancelada
-    if (!['pending', 'accepted', 'on_way'].includes(ride.status)) {
+    if (!['pending', 'negotiating', 'accepted', 'driver_arrived'].includes(ride.status)) {
       return NextResponse.json(
-        { error: 'Ride cannot be cancelled' },
+        { error: 'Corrida não pode ser cancelada neste status' },
         { status: 400 }
       )
     }
 
     // Calcular taxa de cancelamento se aplicável
     let cancellationFee = 0
-    if (ride.status === 'accepted' || ride.status === 'on_way') {
+    if (ride.status === 'accepted' || ride.status === 'driver_arrived') {
       cancellationFee = ride.final_price ? ride.final_price * 0.1 : 0 // 10% do valor
     }
 
-    // Atualizar status da corrida
-    const { data: updatedRide, error: updateError } = await supabase
-      .from('rides')
-      .update({
-        status: 'cancelled',
-        cancelled_by: user.id,
-        cancellation_reason: reason,
-        cancellation_fee: cancellationFee,
-      })
-      .eq('id', params.id)
-      .select()
-      .single()
+    // Atualizar status via API de status (garante notificações + email)
+    const statusRes = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/v1/rides/${id}/status`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', cookie: request.headers.get('cookie') || '' },
+        body: JSON.stringify({ status: 'cancelled', cancellation_reason: reason || 'Cancelado pelo usuário' }),
+      }
+    )
 
-    if (updateError) throw updateError
+    if (!statusRes.ok) {
+      // Fallback: atualizar diretamente se a chamada interna falhar
+      const { data: updatedRide, error: updateError } = await supabase
+        .from('rides')
+        .update({
+          status: 'cancelled',
+          cancelled_by: user.id,
+          cancellation_reason: reason || 'Cancelado pelo usuário',
+          cancellation_fee: cancellationFee,
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
 
-    // Criar notificação para o outro usuário
-    const otherUserId = ride.passenger_id === user.id ? ride.driver_id : ride.passenger_id
-    if (otherUserId) {
-      await supabase.from('notifications').insert({
-        user_id: otherUserId,
-        type: 'ride',
-        title: 'Corrida cancelada',
-        message: `A corrida foi cancelada. Motivo: ${reason}`,
-        ride_id: params.id,
-      })
+      if (updateError) throw updateError
+
+      const otherUserId = ride.passenger_id === user.id ? ride.driver_id : ride.passenger_id
+      if (otherUserId) {
+        await supabase.from('notifications').insert({
+          user_id: otherUserId,
+          type: 'ride',
+          title: 'Corrida cancelada',
+          message: `A corrida foi cancelada. Motivo: ${reason || 'Cancelado pelo usuário'}`,
+          ride_id: id,
+          read: false,
+        })
+      }
+
+      return NextResponse.json({ ride: updatedRide, cancellationFee })
     }
 
+    const { ride: updatedRide } = await statusRes.json()
     return NextResponse.json({ ride: updatedRide, cancellationFee })
   } catch (error) {
     console.error('[v0] Error cancelling ride:', error)

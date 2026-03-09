@@ -173,9 +173,23 @@ export default function DriverPage() {
     setAccepting(ride.id)
     try {
       const res = await fetch('/api/v1/offers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ride_id: ride.id, offered_price: ride.passenger_price_offer, estimated_arrival_minutes: 5, message: 'Aceito pelo preço oferecido' }) })
-      if (!res.ok) { const err = await res.json(); alert(err.error || 'Erro ao aceitar corrida'); return }
+      if (!res.ok) { const err = await res.json().catch(() => ({})); alert(err.error || 'Erro ao aceitar corrida'); return }
       const { offer } = await res.json()
-      await fetch(`/api/v1/offers/${offer.id}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+
+      const acceptRes = await fetch(`/api/v1/offers/${offer.id}/accept`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      if (!acceptRes.ok) {
+        // A corrida pode já ter sido aceita por outro motorista (409)
+        const acceptErr = await acceptRes.json().catch(() => ({}))
+        if (acceptRes.status === 409) {
+          alert('Esta corrida já foi aceita por outro motorista.')
+        } else {
+          alert(acceptErr.error || 'Erro ao confirmar aceite. Tente outra corrida.')
+        }
+        setRides(prev => prev.filter(r => r.id !== ride.id))
+        return
+      }
+
+      // Só inicia tracking após confirmação de que o aceite foi bem-sucedido
       if (userId) trackingService.startDriverTracking(ride.id, userId)
       setRides(prev => prev.filter(r => r.id !== ride.id))
       loadDailyStats(userId!)

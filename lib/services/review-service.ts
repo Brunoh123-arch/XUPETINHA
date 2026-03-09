@@ -144,11 +144,11 @@ class ReviewService {
   private async updateUserRating(userId: string) {
     const stats = await this.getReviewStats(userId)
     
+    // Atualiza apenas o campo 'rating' (total_reviews não existe na tabela profiles)
     await this.supabase
       .from('profiles')
       .update({
         rating: stats.average_rating,
-        total_reviews: stats.total_reviews
       })
       .eq('id', userId)
   }
