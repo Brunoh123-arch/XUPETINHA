@@ -1,9 +1,12 @@
 import { updateSession } from '@/lib/supabase/middleware'
 import { type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request)
 }
+
+// Compatibilidade retroativa com Next.js < 16
+export { proxy as middleware }
 
 export const config = {
   matcher: [
