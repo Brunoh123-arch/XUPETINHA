@@ -84,45 +84,31 @@ export default function HomePage() {
       } finally {
         setLoading(false)
       }
-        } else {
-          const localProfile = sessionStorage.getItem('userProfile') || localStorage.getItem('uppi_profile')
-          if (localProfile) {
-            const localData = JSON.parse(localProfile)
-            setProfile({
-              id: 'local', full_name: localData.name, phone: localData.phone || '', user_type: localData.user_type || 'passenger',
-              avatar_url: '/images/default-avatar.jpg', rating: 5.0, total_rides: 0,
-              created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-            })
-            const hasSeenWelcome = sessionStorage.getItem('uppi_welcome_shown')
-            if (!hasSeenWelcome) {
-              sessionStorage.setItem('uppi_welcome_shown', 'true')
-              setTimeout(() => {
-                showCouponModal({
-                  id: 'welcome',
-                  userName: localData.name?.split(' ')[0] || 'Usuario',
-                  title: 'Corrida gratis',
-                  description: 'Na sua primeira corrida',
-                  type: 'freeride',
-                  icon: '🚗',
-                })
-              }, 1500)
-            }
-          } else {
-            setProfile({
-              id: 'guest', full_name: 'Usuario', phone: '', user_type: 'passenger',
-              avatar_url: '/images/default-avatar.jpg', rating: 5.0, total_rides: 0,
-              created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-            })
-          }
-        }
-      } catch {
-        /* silent */
-      } finally {
-        setLoading(false)
-      }
     }
     loadProfile()
   }, [supabase, showCouponModal])
+
+  // Realtime: acompanha status da corrida ativa — limpa banner se completada/cancelada
+  useEffect(() => {
+    if (!activeRideId) return
+
+    const channel = supabase
+      .channel(`home-active-ride-${activeRideId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'rides',
+        filter: `id=eq.${activeRideId}`,
+      }, (payload) => {
+        const newStatus = payload.new?.status
+        if (newStatus === 'completed' || newStatus === 'cancelled') {
+          setActiveRideId(null)
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [activeRideId, supabase])
 
   if (loading) {
     return <HomeSkeleton />

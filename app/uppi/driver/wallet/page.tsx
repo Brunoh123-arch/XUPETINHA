@@ -75,21 +75,24 @@ export default function DriverWalletPage() {
 
     setWithdrawing(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      await supabase.from('wallet_transactions').insert({
-        user_id: user.id,
-        type: 'withdrawal',
-        amount: -amount,
-        description: 'Saque para conta bancária',
-        status: 'pending',
+      const response = await fetch('/api/v1/driver/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
       })
 
-      await supabase.from('user_wallets').update({ balance: balance - amount }).eq('user_id', user.id)
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || 'Erro ao solicitar saque')
+        return
+      }
+
       setShowWithdraw(false)
       setWithdrawAmount('')
       await loadWallet()
+    } catch (err) {
+      console.error('Withdraw error:', err)
     } finally {
       setWithdrawing(false)
     }

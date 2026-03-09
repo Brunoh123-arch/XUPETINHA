@@ -18,19 +18,13 @@ interface DemandZone {
   peak_hour: string
 }
 
-const MOCK_ZONES: DemandZone[] = [
-  { id: '1', lat: -15.7942, lng: -47.8825, radius: 800, intensity: 0.9, label: 'Asa Norte', ride_count: 47, avg_price: 22, peak_hour: '18:00-20:00' },
-  { id: '2', lat: -15.8267, lng: -47.9218, radius: 600, intensity: 0.7, label: 'Asa Sul', ride_count: 33, avg_price: 18, peak_hour: '07:00-09:00' },
-  { id: '3', lat: -15.7801, lng: -47.9292, radius: 1000, intensity: 1.0, label: 'Plano Piloto', ride_count: 65, avg_price: 28, peak_hour: '08:00-10:00' },
-  { id: '4', lat: -15.8727, lng: -48.0169, radius: 500, intensity: 0.5, label: 'Taguatinga', ride_count: 21, avg_price: 15, peak_hour: '07:00-08:00' },
-  { id: '5', lat: -15.8348, lng: -48.1396, radius: 400, intensity: 0.4, label: 'Ceilândia', ride_count: 18, avg_price: 14, peak_hour: '06:00-08:00' },
-]
-
-const DEMAND_COLORS: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f97316',
-  medium: '#f59e0b',
-  low: '#10b981',
+// Fallback zones usadas apenas quando o banco está vazio e temos a localização do usuário
+function buildFallbackZones(lat: number, lng: number): DemandZone[] {
+  return [
+    { id: 'f1', lat: lat + 0.02, lng: lng + 0.01, radius: 600, intensity: 0.8, label: 'Região Norte', ride_count: 30, avg_price: 20, peak_hour: '07:00-09:00' },
+    { id: 'f2', lat: lat - 0.015, lng: lng - 0.02, radius: 500, intensity: 0.6, label: 'Região Sul', ride_count: 18, avg_price: 16, peak_hour: '18:00-20:00' },
+    { id: 'f3', lat: lat + 0.005, lng: lng - 0.03, radius: 700, intensity: 0.5, label: 'Centro', ride_count: 25, avg_price: 22, peak_hour: '12:00-14:00' },
+  ]
 }
 
 export default function DriverHotZonesPage() {
@@ -65,13 +59,34 @@ export default function DriverHotZonesPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/onboarding/splash'); return }
 
-      const [{ data: hz }] = await Promise.all([
-        supabase.from('hot_zones').select('*').eq('is_active', true),
-      ])
-      if (hz) setHotZones(hz)
+      const { data: hz } = await supabase
+        .from('hot_zones')
+        .select('id, name, latitude, longitude, radius_meters, intensity')
+        .eq('is_active', true)
+        .order('intensity', { ascending: false })
 
-      // Combine DB zones with demand data
-      setZones(MOCK_ZONES)
+      if (hz) {
+        setHotZones(hz)
+        // Mapear hot_zones do banco para DemandZone
+        const mapped: DemandZone[] = hz.map(z => ({
+          id: z.id,
+          lat: z.latitude,
+          lng: z.longitude,
+          radius: z.radius_meters ?? 500,
+          intensity: typeof z.intensity === 'number' ? z.intensity : 0.5,
+          label: z.name,
+          ride_count: 0,
+          avg_price: 0,
+          peak_hour: '—',
+        }))
+
+        // Se o banco estiver vazio, usar fallback baseado na localização do usuário
+        if (mapped.length === 0 && userLat !== null && userLng !== null) {
+          setZones(buildFallbackZones(userLat!, userLng!))
+        } else {
+          setZones(mapped)
+        }
+      }
     } finally {
       setLoading(false)
     }

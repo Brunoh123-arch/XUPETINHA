@@ -304,32 +304,45 @@ export default function HistoryPage() {
   const [rides, setRides] = useState<RideWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
   const [filter, setFilter] = useState<'all' | 'completed' | 'cancelled'>('all')
+  const PAGE_SIZE = 20
 
-  const loadHistory = async () => {
+  const loadHistory = async (reset = true) => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data } = await supabase
-        .from('rides')
-        .select(`
-          *,
-          driver:profiles!driver_id ( full_name, avatar_url, rating ),
-          passenger:profiles!passenger_id ( full_name, avatar_url, rating ),
-          driver_profile:driver_profiles!driver_id ( vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type )
-        `)
-        .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)
-        .order('created_at', { ascending: false })
-      setRides(data || [])
+    if (!user) { setLoading(false); return }
+
+    const offset = reset ? 0 : page * PAGE_SIZE
+    const result = await historyService.getRideHistory(user.id, PAGE_SIZE, offset)
+
+    if (result.success && result.rides) {
+      if (reset) {
+        setRides(result.rides as RideWithDetails[])
+        setPage(1)
+      } else {
+        setRides(prev => [...prev, ...(result.rides as RideWithDetails[])])
+        setPage(p => p + 1)
+      }
+      setHasMore(result.hasMore ?? false)
     }
     setLoading(false)
     setRefreshing(false)
+    setLoadingMore(false)
   }
 
-  useEffect(() => { loadHistory() }, [supabase])
+  useEffect(() => { loadHistory(true) }, [supabase])
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadHistory()
+    await loadHistory(true)
+  }
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    await loadHistory(false)
   }
 
   const formatTime = (d: string) =>
@@ -488,6 +501,27 @@ export default function HistoryPage() {
                 </div>
               </div>
             ))}
+
+            {/* Load more */}
+            {hasMore && (
+              <div className="flex justify-center py-6">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 px-6 py-3 bg-secondary rounded-full text-[14px] font-semibold text-foreground ios-press disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <div className="w-4 h-4 border-2 border-foreground/40 border-t-foreground rounded-full animate-spin" />
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                  {loadingMore ? 'Carregando...' : 'Carregar mais'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
