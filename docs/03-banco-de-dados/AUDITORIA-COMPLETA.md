@@ -441,7 +441,7 @@
 
 ---
 
-## SECAO 2: 75 RPCs DE NEGOCIO (verificado via information_schema.routines em 09/03/2026)
+## SECAO 2: 75 RPCs DE NEGOCIO (verificado via information_schema.routines em 10/03/2026)
 
 ### Por categoria
 
@@ -459,7 +459,7 @@
 
 ---
 
-## SECAO 3: TRIGGERS — 35 customizados (verificado via information_schema.triggers em 09/03/2026)
+## SECAO 3: TRIGGERS — 35 customizados (verificado via information_schema.triggers em 10/03/2026)
 
 | Trigger | Tabela | Evento | Descricao |
 |---|---|---|---|
@@ -498,7 +498,7 @@
 
 ---
 
-## SECAO 4: PONTOS DE ATENCAO (auditoria 09/03/2026)
+## SECAO 4: PONTOS DE ATENCAO (auditoria 10/03/2026)
 
 ### 3.1 Tabelas duplicadas — mesmo conceito, dois nomes
 
@@ -561,4 +561,4 @@ auth.users INSERT
 
 ---
 
-**Auditado em 09/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas verificadas via SQL direto
+**Auditado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas verificadas via SQL direto

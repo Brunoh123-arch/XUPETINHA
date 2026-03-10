@@ -237,7 +237,7 @@
 
 ---
 
-## 3. Banco de Dados (09/03/2026 — jpnwxqjrhzaobnugjnyx)
+## 3. Banco de Dados (10/03/2026 — jpnwxqjrhzaobnugjnyx)
 
 | Item | Status |
 |------|--------|
@@ -253,12 +253,12 @@
 | Migrations aplicadas | **49** |
 | Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
-### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 09/03/2026)
+### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 10/03/2026)
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
 
-## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 09/03/2026)
+## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 10/03/2026)
 
 ### Corridas e Motorista (20)
 - [x] accept_price_offer
@@ -377,7 +377,7 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-## 6. Pontos de Atencao (auditoria 09/03/2026)
+## 6. Pontos de Atencao (auditoria 10/03/2026)
 
 ### Inconsistencias codigo vs banco
 

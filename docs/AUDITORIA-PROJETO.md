@@ -5,7 +5,7 @@
 **Status Geral:** 98% Operacional — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas public, 86 com RLS, 51 com Realtime, 75 RPCs, 162 politicas, 260 indices, 34 triggers — migrations 001-049
 **Frontend:** 149 telas | 81 APIs | 42 admin
 
-> **NOTA IMPORTANTE:** Os numeros abaixo desta linha foram registrados em 02/03/2026 com projeto Supabase anterior. Os valores reais atuais (09/03/2026, jpnwxqjrhzaobnugjnyx) estao no SCHEMA.md e STATUS-FUNCIONALIDADES.md.
+> **NOTA:** Os numeros acima foram verificados em 10/03/2026. Valores detalhados estao no SCHEMA.md e STATUS-FUNCIONALIDADES.md.
 
 ---
 

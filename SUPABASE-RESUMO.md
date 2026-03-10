@@ -41,7 +41,7 @@ VIEWS:      3 (ride_offers + 2 PostGIS do sistema)
 - [x] 1 View (ride_offers)
 - [x] PostGIS instalado (find_nearby_drivers usa ST_Distance)
 
-### Realtime (51 tabelas — verificado via pg_publication_tables em 09/03/2026)
+### Realtime (51 tabelas)
 - [x] rides, price_offers, driver_locations, driver_profiles, driver_reviews
 - [x] messages, notifications, support_messages, support_tickets
 - [x] payments, wallet_transactions, user_wallets, driver_withdrawals
@@ -66,7 +66,7 @@ spatial_ref_sys, system_settings, user_2fa, user_coupons, user_onboarding,
 user_recording_preferences, user_settings, user_sms_preferences, vehicles,
 webhook_endpoints
 
-### RPCs Disponiveis (75 funcoes de negocio — verificado via SQL em 09/03/2026)
+### RPCs Disponiveis (75 funcoes de negocio — verificado via SQL em 10/03/2026)
 
 **Corridas:** find_nearby_drivers, create_ride, accept_ride, start_ride, complete_ride, cancel_ride, submit_price_offer, accept_price_offer, upsert_driver_location, estimate_ride_price, get_surge_multiplier, get_driver_active_ride, driver_accept_scheduled_ride, handle_driver_cancellation, handle_ride_completed, get_ride_with_details, get_ride_history, get_ride_history_paginated
 
@@ -145,7 +145,7 @@ middleware.ts         Middleware autenticacao (Next.js 16 compativel)
 
 ---
 
-## Pontos de Atencao (09/03/2026)
+## Pontos de Atencao (10/03/2026)
 
 1. `user_wallets` — NAO tem reserved_balance, pending_balance, total_earned, total_spent
 2. `support_tickets` — campo e `topic` (nao `subject`)
@@ -163,4 +163,4 @@ middleware.ts         Middleware autenticacao (Next.js 16 compativel)
 ---
 
 **Status:** Totalmente Operacional
-**Data:** 09/03/2026 — jpnwxqjrhzaobnugjnyx
+**Data:** 10/03/2026 — jpnwxqjrhzaobnugjnyx

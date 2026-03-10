@@ -1,7 +1,7 @@
 # Analise Completa de Todos os Schemas — Supabase UPPI
 
-**Data da Analise:** 09/03/2026
-**Projeto:** jpnwxqjrhzaobnugjnyx (ativo — verificado via SQL em 09/03/2026)
+**Data da Analise:** 10/03/2026
+**Projeto:** jpnwxqjrhzaobnugjnyx
 **Metodo:** SELECT direto via supabase_execute_sql — dados reais
 
 ---
@@ -10,7 +10,7 @@
 
 | Schema | Tabelas | Descricao | Gerenciado por |
 |--------|---------|-----------|----------------|
-| **public** | **80** | Dominio da aplicacao UPPI | Nos |
+| **public** | **100** | Dominio da aplicacao UPPI | Nos |
 | pg_catalog | 64 | Sistema interno do PostgreSQL | PostgreSQL |
 | auth | 21 | Autenticacao e sessoes | Supabase Auth |
 | storage | 8 | Arquivos e buckets | Supabase Storage |
@@ -21,9 +21,9 @@
 
 ---
 
-## 1. Schema: public (80 tabelas — Dominio UPPI)
+## 1. Schema: public (100 tabelas — Dominio UPPI)
 
-### Tabelas por categoria (verificadas em 09/03/2026)
+### Tabelas por categoria (10/03/2026)
 
 | Categoria | Tabelas |
 |-----------|---------|
@@ -57,7 +57,7 @@
 
 ### Realtime Publications (35 tabelas)
 
-Verificadas via `pg_publication_tables` em 09/03/2026 — **39 tabelas**:
+Verificadas via `pg_publication_tables` em 10/03/2026 — **39 tabelas**:
 
 ```
 city_zones, delivery_orders, driver_locations, driver_profiles,
@@ -218,7 +218,7 @@ SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'TWILIO_AUTH_T
 
 ---
 
-## 7. Consolidado Final (09/03/2026)
+## 7. Consolidado Final (10/03/2026)
 
 | Metrica | Valor |
 |---------|-------|
@@ -234,4 +234,4 @@ SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = 'TWILIO_AUTH_T
 
 ---
 
-**Gerado em 09/03/2026** — Analise via SQL direto no Supabase jpnwxqjrhzaobnugjnyx
+**Gerado em 10/03/2026** — Analise via SQL direto no Supabase jpnwxqjrhzaobnugjnyx

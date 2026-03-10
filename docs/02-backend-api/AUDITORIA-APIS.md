@@ -1,9 +1,9 @@
 # AUDITORIA COMPLETA DE APIs
 
-**Data:** 09/03/2026
-**Versao:** 1.0 — Verificado por varredura de todos os route.ts vs. fetch calls
-**Total de route.ts:** 83
-**Total conectadas ao Supabase:** 75
+**Data:** 10/03/2026
+**Versao:** 2.0
+**Total de route.ts:** 81
+**Total conectadas ao Supabase:** 73
 **Total externas (Google/Paradise):** 4
 **Total utilitarios (sem banco direto):** 4
 **Endpoints chamados pelas telas NAO existentes:** 0
@@ -17,7 +17,7 @@ Todos os endpoints chamados por telas, components e services existem como `route
 
 ---
 
-## MAPA COMPLETO DAS 83 APIs
+## MAPA COMPLETO DAS 81 APIs
 
 ### GRUPO: Corridas e Motorista
 
@@ -203,4 +203,4 @@ Todos os 83 `route.ts` estao funcionais com conexao ao banco ou servico externo 
 As 10 APIs nao chamadas pelas telas sao corretas — sao webhooks externos, cron jobs ou endpoints de setup.
 
 ---
-**Atualizado em 09/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 83 route.ts / 75 com banco / 4 externas / 4 utilitarios
+**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 83 route.ts / 75 com banco / 4 externas / 4 utilitarios

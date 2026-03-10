@@ -31,7 +31,7 @@
 - [x] **0 tabelas sem politicas** — nenhuma tabela com RLS bloqueado sem politicas
 - [x] **0 RPCs criticas faltando** — todas as 75 RPCs do codigo existem no banco
 
-### Tabelas COM Realtime (51 — verificadas via pg_publication_tables em 09/03/2026)
+### Tabelas COM Realtime (51)
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
@@ -115,7 +115,7 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 
 ---
 
-## RPCs Disponiveis (75 funcoes de negocio — verificadas via SELECT em information_schema.routines em 09/03/2026)
+## RPCs Disponiveis (75 funcoes de negocio — verificadas via SELECT em information_schema.routines em 10/03/2026)
 
 ### Novas RPCs (migrations 033-034)
 - `get_nearby_drivers` — alias otimizado de find_nearby_drivers
@@ -189,7 +189,7 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 - `post_likes` + `social_post_likes` — usar **social_post_likes** (tem Realtime e RLS corretas)
 - `group_ride_members` + `group_ride_participants` — usar **group_ride_participants** (mais completa)
 
-### Campos que NAO existem no banco (verificado via SQL em 09/03/2026)
+### Campos que NAO existem no banco (verificado via SQL em 10/03/2026)
 - `user_wallets`: reserved_balance, pending_balance, total_earned, total_spent — **NAO EXISTEM**
 - `support_tickets`: subject — campo correto e **`topic`**
 
@@ -219,4 +219,4 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 ---
 
 **Status:** Totalmente Operacional
-**Atualizado:** 09/03/2026 — Projeto Supabase jpnwxqjrhzaobnugjnyx
+**Atualizado:** 10/03/2026 — Projeto Supabase jpnwxqjrhzaobnugjnyx
