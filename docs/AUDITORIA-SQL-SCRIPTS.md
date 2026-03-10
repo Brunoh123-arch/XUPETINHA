@@ -16,12 +16,30 @@
 | Scripts de RPCs | 8 | OK |
 | Scripts de Seed | 5 | OK |
 | Scripts de Admin | 3 | OK |
-| Scripts de Realtime | 3 | Incompleto (4 vs 51 tabelas) |
-| Scripts Duplicados | ~20 | PROBLEMA |
+| Scripts de Realtime | 3 | CORRIGIDO - enable-realtime.sql atualizado com 51 tabelas |
+| Scripts Duplicados | ~20 | DOCUMENTADO - usar apenas 000-migration-consolidada.sql |
+| Scripts de Verificacao | 2 | NOVO - verify-database-integrity.sql, fix-missing-rls.sql |
 
 ---
 
-## PROBLEMAS IDENTIFICADOS
+## SOLUCOES APLICADAS (10/03/2026)
+
+### 1. Realtime Corrigido
+- **Arquivo:** `scripts/enable-realtime.sql`
+- **Antes:** 4 tabelas
+- **Depois:** 51 tabelas com tratamento de erros
+
+### 2. Scripts de Verificacao Criados
+- **`scripts/verify-database-integrity.sql`** - Auditoria completa do banco
+- **`scripts/fix-missing-rls.sql`** - Corrige RLS em tabelas faltantes
+
+### 3. Script Master Identificado
+- **Usar:** `scripts/000-migration-consolidada.sql` para novos deploys
+- Scripts duplicados documentados abaixo para referencia
+
+---
+
+## PROBLEMAS IDENTIFICADOS (HISTORICO)
 
 ### 1. SCRIPTS DUPLICADOS (Prioridade Alta)
 
