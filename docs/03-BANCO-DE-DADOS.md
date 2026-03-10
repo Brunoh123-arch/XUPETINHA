@@ -237,7 +237,7 @@ As seguintes tabelas tem Realtime habilitado para atualizacoes em tempo real:
 
 ## Seguranca
 
-- **RLS ativo em 86 de 87 tabelas** (exceto spatial_ref_sys do PostGIS)
+- **RLS ativo em 86 de 100 tabelas** (exceto spatial_ref_sys do PostGIS e novas tabelas)
 - 162 politicas RLS configuradas
 - Cada usuario acessa apenas seus proprios dados
 - Admins tem policies separadas via `user_type = 'admin'`

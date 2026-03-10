@@ -435,4 +435,4 @@ search-bar, segmented-control, sheet, skeleton, slider, switch, tabs, toast-adva
 
 ---
 
-**Ultima atualizacao:** 02/03/2026 — Supabase conectado (pjlbixnzjndezoscbhej), 74 tabelas public, 4 migrations, 152 paginas
+**Ultima atualizacao:** 10/03/2026 — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas public, 149 telas, 81 APIs

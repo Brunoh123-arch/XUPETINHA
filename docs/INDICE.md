@@ -24,13 +24,13 @@ docs/
     IMPLEMENTACAO.md                         Funcionalidades, componentes React, UX
 
   02-backend-api/
-    API-ENDPOINTS.md                         57 route.ts, 92+ handlers documentados,
+    API-ENDPOINTS.md                         81 route.ts documentados,
                                              rate limiting, autenticacao, padrao de erros
     VERSIONAMENTO.md                         Padrao /api/v1/, middleware, headers de versao
 
   03-banco-de-dados/
-    AUDITORIA-COMPLETA.md                    Schema real completo (87 tabelas, 51 Realtime, 75 RPCs, 35 triggers)
-    SCHEMA.md                                Estado real (87 tabelas — verificado 09/03/2026, migrations 001-034) +
+    AUDITORIA-COMPLETA.md                    Schema real completo (100 tabelas, 51 Realtime, 75 RPCs, 34 triggers)
+    SCHEMA.md                                Estado real (100 tabelas — migrations 001-049)
                                              campos detalhados, RLS, indexes, funcoes SQL
 
   04-infraestrutura/
@@ -430,7 +430,7 @@ package.json                                 Dependencias completas
 | Arquivo                        | Correcao                                                     |
 |-------------------------------|--------------------------------------------------------------|
 | next.config.mjs               | Removida chave `eslint` (nao suportada no Next.js 16)        |
-| middleware.ts → proxy.ts      | Renomeado para convencao Next.js 16                          |
+| middleware.ts �� proxy.ts      | Renomeado para convencao Next.js 16                          |
 | app/api/v1/offers/route.ts    | Usa driver_profiles/profiles (nao 'drivers'/'users')         |
 | app/api/v1/wallet/route.ts    | Usa calculate_wallet_balance RPC + colunas corretas          |
 | app/api/v1/ratings/route.ts   | Usa reviewed_id/reviewer_id corretos                         |
@@ -444,4 +444,4 @@ package.json                                 Dependencias completas
 
 ---
 
-**Ultima atualizacao:** 02/03/2026 — Supabase conectado (pjlbixnzjndezoscbhej), 74 tabelas public / 176 tabelas total (todos schemas), 4 migrations aplicadas, 152 paginas, 57 APIs, 15 funcoes RPC
+**Ultima atualizacao:** 10/03/2026 — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas public, 149 telas, 81 APIs, 75 RPCs, 49 migrations

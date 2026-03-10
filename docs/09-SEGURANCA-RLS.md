@@ -130,7 +130,7 @@ if (signature !== expected) {
 
 ## Checklist de Seguranca para Producao
 
-- [x] RLS habilitado em 86 de 87 tabelas (162 policies)
+- [x] RLS habilitado em 86 de 100 tabelas (162 policies)
 - [x] JWT validado em todas as APIs via `supabase.auth.getUser()`
 - [x] Service role key apenas server-side (nunca exposta no client)
 - [x] Webhook PIX com validacao HMAC (Paradise Gateway)

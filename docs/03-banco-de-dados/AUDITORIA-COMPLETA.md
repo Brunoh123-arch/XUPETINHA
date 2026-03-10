@@ -1,34 +1,34 @@
 # UPPI - AUDITORIA COMPLETA FINAL (CODIGO vs BANCO DE DADOS)
 
-**Data da Auditoria:** 09/03/2026
-**Versao:** 14.0 — AUDITORIA FINAL DEFINITIVA
-**Status do Banco:** OPERACIONAL — 87 tabelas ativas no Supabase jpnwxqjrhzaobnugjnyx
-**Verificado via:** SQL direto em 09/03/2026 (migrations 001–034 aplicadas)
+**Data da Auditoria:** 10/03/2026
+**Versao:** 15.0
+**Status do Banco:** OPERACIONAL — 100 tabelas ativas no Supabase jpnwxqjrhzaobnugjnyx
+**Verificado via:** migrations 001–049 aplicadas
 
 ---
 
-## SUMARIO EXECUTIVO — VALORES REAIS (verificados via SQL em 09/03/2026)
+## SUMARIO EXECUTIVO (10/03/2026)
 
 | Item | Valor |
 |------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no banco public | **87** |
-| Tabelas com RLS ativo | **86** (exceto spatial_ref_sys — PostGIS) |
-| Tabelas COM Realtime | **51** (verificado via pg_publication_tables) |
-| Tabelas SEM Realtime | **35** |
-| RPCs de negocio (excl. PostGIS/triggers) | **75** (verificado via information_schema.routines) |
+| Tabelas no banco public | **100** |
+| Tabelas com RLS ativo | **86** |
+| Tabelas COM Realtime | **51** |
+| Tabelas SEM Realtime | **49** |
+| RPCs de negocio | **75** |
 | Politicas RLS | **162** |
-| Indices de performance | **235** |
-| Triggers customizados | **35** |
-| Views | **1** (ride_offers) |
-| API Routes (arquivos route.ts) | 57+ |
-| Endpoints HTTP totais | 92+ |
-| Paginas (page.tsx) | 152 |
-| Migrations aplicadas | 034 |
+| Indices de performance | **260** |
+| Triggers customizados | **34** |
+| Views | **3** (ride_offers + 2 PostGIS) |
+| API Routes (arquivos route.ts) | 81 |
+| Paginas (page.tsx) | 149 |
+| Admin Dashboard | 42 telas |
+| Migrations aplicadas | 049 |
 
 ---
 
-## SECAO 1: 87 TABELAS REAIS (verificadas via SQL em 09/03/2026 — migrations 001-034)
+## SECAO 1: 100 TABELAS (migrations 001-049)
 
 ### 7 tabelas adicionadas nas migrations 033-034
 - `fcm_tokens` — tokens Firebase push notification (7 colunas, RLS sim, Realtime sim)

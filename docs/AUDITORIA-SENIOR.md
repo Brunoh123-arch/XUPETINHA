@@ -38,7 +38,7 @@ O projeto Uppi esta **98% pronto** para producao. A arquitetura esta solida, com
 - Rotacao automatica do carro (bearing)
 
 ### 2. Seguranca Robusta
-- RLS em 86 de 87 tabelas (162 politicas)
+- RLS em 86 de 100 tabelas (162 politicas)
 - JWT validado em todas as APIs
 - Webhook HMAC para PIX
 - Queries parametrizadas (sem SQL injection)

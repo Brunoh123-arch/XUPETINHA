@@ -1,8 +1,8 @@
 # Versionamento de API - Uppi
 
-**Ultima Atualizacao:** 06/03/2026  
+**Ultima Atualizacao:** 10/03/2026  
 **Versao Atual:** v1  
-**Status:** Todos os 57 route.ts em /api/v1/, middleware ativo
+**Status:** Todos os 81 route.ts em /api/v1/, middleware ativo
 
 ---
 
@@ -10,7 +10,7 @@
 
 Todas as APIs agora usam versionamento obrigatório no path: `/api/v1/*`
 
-### Rotas Migradas (56 total)
+### Rotas Migradas (81 total)
 
 **Antes:** `/api/rides`  
 **Agora:** `/api/v1/rides`
