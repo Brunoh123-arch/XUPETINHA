@@ -17,6 +17,7 @@ docs/
   AUDITORIA-SUPABASE-COMPLETA.md             Auditoria total Supabase: 100 tabelas, RPCs, RLS, Realtime
   AUDITORIA-SENIOR.md                        Analise tecnica com problemas criticos e recomendacoes
   AUDITORIA-SQL-SCRIPTS.md                   Auditoria dos 83 scripts SQL (duplicados, inconsistencias)
+  GUIA-SETUP-SUPABASE.md                     Guia passo-a-passo para novo Supabase
   CONFIGURACAO-COMPLETA.md                   Env vars, integracoes, proximos passos
   SUPABASE-CONEXAO.md                        Conexao Supabase: projeto, migrations, RPCs, variaveis
   VAPID-SETUP.md                             Setup Web Push (VAPID) para push notifications
