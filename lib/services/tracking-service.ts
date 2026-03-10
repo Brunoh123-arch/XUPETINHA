@@ -18,47 +18,110 @@ export interface TrackingUpdate {
   distance_to_pickup?: number
 }
 
+// Configuracoes de tracking otimizadas para bateria (igual Uber)
+const TRACKING_CONFIGS = {
+  idle: { interval: 60000, distanceFilter: 100 },      // Motorista offline: 1min, 100m
+  online: { interval: 10000, distanceFilter: 20 },     // Motorista online: 10s, 20m
+  active_ride: { interval: 3000, distanceFilter: 5 },  // Corrida ativa: 3s, 5m
+  stopped: { interval: 20000, distanceFilter: 10 },    // Parado: 20s, 10m
+}
+
 class TrackingService {
   private supabase = createClient()
   private watchId: number | null = null
   private updateInterval: NodeJS.Timeout | null = null
+  private lastPosition: { lat: number; lng: number } | null = null
+  private lastSpeed: number = 0
+  private currentMode: 'idle' | 'online' | 'active_ride' = 'online'
+
+  // Calcular distancia em metros (Haversine)
+  private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371000
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  }
 
   // Inicia rastreamento GPS do motorista para uma corrida
-  startDriverTracking(rideId: string, driverId: string) {
+  startDriverTracking(rideId: string, driverId: string, mode: 'online' | 'active_ride' = 'active_ride') {
     if (!navigator.geolocation) return
+
+    this.currentMode = mode
+    const config = TRACKING_CONFIGS[mode]
 
     this.watchId = navigator.geolocation.watchPosition(
       async (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        const speed = position.coords.speed || 0
+
+        // DISTANCE FILTER: ignorar se nao moveu o suficiente
+        if (this.lastPosition) {
+          const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
+          const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
+          if (distance < distanceFilter) {
+            return // Nao moveu o suficiente
+          }
+        }
+
+        this.lastPosition = { lat, lng }
+        this.lastSpeed = speed
+
         const location: DriverLocation = {
           driver_id: driverId,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude: lat,
+          longitude: lng,
           heading: position.coords.heading || 0,
-          speed: position.coords.speed || 0,
+          speed: speed,
           accuracy: position.coords.accuracy,
           timestamp: new Date().toISOString(),
         }
         await this.updateDriverLocation(rideId, location)
       },
       (_err) => {},
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      { enableHighAccuracy: mode === 'active_ride', maximumAge: 5000, timeout: 10000 }
     )
 
-    // Fallback a cada 5 segundos
-    this.updateInterval = setInterval(() => {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const location: DriverLocation = {
-          driver_id: driverId,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          heading: position.coords.heading || 0,
-          speed: position.coords.speed || 0,
-          accuracy: position.coords.accuracy,
-          timestamp: new Date().toISOString(),
-        }
-        await this.updateDriverLocation(rideId, location)
-      })
-    }, 5000)
+    // Intervalo dinamico baseado em velocidade
+    const startInterval = () => {
+      const interval = this.lastSpeed < 0.5 ? TRACKING_CONFIGS.stopped.interval : config.interval
+      this.updateInterval = setTimeout(async () => {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          const speed = position.coords.speed || 0
+
+          // Distance filter
+          if (this.lastPosition) {
+            const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
+            const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
+            if (distance < distanceFilter) {
+              startInterval()
+              return
+            }
+          }
+
+          this.lastPosition = { lat, lng }
+          this.lastSpeed = speed
+
+          const location: DriverLocation = {
+            driver_id: driverId,
+            latitude: lat,
+            longitude: lng,
+            heading: position.coords.heading || 0,
+            speed: speed,
+            accuracy: position.coords.accuracy,
+            timestamp: new Date().toISOString(),
+          }
+          await this.updateDriverLocation(rideId, location)
+          startInterval()
+        })
+      }, interval)
+    }
+    startInterval()
   }
 
   stopTracking() {
@@ -67,9 +130,17 @@ class TrackingService {
       this.watchId = null
     }
     if (this.updateInterval) {
-      clearInterval(this.updateInterval)
+      clearTimeout(this.updateInterval)
       this.updateInterval = null
     }
+    this.lastPosition = null
+    this.lastSpeed = 0
+    this.currentMode = 'idle'
+  }
+
+  // Mudar modo de tracking (ex: de online para active_ride)
+  setTrackingMode(mode: 'idle' | 'online' | 'active_ride') {
+    this.currentMode = mode
   }
 
   // Grava localização via API (evita problema de RLS no client-side)
