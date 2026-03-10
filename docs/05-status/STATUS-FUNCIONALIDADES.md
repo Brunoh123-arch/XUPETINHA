@@ -21,7 +21,7 @@
 | Views | **3** (ride_offers + 2 PostGIS sistema) |
 | Migrations aplicadas | **49** |
 | Paginas (page.tsx) | **149** |
-| API route.ts | **82** |
+| API route.ts | **81** |
 | Admin dashboard | **42 telas** |
 
 ### Pontos Fortes
@@ -178,7 +178,7 @@
 
 ---
 
-## 2. Backend - API Routes (82 arquivos)
+## 2. Backend - API Routes (81 arquivos)
 
 - [x] /api/v1/health
 - [x] /api/v1/profile — GET + PATCH
@@ -418,6 +418,6 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **149 telas / 82 APIs / 42 admin**
+**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **149 telas / 81 APIs / 42 admin**
 
 Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.
