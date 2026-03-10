@@ -14,7 +14,8 @@
 docs/
   INDICE.md                                  <-- Voce esta aqui (mapa completo do projeto)
   AUDITORIA-PROJETO.md                       Auditoria completa: paginas, APIs, componentes, hooks
-  AUDITORIA-PROJETO-v2.md                    Auditoria v2 (banco 73 tabelas, APIs corrigidas)
+  AUDITORIA-SUPABASE-COMPLETA.md             Auditoria total Supabase: 100 tabelas, RPCs, RLS, Realtime
+  AUDITORIA-SENIOR.md                        Analise tecnica com problemas criticos e recomendacoes
   CONFIGURACAO-COMPLETA.md                   Env vars, integracoes, proximos passos
   SUPABASE-CONEXAO.md                        Conexao Supabase: projeto, migrations, RPCs, variaveis
   VAPID-SETUP.md                             Setup Web Push (VAPID) para push notifications
