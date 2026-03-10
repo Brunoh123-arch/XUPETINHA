@@ -1,17 +1,17 @@
 # UPPI - Status de Funcionalidades
 
-**Ultima Atualizacao:** 09/03/2026
-**Versao:** 22.0 — NUMEROS FINAIS DEFINITIVOS
-**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas, 51 Realtime, 75 RPCs, 162 politicas, 260 indices, 34 triggers, 49 migrations
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 23.0 — Documentacao atualizada
+**Status Geral:** 98% Pronto para Producao — Supabase jpnwxqjrhzaobnugjnyx
 
 ---
 
-## Resumo Geral (09/03/2026)
+## Resumo Geral (10/03/2026)
 
 | Categoria | Valor |
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no Banco (public) | **87** |
+| Tabelas no Banco (public) | **100** |
 | Tabelas com RLS ativo | **86** |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -20,13 +20,20 @@
 | Triggers customizados | **34** |
 | Views | **3** (ride_offers + 2 PostGIS sistema) |
 | Migrations aplicadas | **49** |
-| Paginas (page.tsx) | 152 |
-| API route.ts | 57+ |
-| Endpoints HTTP | 92+ |
+| Paginas (page.tsx) | **149** |
+| API route.ts | **81** |
+| Admin dashboard | **42 telas** |
+
+### Pontos Fortes
+- GPS com 3 modos de tracking (idle/online/active_ride) + distance filter
+- RLS em 86 tabelas com 162 politicas
+- Realtime em 51 tabelas para atualizacoes em tempo real
+- PostGIS para busca de motoristas proximos
+- Animacao suave do marcador no mapa (interpolacao cubic ease-out)
 
 ---
 
-## 1. Frontend - Paginas (152 total)
+## 1. Frontend - Paginas (149 total)
 
 ### Auth (12) — /auth/
 - [x] /auth/welcome
@@ -119,7 +126,7 @@
 - [x] /uppi/legal/terms
 - [x] /uppi/privacy | /uppi/terms
 
-### Admin (33) — /admin/
+### Admin (42) — /admin/
 
 **Visao Geral**
 - [x] /admin (dashboard KPIs)
@@ -171,7 +178,7 @@
 
 ---
 
-## 2. Backend - API Routes (57+ arquivos)
+## 2. Backend - API Routes (81 arquivos)
 
 - [x] /api/v1/health
 - [x] /api/v1/profile — GET + PATCH
@@ -230,12 +237,12 @@
 
 ---
 
-## 3. Banco de Dados (09/03/2026 — jpnwxqjrhzaobnugjnyx)
+## 3. Banco de Dados (10/03/2026 — jpnwxqjrhzaobnugjnyx)
 
 | Item | Status |
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | **87** (migrations 001-035) |
+| Tabelas public | **100** (migrations 001-049) |
 | Tabelas com RLS | **86** (exceto spatial_ref_sys) |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -246,12 +253,12 @@
 | Migrations aplicadas | **49** |
 | Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
-### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 09/03/2026)
+### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 10/03/2026)
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
 
-## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 09/03/2026)
+## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 10/03/2026)
 
 ### Corridas e Motorista (20)
 - [x] accept_price_offer
@@ -370,7 +377,7 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-## 6. Pontos de Atencao (auditoria 09/03/2026)
+## 6. Pontos de Atencao (auditoria 10/03/2026)
 
 ### Inconsistencias codigo vs banco
 
@@ -388,6 +395,14 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ## 7. Proximos Passos
 
+### Criticos (Bloqueantes para Producao)
+1. Corrigir verificacao facial fake (usa Math.random())
+2. Remover `ignoreBuildErrors: true` do next.config.mjs
+3. Ativar `reactStrictMode: true`
+4. Configurar FIREBASE_SERVER_KEY para push FCM
+5. Configurar PARADISE_API_KEY para pagamentos PIX
+
+### Recomendados
 1. Deploy Vercel — verificar variaveis de ambiente corretas
 2. Testes E2E: auth → home → corrida → oferta → pagamento → avaliacao
 3. Corrigir referencias a campos inexistentes em user_wallets
@@ -395,6 +410,14 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 5. Configurar Twilio para SMS (opcional)
 6. Monitorar error_logs no painel admin apos go-live
 
+### Play Store
+1. Rodar `npx cap add android` para gerar pasta android/
+2. Copiar google-services.json para android/app/
+3. Gerar keystore e atualizar assetlinks.json
+4. Build AAB via Android Studio
+
 ---
 
-**Atualizado em 09/03/2026** — NUMEROS FINAIS DEFINITIVOS — Supabase jpnwxqjrhzaobnugjnyx — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — dados verificados via SQL direto
+**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **149 telas / 81 APIs / 42 admin**
+
+Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.

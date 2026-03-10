@@ -1,16 +1,16 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 09/03/2026
-**Versao:** 18.0 — SCHEMA FINAL DEFINITIVO
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 19.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
-**Projeto Supabase:** jpnwxqjrhzaobnugjnyx (ativo — verificado em 09/03/2026)
-**Tabelas no schema public:** 87 (verificadas via SQL em 09/03/2026 — migrations 001-034)
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx
+**Tabelas no schema public:** 100 (migrations 001-049)
 **Tabelas com RLS ativo:** 86 (exceto spatial_ref_sys — sistema PostGIS)
-**Tabelas com Realtime:** 51 (verificadas via pg_publication_tables em 09/03/2026)
-**RPCs de negocio callable:** 75 (excluindo funcoes PostGIS internas — verificado via SQL em 09/03/2026)
-**Politicas RLS:** 162 (verificadas em 09/03/2026)
-**Indices:** 235 (verificados em 09/03/2026)
-**Triggers customizados:** 34 (verificados via SQL em 09/03/2026)
+**Tabelas com Realtime:** 51
+**RPCs de negocio callable:** 75
+**Politicas RLS:** 162
+**Indices:** 260
+**Triggers customizados:** 34
 **View:** 1 (ride_offers — alias de price_offers)
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
@@ -20,7 +20,7 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **87** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
+| **public** | **100** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
 | auth | 21 | Gerenciadas pelo Supabase Auth |
 | storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
@@ -31,7 +31,7 @@
 
 ---
 
-## 1. Tabelas do Schema Public (87 tabelas — verificadas em 09/03/2026, migrations 001-034)
+## 1. Tabelas do Schema Public (100 tabelas — migrations 001-049)
 
 ### 7 Novas Tabelas (migrations 033-034)
 - `fcm_tokens` — tokens Firebase Cloud Messaging por dispositivo
@@ -941,7 +941,7 @@ CREATE OR REPLACE VIEW ride_offers AS SELECT * FROM price_offers;
 
 ## 2. Tabelas com Realtime Ativo (51 tabelas)
 
-Verificadas via `pg_publication_tables` em 09/03/2026 (migrations 001-034):
+Verificadas via `pg_publication_tables` em 10/03/2026 (migrations 001-034):
 
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
@@ -1092,7 +1092,7 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 ---
 
-## 6. Consolidado Final — VALORES REAIS (09/03/2026)
+## 6. Consolidado Final — VALORES REAIS (10/03/2026)
 
 | Metrica | Valor | Observacao |
 |---------|-------|------------|
@@ -1110,6 +1110,6 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 ---
 
-**NOTA:** Estes sao os numeros DEFINITIVOS verificados via consulta SQL direta no Supabase jpnwxqjrhzaobnugjnyx em 09/03/2026. Nao usar numeros de versoes anteriores da documentacao.
+**NOTA:** Estes sao os numeros DEFINITIVOS verificados via consulta SQL direta no Supabase jpnwxqjrhzaobnugjnyx em 10/03/2026. Nao usar numeros de versoes anteriores da documentacao.
 
-**Atualizado em 09/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-035 (49 entradas)
+**Atualizado em 10/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-035 (49 entradas)

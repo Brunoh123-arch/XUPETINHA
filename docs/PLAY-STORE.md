@@ -1,6 +1,9 @@
 # Publicar na Play Store — Guia Capacitor
 
-O Uppi usa **Capacitor** para gerar um APK/AAB nativo Android a partir do codigo Next.js.
+**Atualizado em:** 10/03/2026  
+**Package ID:** `app.uppi.mobile`
+
+O Uppi usa **Capacitor 8** para gerar um APK/AAB nativo Android a partir do codigo Next.js.
 NAO e TWA (Trusted Web Activity) — e um app nativo real com acesso a GPS, camera, push FCM e todos os sensores.
 
 ---
@@ -11,11 +14,12 @@ NAO e TWA (Trusted Web Activity) — e um app nativo real com acesso a GPS, came
 |---|---|---|
 | `@capacitor/core` | 8.2.0 | Core do Capacitor |
 | `@capacitor/android` | 8.2.0 | Build nativo Android |
-| `@capacitor/geolocation` | 8.0.0 | GPS em background e foreground |
+| `@capacitor/geolocation` | 8.0.0 | GPS com 3 modos (idle/online/active_ride) |
 | `@capacitor/push-notifications` | 8.0.2 | FCM nativo (sem web push) |
 | `@capacitor/splash-screen` | 8.0.0 | Splash screen nativa |
 | `@capacitor/status-bar` | 8.0.0 | Controle da barra de status |
-| `@capacitor/app` | instalado | Back button, deep links, lifecycle |
+| `@capacitor/app` | 8.0.0 | Back button, deep links, lifecycle |
+| `@capacitor/google-maps` | opcional | Mapa nativo 60fps (opcional, fallback para Google Maps Web) |
 
 ---
 
