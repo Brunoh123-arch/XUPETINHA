@@ -1,450 +1,150 @@
 # UPPI - Indice Completo do Projeto
 
 **Ultima atualizacao:** 10/03/2026
-**Versao:** 17.0
-**Arquitetura:** Frontend + Backend + Banco (100 tabelas public / 86 com RLS / 51 com Realtime) + API (81 routes) + Auth + Admin
-**Supabase:** jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations**
-**Frontend:** 149 telas (page.tsx) | 81 APIs (route.ts) | 42 admin
+**Versao:** 18.0 — Docs organizados (duplicados removidos)
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx
 
 ---
 
-## 1. Documentacao (docs/) — 17 documentos
+## Numeros do Projeto
+
+| Metrica | Valor |
+|---------|-------|
+| Tabelas PostgreSQL | **100** |
+| Tabelas com RLS | **86** |
+| Tabelas com Realtime | **51** |
+| RPCs callable | **75** |
+| Politicas RLS | **162** |
+| Indices | **260** |
+| Triggers | **34** |
+| Migrations | **49** |
+| Telas (page.tsx) | **149** |
+| APIs (route.ts) | **81** |
+| Admin Dashboard | **42 telas** |
+
+---
+
+## Estrutura de Documentacao (32 arquivos)
 
 ```
+/
+├── README.md                                   Visao geral do projeto
+
 docs/
-  INDICE.md                                  <-- Voce esta aqui (mapa completo do projeto)
-  AUDITORIA-PROJETO.md                       Auditoria completa: paginas, APIs, componentes, hooks
-  AUDITORIA-SUPABASE-COMPLETA.md             Auditoria total Supabase: 100 tabelas, RPCs, RLS, Realtime
-  AUDITORIA-SENIOR.md                        Analise tecnica com problemas criticos e recomendacoes
-  AUDITORIA-SQL-SCRIPTS.md                   Auditoria dos 83 scripts SQL (duplicados, inconsistencias)
-  GUIA-SETUP-SUPABASE.md                     Guia passo-a-passo para novo Supabase
-  CONFIGURACAO-COMPLETA.md                   Env vars, integracoes, proximos passos
-  SUPABASE-CONEXAO.md                        Conexao Supabase: projeto, migrations, RPCs, variaveis
-  VAPID-SETUP.md                             Setup Web Push (VAPID) para push notifications
-  PAINEL-ADMIN.md                            Painel admin completo: 42 paginas
+├── INDICE.md                                   VOCE ESTA AQUI - Mapa completo
 
-  01-frontend/
-    IMPLEMENTACAO.md                         Funcionalidades, componentes React, UX
+├── AUDITORIAS/
+│   ├── AUDITORIA-SENIOR.md                     Analise tecnica com problemas criticos
+│   ├── AUDITORIA-SUPABASE-COMPLETA.md          100 tabelas, RPCs, RLS, Realtime
+│   └── AUDITORIA-SQL-SCRIPTS.md                83 scripts SQL auditados
 
-  02-backend-api/
-    API-ENDPOINTS.md                         81 route.ts documentados,
-                                             rate limiting, autenticacao, padrao de erros
-    VERSIONAMENTO.md                         Padrao /api/v1/, middleware, headers de versao
+├── GUIAS/
+│   ├── GUIA-SETUP-SUPABASE.md                  Passo-a-passo para novo Supabase
+│   └── CONFIGURACAO-COMPLETA.md                Env vars, integracoes, proximos passos
 
-  03-banco-de-dados/
-    AUDITORIA-COMPLETA.md                    Schema real completo (100 tabelas, 51 Realtime, 75 RPCs, 34 triggers)
-    SCHEMA.md                                Estado real (100 tabelas — migrations 001-049)
-                                             campos detalhados, RLS, indexes, funcoes SQL
+├── STATUS/
+│   └── 05-status/STATUS-FUNCIONALIDADES.md     Checklist completo atualizado
 
-  04-infraestrutura/
-    GOOGLE-MAPS.md                           Setup, hooks, componentes, troubleshooting
-    GOOGLE-MAPS-EXEMPLOS.md                  10 exemplos praticos: mapa, rota, autocomplete
-    TESTE-REALTIME.md                        Guia de teste Supabase Realtime (passo a passo)
+├── FRONTEND/
+│   ├── 00-ANALISE-COMPLETA.md                  Analise geral do projeto
+│   ├── 01-TELAS-E-FLUXOS.md                    149 telas documentadas
+│   ├── 01-frontend/IMPLEMENTACAO.md            Componentes, hooks, UX
+│   └── PAINEL-ADMIN.md                         42 paginas do admin
 
-  05-status/
-    STATUS-FUNCIONALIDADES.md                Checklist completo: 100 tabelas, 75 RPCs,
-                                             149 telas, 81 APIs, 51 tabelas Realtime (10/03/2026)
+├── BACKEND/
+│   ├── 02-backend-api/API-ENDPOINTS.md         81 route.ts documentados
+│   ├── 02-backend-api/AUDITORIA-APIS.md        Auditoria de APIs
+│   └── 02-backend-api/VERSIONAMENTO.md         Padrao /api/v1/
 
-  06-deploy/
-    PLAY-STORE.md                            Guia de publicacao (TWA/Capacitor/FCM)
+├── BANCO DE DADOS/
+│   ├── 03-banco-de-dados/SCHEMA.md             100 tabelas detalhadas
+│   ├── 03-banco-de-dados/AUDITORIA-COMPLETA.md Schema real verificado
+│   └── 03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md Todos os schemas
 
-  07-design/
-    DESIGN-SYSTEM-IOS.md                     Design system iOS completo, tokens, animacoes
-    BUTTONS-COMPONENTS.md                    Guia de botoes e componentes visuais
+├── INFRAESTRUTURA/
+│   ├── 04-infraestrutura/GOOGLE-MAPS.md        Setup e troubleshooting
+│   ├── 04-infraestrutura/GOOGLE-MAPS-EXEMPLOS.md 10 exemplos praticos
+│   └── 04-infraestrutura/TESTE-REALTIME.md     Guia de teste Realtime
+
+├── FEATURES/
+│   ├── 04-PLAY-STORE-CAPACITOR.md              Publicacao Android/Capacitor
+│   ├── 05-DESENVOLVIMENTO-LOCAL.md             Setup local
+│   ├── 06-VARIAVEIS-DE-AMBIENTE.md             Todas as env vars
+│   ├── 07-ARQUITETURA.md                       Arquitetura do sistema
+│   ├── 08-PAGAMENTOS-PIX.md                    Integracao PIX
+│   ├── 09-SEGURANCA-RLS.md                     Row Level Security
+│   ├── 10-GPS-E-TRACKING.md                    GPS nativo + tracking
+│   └── 11-FIREBASE-FCM.md                      Push notifications
+
+└── DESIGN/
+    ├── 07-design/DESIGN-SYSTEM-IOS.md          Design system iOS completo
+    └── 07-design/BUTTONS-COMPONENTS.md         Guia de componentes
 ```
 
 ---
 
-## 2. Codigo-Fonte - Estrutura Completa
+## Scripts SQL (scripts/)
 
-### 2.1 Frontend - Paginas (app/)
-
-```
-app/
-  page.tsx                                   Redirect para /auth/welcome
-  layout.tsx                                 Layout raiz (PWA, meta, Inter font, Sentry)
-  globals.css                                Design system iOS completo
-  offline/page.tsx                           Pagina offline (PWA)
-  google-setup/page.tsx                      Configuracao Google Maps
-  share/page.tsx                             Compartilhamento
-  login/page.tsx                             Alias de auth
-  signup/page.tsx                            Alias de auth
-  phone/page.tsx                             Auth por telefone
-  privacy/page.tsx                           Politica de privacidade
-  terms/page.tsx                             Termos de uso
-
-  auth/                                      Fluxo de autenticacao (12 paginas)
-    welcome/page.tsx
-    login/page.tsx
-    sign-up/page.tsx
-    sign-up-success/page.tsx
-    user-type/page.tsx
-    error/page.tsx
-    callback/page.tsx
-    selection/page.tsx                       NOVO — escolha Passageiro ou Motorista
-    passenger/page.tsx                       NOVO — signup direto de passageiro
-    driver/welcome/page.tsx
-    driver/login/page.tsx
-    driver/sign-up/page.tsx
-
-  onboarding/                                Onboarding (3 paginas)
-    page.tsx
-    splash/page.tsx
-    create-account/page.tsx
-
-  uppi/                                      App principal (70+ paginas)
-    layout.tsx                               Layout com BottomNavigation + SidebarMenu
-    home/page.tsx                            Home com mapa, sugestoes IA, zonas quentes
-    profile/page.tsx                         Perfil do usuario
-    history/page.tsx                         Historico de corridas
-    wallet/page.tsx                          Carteira digital
-    payments/page.tsx                        Metodos de pagamento
-    notifications/page.tsx                   Notificacoes
-    analytics/page.tsx                       Estatisticas do usuario
-    settings/page.tsx                        Configuracoes
-    settings/sms/page.tsx                    Config SMS
-    settings/recording/page.tsx              Gravacao de audio
-    settings/2fa/page.tsx                    Dois fatores
-    settings/emergency/page.tsx              Config emergencia
-    settings/language/page.tsx               Idioma
-    settings/password/page.tsx               Alterar senha
-    favorites/page.tsx                       Enderecos favoritos
-    favorites/add/page.tsx                   Adicionar favorito
-    achievements/page.tsx                    Conquistas/badges
-    leaderboard/page.tsx                     Ranking
-    social/page.tsx                          Feed social
-    social/create/page.tsx                   Criar post
-    referral/page.tsx                        Indicacao de amigos
-    promotions/page.tsx                      Promocoes e cupons
-    club/page.tsx                            Clube de assinatura
-    help/page.tsx                            Ajuda
-    suporte/page.tsx                         Suporte
-    suporte/chat/page.tsx                    Chat de suporte
-    seguranca/page.tsx                       Seguranca
-    emergency/page.tsx                       Emergencia
-    emergency-contacts/page.tsx              Contatos de emergencia
-    tracking/page.tsx                        Rastreamento GPS
-    entregas/page.tsx                        Entregas
-    cidade-a-cidade/page.tsx                 Viagens intermunicipais
-    ios-showcase/page.tsx                    Showcase de componentes iOS
-    legal/terms/page.tsx
-    legal/privacy/page.tsx
-    privacy/page.tsx
-    terms/page.tsx
-
-    ride/                                    Fluxo de corrida (14 paginas)
-      route-input/page.tsx
-      select/page.tsx
-      route-alternatives/page.tsx
-      searching/page.tsx
-      schedule/page.tsx
-      group/page.tsx
-      [id]/tracking/page.tsx
-      [id]/chat/page.tsx
-      [id]/offers/page.tsx
-      [id]/details/page.tsx
-      [id]/payment/page.tsx
-      [id]/review/page.tsx
-      [id]/review-enhanced/page.tsx
-
-    request-ride/page.tsx
-    driver-mode/page.tsx
-    driver-mode/active/page.tsx
-
-    driver/                                  Area do motorista (8 paginas)
-      page.tsx                               REDESENHADO — mesmo visual do passageiro (mapa + toggle online/offline + corridas)
-      register/page.tsx
-      documents/page.tsx
-      verify/page.tsx
-      earnings/page.tsx
-      history/page.tsx                       Com DriverBottomNavigation
-      profile/page.tsx                       Com DriverBottomNavigation
-      wallet/page.tsx                        Com DriverBottomNavigation
-
-  admin/                                     Painel administrativo (42 paginas)
-    layout.tsx
-    page.tsx                                 Dashboard KPIs + AreaChart + BarChart
-    login/page.tsx
-    users/page.tsx
-    drivers/page.tsx
-    drivers/earnings/page.tsx
-    rides/page.tsx
-    rides/[id]/page.tsx
-    financeiro/page.tsx
-    payments/page.tsx
-    analytics/page.tsx
-    monitor/page.tsx
-    cupons/page.tsx
-    notifications/page.tsx
-    logs/page.tsx
-    settings/page.tsx
-    webhooks/page.tsx
-    agendamentos/page.tsx
-    group-rides/page.tsx
-    cidade-a-cidade/page.tsx
-    entregas/page.tsx
-    price-offers/page.tsx
-    messages/page.tsx
-    suporte/page.tsx
-    social/page.tsx
-    reviews/page.tsx
-    achievements/page.tsx
-    leaderboard/page.tsx
-    referrals/page.tsx
-    subscriptions/page.tsx
-    favoritos/page.tsx
-    emergency/page.tsx
-    emergency-contacts/page.tsx
-    sms/page.tsx
-    recordings/page.tsx
-    promotions/page.tsx
-    faq/page.tsx
-    legal/page.tsx
-```
-
-### 2.2 Backend - API Routes (app/api/v1/) — 81 arquivos
-
-```
-app/api/v1/
-  health/route.ts
-  profile/route.ts                           GET + PATCH (profiles, sem tabela 'users')
-  stats/route.ts
-  rides/route.ts                             GET + POST (profiles + driver_profiles)
-  rides/[id]/status/route.ts
-  rides/[id]/cancel/route.ts
-  rides/[id]/report/route.ts                 Email automatico via Resend
-  offers/route.ts                            GET + POST (driver_profiles + profiles)
-  offers/[id]/accept/route.ts
-  ratings/route.ts                           GET + POST (reviewed_id/reviewer_id)
-  reviews/route.ts
-  reviews/enhanced/route.ts
-  reviews/driver/route.ts
-  notifications/route.ts
-  notifications/send/route.ts
-  messages/route.ts
-  wallet/route.ts                            GET + POST (calculate_wallet_balance RPC)
-  coupons/route.ts
-  subscriptions/route.ts
-  favorites/route.ts
-  referrals/route.ts
-  achievements/route.ts
-  leaderboard/route.ts
-  social/posts/route.ts
-  social/posts/[id]/like/route.ts
-  social/posts/[id]/comments/route.ts
-  drivers/nearby/route.ts                    find_nearby_drivers RPC
-  drivers/hot-zones/route.ts
-  driver/location/route.ts                   latitude/longitude (nao lat/lng)
-  driver/documents/route.ts
-  driver/verify/route.ts
-  group-rides/route.ts
-  group-rides/join/route.ts
-  emergency/route.ts
-  recordings/upload/route.ts
-  sms/send/route.ts
-  sms/status/route.ts
-  geocode/route.ts
-  places/autocomplete/route.ts
-  places/details/route.ts
-  routes/alternatives/route.ts
-  distance/route.ts
-  webhooks/route.ts
-  webhooks/process/route.ts
-  auth/verify/route.ts
-  auth/email-otp/send/route.ts
-  auth/email-otp/verify/route.ts
-  push/subscribe/route.ts
-  push/send/route.ts
-  push/broadcast/route.ts
-  push/vapid-public-key/route.ts
-  admin/setup/route.ts
-  admin/create-first/route.ts
-
-app/api/admin/check/route.ts               Verifica status de admin
-```
-
-### 2.3 Componentes (components/)
-
-```
-components/
-  Custom (49):
-    bottom-navigation.tsx (expandido — aparece em todas as rotas do passageiro), sidebar-menu.tsx
-    driver-bottom-navigation.tsx             NOVO — navegacao do motorista (Inicio/Historico/Carteira/Perfil)
-    google-map.tsx, modern-map.tsx, route-map.tsx, map-fallback.tsx, route-preview-3d.tsx
-    places-search.tsx, search-address.tsx, nearby-drivers.tsx, hot-zones-card.tsx, location-tag.tsx
-    referral-card.tsx, referral-client.tsx
-    facial-verification.tsx, ride-audio-recorder.tsx, voice-assistant-button.tsx
-    ios-page-transition.tsx, pull-to-refresh.tsx, swipeable-list-item.tsx
-    service-worker.tsx, auto-theme.tsx, theme-provider.tsx, theme-toggle.tsx
-    client-providers.tsx, fcm-provider.tsx, app-initializer.tsx
-    chat-interface.tsx, pix-qr-code.tsx, empty-state.tsx, loading-overlay.tsx
-    coupon-notification-modal.tsx, notification-banner.tsx, permission-onboarding.tsx
-    go-back-button.tsx, uppi-logo.tsx
-    skeletons: driver, history, notifications, profile, social, tracking, wallet
-    admin/admin-header.tsx, admin/admin-sidebar.tsx
-
-  UI shadcn/ui (54 em components/ui/)
-  iOS Components (31 em components/ui/ios-*)
-```
-
-### 2.4 Hooks Customizados (hooks/) — 12
-
-```
-use-auth.ts                                Sessao Supabase + perfil
-use-fcm.ts                                 Firebase Cloud Messaging
-use-geolocation.ts                         Geolocalizacao
-use-google-maps.ts                         Google Maps loader
-use-haptic.ts                              Haptic feedback (7 padroes)
-use-mobile.tsx                             Breakpoint 768px
-use-places-autocomplete.ts                 Google Places
-use-pull-to-refresh.ts                     Pull to refresh
-use-swipe.ts                               Gestos swipe
-use-swipe-actions.ts                       Acoes swipe em lista
-use-toast.ts                               Toast shadcn
-use-voice-assistant.ts                     Speech Recognition pt-BR
-```
-
-### 2.5 Bibliotecas e Utilidades (lib/)
-
-```
-lib/
-  utils.ts                                   cn() - merge de classes Tailwind
-  admin-auth.ts                              Autenticacao admin (requireAdmin)
-  api-utils.ts                               requireAuth, getCurrentUserWithProfile,
-                                             requireDriver (usa profiles/driver_profiles)
-
-  supabase/
-    client.ts                                Cliente browser
-    server.ts                                Cliente server
-    proxy.ts                                 Middleware de sessao (updateSession)
-    database.ts                              Funcoes helper (tabelas corretas)
-    types.ts                                 Tipos gerados Supabase
-
-  google-maps/
-    provider.tsx, utils.ts, types.ts, route-optimizer.ts
-
-  types/
-    database.ts                              Tipos TypeScript do dominio (atualizado v2)
-
-  utils/
-    ios-toast.ts, rate-limit.ts, ai-suggestions.ts, ride-calculator.ts,
-    fetch-retry.ts, ios-animations.ts, ios-haptics.ts, haptics.ts,
-    analytics.ts, deep-links.ts, init-app.ts, offline-handler.ts
-
-  services/ (13 services)
-    auth-service.ts, chat-service.ts, favorites-service.ts, geolocation-service.ts,
-    history-service.ts, notification-service.ts, payment-service.ts, profile-service.ts,
-    realtime-service.ts, review-service.ts (rater_id/rated_id corretos),
-    ride-service.ts, storage-service.ts, tracking-service.ts
-
-  api/
-    config.ts, version-middleware.ts
-
-  helpers/
-    notifications.ts
-```
-
-### 2.6 Configuracao
-
-```
-proxy.ts                                     Supabase session + route protection
-                                             (renomeado de middleware.ts — Next.js 16)
-components.json                              Config shadcn/ui
-next.config.mjs                              Next.js 16 (sem eslint — removido, Sentry, envs)
-package.json                                 Dependencias completas
-```
+| Script | Descricao | Usar |
+|--------|-----------|------|
+| **SETUP-NOVO-SUPABASE.sql** | Setup completo para novo Supabase | PRINCIPAL |
+| 000-migration-consolidada.sql | Migration master consolidada | Referencia |
+| enable-realtime.sql | Habilita Realtime em 51 tabelas | Pos-setup |
+| verify-database-integrity.sql | Auditoria do banco | Diagnostico |
+| fix-missing-rls.sql | Corrige RLS faltante | Correcao |
 
 ---
 
-## 3. Mapeamento: Camada -> Codigo + Docs
+## Documentos por Categoria
 
-| Camada              | Codigo                              | Documentacao                                |
-|---------------------|-------------------------------------|---------------------------------------------|
-| Frontend / Paginas  | app/uppi/** + app/auth/**           | docs/01-frontend/IMPLEMENTACAO.md           |
-| Backend / API       | app/api/v1/**                       | docs/02-backend-api/API-ENDPOINTS.md        |
-| Banco de Dados      | Supabase (externo)                  | docs/03-banco-de-dados/SCHEMA.md            |
-| Schema Completo     | Supabase (externo)                  | docs/03-banco-de-dados/AUDITORIA-COMPLETA.md|
-| Componentes         | components/**                       | docs/01-frontend/IMPLEMENTACAO.md           |
-| Hooks               | hooks/**                            | docs/AUDITORIA-PROJETO.md                   |
-| Lib / Utilidades    | lib/**                              | docs/AUDITORIA-PROJETO.md                   |
-| Autenticacao        | proxy.ts + lib/supabase/            | docs/AUDITORIA-PROJETO.md                   |
-| Google Maps         | lib/google-maps/** + hooks/         | docs/04-infraestrutura/GOOGLE-MAPS.md       |
-| Realtime            | lib/services/realtime-service.ts    | docs/04-infraestrutura/TESTE-REALTIME.md    |
-| Status              | —                                   | docs/05-status/STATUS-FUNCIONALIDADES.md    |
-| Deploy              | —                                   | docs/06-deploy/PLAY-STORE.md                |
+### Essenciais (ler primeiro)
+1. `README.md` - Visao geral
+2. `docs/05-status/STATUS-FUNCIONALIDADES.md` - Estado atual
+3. `docs/GUIA-SETUP-SUPABASE.md` - Como configurar
 
----
+### Desenvolvimento
+1. `docs/01-TELAS-E-FLUXOS.md` - Todas as telas
+2. `docs/02-backend-api/API-ENDPOINTS.md` - Todas as APIs
+3. `docs/03-banco-de-dados/SCHEMA.md` - Schema do banco
 
-## 4. Tech Stack Completa
+### Seguranca
+1. `docs/09-SEGURANCA-RLS.md` - RLS policies
+2. `docs/AUDITORIA-SENIOR.md` - Problemas criticos
 
-| Tecnologia           | Uso                                        | Versao    |
-|----------------------|--------------------------------------------|-----------|
-| Next.js              | Framework fullstack (App Router)           | 16.0.7    |
-| React                | UI library                                 | 19        |
-| TypeScript           | Tipagem estatica                           | 5.7.3     |
-| Tailwind CSS         | Estilos utilitarios                        | 3.4.17    |
-| shadcn/ui            | 54 componentes UI base + 31 iOS = 85       | latest    |
-| Supabase             | Auth + PostgreSQL + Realtime + Storage     | 2.47.x    |
-| Google Maps          | Mapas, rotas, geocoding, places            | latest    |
-| Web Push (VAPID)     | Push notifications nativo (sem Firebase)   | web-push 3.x |
-| Framer Motion        | Animacoes                                  | 11.x      |
-| Recharts             | Graficos                                   | 2.15.0    |
-| Sonner               | Notificacoes toast                         | 1.7.1     |
-| Lucide React         | Icones                                     | latest    |
-| Zod                  | Validacao de dados                         | 3.24      |
-| React Hook Form      | Formularios                                | 7.54      |
-| Resend               | Envio de emails transacionais              | 4.8.0     |
-| Sentry               | Monitoramento de erros                     | 9.x       |
-| Vercel Analytics     | Analytics de uso                           | 1.3.1     |
-| canvas-confetti      | Animacao de confete/conquistas             | 1.9       |
+### Deploy
+1. `docs/04-PLAY-STORE-CAPACITOR.md` - Android/Capacitor
+2. `docs/06-VARIAVEIS-DE-AMBIENTE.md` - Env vars
 
 ---
 
-## 5. Banco de Dados - Estado Real (10/03/2026 — jpnwxqjrhzaobnugjnyx)
+## Tech Stack
 
-| Categoria              | Quantidade | Observacao |
-|------------------------|-----------|------------|
-| Tabelas (schema public)| **100**   | Verificadas em 10/03/2026 — migrations 001-049 |
-| Tabelas com RLS ativo  | **86**    | Exceto spatial_ref_sys (PostGIS sistema) |
-| Tabelas com Realtime   | **51**    | Verificadas via pg_publication_tables |
-| RPCs callable          | **75**    | Excluindo funcoes PostGIS internas |
-| Politicas RLS          | **162**   | Verificadas via pg_policies |
-| Indices                | **260**   | Verificados via pg_indexes |
-| Trigger functions      | **34**    | Incluindo triggers de corrida, gamificacao e cascata |
-| Views                  | **1**     | ride_offers (alias price_offers) |
-| Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth |
-| Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage |
-| Tabelas (realtime)     | 3         | Gerenciadas pelo Supabase Realtime |
-| Tabelas (vault)        | 1         | Segredos criptografados |
-
-### Migrations aplicadas no Supabase (pjlbixnzjndezoscbhej)
-
-| Migration | Conteudo | Status |
-|-----------|---------|--------|
-| 001_core_tables | profiles, driver_profiles, rides, price_offers, messages, ratings, favorites, notifications + trigger on_auth_user_created | Aplicada |
-| 002_location_wallet_social | driver_locations, ride_tracking, ride_stops, location_history, hot_zones, user_wallets, wallet_transactions, payments, coupons, coupon_uses, user_coupons, social_posts, social_post_likes, post_comments, social_follows, user_social_stats, user_achievements, referral_achievements, leaderboard, rating_categories (seed) | Aplicada |
-| 003_driver_security_support | driver_verifications, vehicles, drivers, driver_route_segments, emergency_contacts, emergency_alerts, ride_recordings, recording_consents, user_recording_preferences, group_rides, group_ride_participants, scheduled_rides, ride_offers, support_tickets, support_messages, referrals, subscriptions, promotions, sms_templates, sms_deliveries, sms_logs, webhook_endpoints, webhook_deliveries, admin_logs, error_logs, system_settings (seed), push_subscriptions, notification_preferences, user_sms_preferences, user_onboarding | Aplicada |
-| 004_routes_reviews_misc | popular_routes, driver_popular_routes, route_history, address_search_history, reviews, driver_reviews, rating_helpful_votes, rating_reports, reports, pricing_rules (seed), avatars, users, campaigns, faqs, legal_documents + 15 RPCs | Aplicada |
+| Tecnologia | Versao | Uso |
+|------------|--------|-----|
+| Next.js | 16.0.7 | Framework fullstack |
+| React | 19 | UI library |
+| TypeScript | 5.7.3 | Tipagem |
+| Tailwind CSS | 3.4.17 | Estilos |
+| Supabase | 2.47.x | Backend (Auth + DB + Realtime) |
+| Capacitor | 8.x | App Android nativo |
+| Google Maps | latest | Mapas e rotas |
 
 ---
 
-## 6. Correcoes Aplicadas (Historico)
+## Arquivos Removidos (duplicados)
 
-| Arquivo                        | Correcao                                                     |
-|-------------------------------|--------------------------------------------------------------|
-| next.config.mjs               | Removida chave `eslint` (nao suportada no Next.js 16)        |
-| middleware.ts �� proxy.ts      | Renomeado para convencao Next.js 16                          |
-| app/api/v1/offers/route.ts    | Usa driver_profiles/profiles (nao 'drivers'/'users')         |
-| app/api/v1/wallet/route.ts    | Usa calculate_wallet_balance RPC + colunas corretas          |
-| app/api/v1/ratings/route.ts   | Usa reviewed_id/reviewer_id corretos                         |
-| app/api/v1/rides/route.ts     | Joins corretos via profiles!passenger_id / driver_profiles   |
-| app/api/v1/profile/route.ts   | Usa profiles com id (nao user_id)                            |
-| app/api/v1/driver/location    | Usa latitude/longitude (nao lat/lng)                         |
-| lib/supabase/database.ts      | Todas as funcoes reescritas com tabelas corretas              |
-| lib/api-utils.ts              | requireDriver usa driver_profiles, nao 'drivers'             |
-| lib/services/review-service.ts| Usa rater_id/rated_id (nao reviewer_id/reviewee_id)          |
-| lib/types/database.ts         | Atualizado com todas as novas colunas e tipos                 |
+Os seguintes arquivos foram removidos por serem duplicados:
+
+- `SUPABASE-CHECKLIST.md` (consolidado em AUDITORIA-SUPABASE-COMPLETA.md)
+- `SUPABASE-RESUMO.md` (consolidado em AUDITORIA-SUPABASE-COMPLETA.md)
+- `docs/SUPABASE-CONEXAO.md` (consolidado em GUIA-SETUP-SUPABASE.md)
+- `docs/SUPABASE-GUIA-RAPIDO.md` (consolidado em GUIA-SETUP-SUPABASE.md)
+- `docs/02-APIs.md` (duplicado de 02-backend-api/API-ENDPOINTS.md)
+- `docs/03-BANCO-DE-DADOS.md` (duplicado de 03-banco-de-dados/SCHEMA.md)
+- `docs/PUBLICAR-PLAY-STORE.md` (duplicado de 04-PLAY-STORE-CAPACITOR.md)
+- `docs/06-deploy/PLAY-STORE.md` (duplicado de 04-PLAY-STORE-CAPACITOR.md)
+- `docs/AUDITORIA-PROJETO.md` (consolidado em AUDITORIA-SENIOR.md)
 
 ---
 
-**Ultima atualizacao:** 10/03/2026 — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas public, 149 telas, 81 APIs, 75 RPCs, 49 migrations
+**Atualizado em 10/03/2026** — 32 documentos organizados, 9 duplicados removidos

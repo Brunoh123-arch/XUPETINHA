@@ -819,7 +819,370 @@ CREATE TABLE IF NOT EXISTS user_2fa (
 );
 
 -- =====================================================
--- PARTE 15: TRIGGERS UPDATED_AT
+-- PARTE 15: TABELAS ADICIONAIS (completando 100)
+-- =====================================================
+
+-- Coupon Uses
+CREATE TABLE IF NOT EXISTS coupon_uses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  coupon_id UUID REFERENCES coupons(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  ride_id UUID REFERENCES rides(id) ON DELETE SET NULL,
+  discount_applied DECIMAL(10,2),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Coupons
+CREATE TABLE IF NOT EXISTS user_coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  coupon_id UUID REFERENCES coupons(id) ON DELETE CASCADE,
+  used BOOLEAN DEFAULT FALSE,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, coupon_id)
+);
+
+-- Notification Preferences
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  push_enabled BOOLEAN DEFAULT TRUE,
+  email_enabled BOOLEAN DEFAULT TRUE,
+  sms_enabled BOOLEAN DEFAULT FALSE,
+  ride_updates BOOLEAN DEFAULT TRUE,
+  promotions BOOLEAN DEFAULT TRUE,
+  social BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Push Subscriptions
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  endpoint TEXT NOT NULL,
+  p256dh TEXT,
+  auth TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Reviews (avaliacoes gerais)
+CREATE TABLE IF NOT EXISTS reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  reviewer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  reviewee_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  tags JSONB DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Rating Categories
+CREATE TABLE IF NOT EXISTS rating_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT UNIQUE NOT NULL,
+  description TEXT,
+  icon TEXT,
+  is_positive BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Social Stats
+CREATE TABLE IF NOT EXISTS user_social_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  followers_count INTEGER DEFAULT 0,
+  following_count INTEGER DEFAULT 0,
+  posts_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Post Likes (alias de social_post_likes)
+CREATE TABLE IF NOT EXISTS post_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES social_posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(post_id, user_id)
+);
+
+-- Driver Verifications
+CREATE TABLE IF NOT EXISTS driver_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  document_type TEXT,
+  document_url TEXT,
+  selfie_url TEXT,
+  status TEXT DEFAULT 'pending',
+  verified_at TIMESTAMPTZ,
+  rejection_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ride Recordings
+CREATE TABLE IF NOT EXISTS ride_recordings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  recording_url TEXT,
+  duration_seconds INTEGER,
+  file_size_mb DECIMAL(10,2),
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Recording Consents
+CREATE TABLE IF NOT EXISTS recording_consents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  consent_given BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Recording Preferences
+CREATE TABLE IF NOT EXISTS user_recording_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  auto_record BOOLEAN DEFAULT FALSE,
+  keep_days INTEGER DEFAULT 7,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Group Ride Participants
+CREATE TABLE IF NOT EXISTS group_ride_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_ride_id UUID REFERENCES group_rides(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'invited',
+  joined_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(group_ride_id, user_id)
+);
+
+-- Promotions
+CREATE TABLE IF NOT EXISTS promotions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  discount_type TEXT,
+  discount_value DECIMAL(10,2),
+  min_ride_value DECIMAL(10,2),
+  max_discount DECIMAL(10,2),
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Popular Routes
+CREATE TABLE IF NOT EXISTS popular_routes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  origin_name TEXT,
+  origin_lat DECIMAL(10,7),
+  origin_lng DECIMAL(10,7),
+  destination_name TEXT,
+  destination_lat DECIMAL(10,7),
+  destination_lng DECIMAL(10,7),
+  ride_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Address Search History
+CREATE TABLE IF NOT EXISTS address_search_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  query TEXT,
+  address TEXT,
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Address History
+CREATE TABLE IF NOT EXISTS address_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  address TEXT,
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  times_used INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Favorites
+CREATE TABLE IF NOT EXISTS favorites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT,
+  address TEXT,
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  type TEXT DEFAULT 'other',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- SMS Templates
+CREATE TABLE IF NOT EXISTS sms_templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  variables JSONB DEFAULT '[]',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- SMS Logs
+CREATE TABLE IF NOT EXISTS sms_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  phone TEXT,
+  template TEXT,
+  message TEXT,
+  status TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User SMS Preferences
+CREATE TABLE IF NOT EXISTS user_sms_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  ride_updates BOOLEAN DEFAULT TRUE,
+  promotions BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Pricing Rules
+CREATE TABLE IF NOT EXISTS pricing_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vehicle_type TEXT,
+  base_fare DECIMAL(10,2) DEFAULT 5,
+  per_km_rate DECIMAL(10,2) DEFAULT 2,
+  per_minute_rate DECIMAL(10,2) DEFAULT 0.5,
+  minimum_fare DECIMAL(10,2) DEFAULT 8,
+  cancellation_fee DECIMAL(10,2) DEFAULT 5,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- App Config
+CREATE TABLE IF NOT EXISTS app_config (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  value TEXT NOT NULL,
+  type TEXT DEFAULT 'string',
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- System Settings
+CREATE TABLE IF NOT EXISTS system_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  value JSONB NOT NULL,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Platform Metrics
+CREATE TABLE IF NOT EXISTS platform_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  date DATE NOT NULL,
+  total_rides INTEGER DEFAULT 0,
+  completed_rides INTEGER DEFAULT 0,
+  cancelled_rides INTEGER DEFAULT 0,
+  total_revenue DECIMAL(12,2) DEFAULT 0,
+  new_users INTEGER DEFAULT 0,
+  active_drivers INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(date)
+);
+
+-- Campaigns
+CREATE TABLE IF NOT EXISTS campaigns (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  type TEXT,
+  target_audience TEXT,
+  discount_type TEXT,
+  discount_value DECIMAL(10,2),
+  starts_at TIMESTAMPTZ,
+  ends_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- FAQs
+CREATE TABLE IF NOT EXISTS faqs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  category TEXT,
+  order_index INTEGER DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Legal Documents
+CREATE TABLE IF NOT EXISTS legal_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  version TEXT DEFAULT '1.0',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Email OTPs
+CREATE TABLE IF NOT EXISTS email_otps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  otp TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Settings
+CREATE TABLE IF NOT EXISTS user_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  language TEXT DEFAULT 'pt-BR',
+  dark_mode BOOLEAN DEFAULT FALSE,
+  haptic_feedback BOOLEAN DEFAULT TRUE,
+  sound_enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Onboarding
+CREATE TABLE IF NOT EXISTS user_onboarding (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  step INTEGER DEFAULT 0,
+  completed BOOLEAN DEFAULT FALSE,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Webhook Endpoints
+CREATE TABLE IF NOT EXISTS webhook_endpoints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  events JSONB DEFAULT '[]',
+  secret TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- =====================================================
+-- PARTE 16: TRIGGERS UPDATED_AT
 -- =====================================================
 
 -- Criar triggers para todas as tabelas com updated_at
@@ -891,7 +1254,15 @@ DECLARE
     'admin_logs', 'system_config', 'error_logs', 'webhooks', 'webhook_deliveries',
     'hot_zones', 'city_zones', 'favorite_addresses', 'favorite_drivers',
     'user_push_tokens', 'driver_schedule', 'family_members', 'subscriptions',
-    'promo_banners', 'promo_codes', 'promo_code_uses', 'push_log', 'sms_deliveries', 'user_2fa'
+    'promo_banners', 'promo_codes', 'promo_code_uses', 'push_log', 'sms_deliveries', 'user_2fa',
+    'coupon_uses', 'user_coupons', 'notification_preferences', 'push_subscriptions',
+    'reviews', 'rating_categories', 'user_social_stats', 'post_likes',
+    'driver_verifications', 'ride_recordings', 'recording_consents', 'user_recording_preferences',
+    'group_ride_participants', 'promotions', 'popular_routes', 'address_search_history',
+    'address_history', 'favorites', 'sms_templates', 'sms_logs', 'user_sms_preferences',
+    'pricing_rules', 'app_config', 'system_settings', 'platform_metrics',
+    'campaigns', 'faqs', 'legal_documents', 'email_otps', 'user_settings',
+    'user_onboarding', 'webhook_endpoints'
   ];
 BEGIN
   FOREACH t IN ARRAY all_tables LOOP
@@ -960,7 +1331,8 @@ DECLARE
     'promo_codes', 'promo_code_uses', 'driver_profiles', 'driver_reviews',
     'driver_withdrawals', 'driver_schedule', 'error_logs', 'favorite_drivers',
     'family_members', 'ratings', 'social_follows', 'user_push_tokens',
-    'emergency_contacts', 'vehicles'
+    'emergency_contacts', 'vehicles', 'group_ride_participants', 'reviews',
+    'driver_verifications', 'user_social_stats'
   ];
 BEGIN
   FOREACH t IN ARRAY realtime_tables LOOP
