@@ -3,8 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { GoogleMap } from '@/components/google-map'
-import type { GoogleMapHandle } from '@/components/google-map'
+import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 import { DriverBottomNavigation } from '@/components/driver-bottom-navigation'
 import DriverSkeleton from '@/components/driver-skeleton'
 import type { Ride } from '@/lib/types/database'
@@ -29,7 +28,7 @@ interface DailyStats {
 export default function DriverPage() {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
-  const mapRef = useRef<GoogleMapHandle>(null)
+  const mapRef = useRef<NativeMapHandle>(null)
 
   const [rides, setRides] = useState<RideWithPassenger[]>([])
   const [loading, setLoading] = useState(true)
@@ -250,9 +249,10 @@ export default function DriverPage() {
     <main className="h-dvh flex flex-col relative overflow-hidden bg-background">
       {/* Map — full screen igual passageiro */}
       <div className="absolute inset-0">
-        <GoogleMap
+        <NativeMap
           ref={mapRef}
           onLocationFound={handleLocationFound}
+          showUserLocation
           className="w-full h-full"
         />
 

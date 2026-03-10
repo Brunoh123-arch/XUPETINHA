@@ -7,7 +7,7 @@ import { iosToast } from '@/lib/utils/ios-toast'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { Ride, Profile, DriverProfile } from '@/lib/types/database'
 import { trackingService, type DriverLocation } from '@/lib/services/tracking-service'
-import { GoogleMap, type GoogleMapHandle } from '@/components/google-map'
+import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 import { triggerHaptic } from '@/lib/utils/haptics'
 import { cn } from '@/lib/utils'
 
@@ -49,7 +49,7 @@ export default function RideTrackingPage() {
   const [showSafetyMenu, setShowSafetyMenu] = useState(false)
   const [sharingLocation, setSharingLocation] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
-  const mapRef = useRef<GoogleMapHandle>(null)
+  const mapRef = useRef<NativeMapHandle>(null)
   const driverMarkerRef = useRef<google.maps.Marker | null>(null)
   const unsubRef = useRef<(() => void) | null>(null)
   const lastLocationTimestampRef = useRef<number>(0)
@@ -354,7 +354,7 @@ export default function RideTrackingPage() {
     <div className="h-dvh overflow-hidden bg-[color:var(--background)] flex flex-col relative">
       {/* Mapa fullscreen */}
       <div className="absolute inset-0">
-        <GoogleMap ref={mapRef} center={mapCenter} zoom={15} />
+        <NativeMap ref={mapRef} center={mapCenter} zoom={15} showUserLocation />
       </div>
 
       {/* Header flutuante */}

@@ -5,8 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { HomeSkeleton } from '@/components/ui/ios-skeleton'
 import type { Profile } from '@/lib/types/database'
-import { GoogleMap } from '@/components/google-map'
-import type { GoogleMapHandle } from '@/components/google-map'
+import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 import { NearbyDrivers } from '@/components/nearby-drivers'
 import { CouponNotificationModal, useCouponNotification } from '@/components/coupon-notification-modal'
 import { triggerHaptic } from '@/hooks/use-haptic'
@@ -23,7 +22,7 @@ export default function HomePage() {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [activeRideId, setActiveRideId] = useState<string | null>(null)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
-  const mapRef = useRef<GoogleMapHandle>(null)
+  const mapRef = useRef<NativeMapHandle>(null)
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
   const { notification: couponNotification, showNotification: showCouponModal, closeNotification: closeCouponModal } = useCouponNotification()
@@ -194,11 +193,12 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Google Map */}
-        <GoogleMap 
+        {/* Native Map - usa SDK nativo no Android */}
+        <NativeMap 
           ref={mapRef} 
           onLocationFound={handleLocationFound} 
           onMapReady={handleMapReady}
+          showUserLocation
           className="w-full h-full" 
         />
 
