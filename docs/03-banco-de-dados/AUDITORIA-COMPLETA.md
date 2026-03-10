@@ -561,4 +561,4 @@ auth.users INSERT
 
 ---
 
-**Auditado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas verificadas via SQL direto
+**Auditado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas, 86 RLS, 51 Realtime, 75 RPCs

@@ -1,8 +1,8 @@
 # UPPI - Configuracao Completa
 
-**Data:** 24/02/2026  
-**Versao:** 11.0  
-**Status:** Operacional — Banco ativo, 73 tabelas, pronto para testes E2E e deploy
+**Atualizado em:** 10/03/2026  
+**Versao:** 12.0  
+**Status:** Operacional — Banco ativo, 100 tabelas, pronto para testes E2E e deploy
 
 ---
 
@@ -22,9 +22,9 @@ Todas as configuracoes essenciais foram concluidas com sucesso:
   - NearbyDrivers, HotZonesCard
   - 5 APIs de mapas: geocode, places, routes, distance
 
-### 2. Versionamento de APIs ✅
+### 2. Versionamento de APIs
 - **Base URL:** `/api/v1/*` (obrigatorio)
-- **Total de APIs:** 92 handlers em 56 route.ts
+- **Total de APIs:** 81 route.ts
 - **Status:** 100% implementadas
 - **Middleware:** Versionamento ativo, chamadas sem v1 retornam 404
 

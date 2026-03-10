@@ -9,14 +9,14 @@
 
 ---
 
-## STATUS SUPABASE — 02/03/2026
+## STATUS SUPABASE — 10/03/2026
 
 | Item | Detalhe |
 |------|---------|
 | Projeto Supabase | pjlbixnzjndezoscbhej (supabase-amber-door) |
 | Migrations aplicadas | 001_core_tables, 002_location_wallet_social, 003_driver_security_support, 004_routes_reviews_misc |
 | Tabelas no schema public | **74** (criadas e verificadas via supabase_list_tables) |
-| RLS | Habilitado em todas as 74 tabelas |
+| RLS | Habilitado em 86 de 100 tabelas |
 | Trigger auto-profile | on_auth_user_created ativo |
 | Realtime | rides, messages, notifications, price_offers, driver_locations, ride_tracking, support_messages, ride_offers |
 | RPC Functions | 15 ativas |
@@ -252,7 +252,7 @@
 
 ---
 
-## 3. BANCO DE DADOS — 111 tabelas totais (02/03/2026)
+## 3. BANCO DE DADOS — 100 tabelas (10/03/2026)
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|

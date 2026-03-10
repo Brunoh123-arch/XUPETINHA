@@ -156,7 +156,7 @@ middleware.ts         Middleware autenticacao (Next.js 16 compativel)
 
 ## Documentacao Completa
 
-- `docs/03-banco-de-dados/SCHEMA.md` — 80 tabelas detalhadas
+- `docs/03-banco-de-dados/SCHEMA.md` — 100 tabelas detalhadas
 - `docs/03-banco-de-dados/AUDITORIA-COMPLETA.md` — Codigo vs banco
 - `SUPABASE-CHECKLIST.md` — Checklist + RPCs + exemplos
 

@@ -1,14 +1,17 @@
-# 🔗 Guia Rápido - Supabase no Projeto
+# Guia Rapido - Supabase no Projeto
 
-## ✅ Status da Integração
+**Atualizado em:** 10/03/2026
+**Projeto:** jpnwxqjrhzaobnugjnyx
 
-**Supabase está 100% conectado e funcional!**
+## Status da Integracao
 
-- ✓ Variáveis de ambiente configuradas
-- ✓ Schema do banco de dados criado (74 tabelas)
-- ✓ RLS (Row Level Security) ativo em todas as tabelas
-- ✓ Middleware de autenticação configurado
-- ✓ Realtime ativo em 8 tabelas principais
+**Supabase 100% conectado e funcional!**
+
+- Variaveis de ambiente configuradas
+- Schema do banco de dados criado (100 tabelas)
+- RLS (Row Level Security) ativo em 86 tabelas (162 politicas)
+- Middleware de autenticacao configurado
+- Realtime ativo em 51 tabelas
 
 ---
 
@@ -159,5 +162,5 @@ Veja `docs/SUPABASE-CONEXAO.md` para detalhes sobre:
 
 ---
 
-**Última atualização:** 06/03/2026
+**Ultima atualizacao:** 10/03/2026
 **Status:** ✅ Operacional

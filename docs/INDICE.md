@@ -426,7 +426,7 @@ package.json                                 Dependencias completas
 
 ---
 
-## 6. Correcoes Aplicadas (02/03/2026)
+## 6. Correcoes Aplicadas (Historico)
 
 | Arquivo                        | Correcao                                                     |
 |-------------------------------|--------------------------------------------------------------|

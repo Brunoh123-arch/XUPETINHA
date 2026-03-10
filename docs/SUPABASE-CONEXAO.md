@@ -1,10 +1,9 @@
 # UPPI - Conexao Supabase
 
 **Data da Conexao:** 02/03/2026
-**Ultima Atualizacao:** 06/03/2026
-**Projeto Supabase:** mstnqzgsdnlsajuaezhs (ativo)
-**Projeto Anterior:** pjlbixnzjndezoscbhej (supabase-amber-door)
-**Status:** ATIVO - schema aplicado + correcoes manuais de 06/03/2026
+**Ultima Atualizacao:** 10/03/2026
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx (supabase-teal-kite)
+**Status:** ATIVO - 100 tabelas, 86 RLS, 51 Realtime, 75 RPCs
 
 ---
 
@@ -19,19 +18,19 @@
 
 ---
 
-## Resumo do Schema (verificado via supabase_list_tables em 02/03/2026)
+## Resumo do Schema (10/03/2026)
 
 | Metrica | Valor |
 |---------|-------|
-| Tabelas no schema public | **80** (6 novas criadas em 06/03/2026) |
-| RLS habilitado | Em todas as 80 tabelas |
+| Tabelas no schema public | **100** |
+| Tabelas com RLS ativo | **86** |
+| Politicas RLS | **162** |
 | Triggers updated_at | Em todas as tabelas com updated_at |
 | Trigger on_auth_user_created | Ativo (cria profile automatico no signup) |
-| Realtime publicado | 8 tabelas |
-| RPC Functions | 15 |
-| Seed system_settings | 6 registros (tarifas) |
-| Seed pricing_rules | 6 tipos de veiculo |
-| Seed rating_categories | 4 categorias |
+| Realtime publicado | **51 tabelas** |
+| RPC Functions | **75** |
+| Indices | **260** |
+| Triggers customizados | **34** |
 
 ---
 
@@ -94,4 +93,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.ride_offers;
 
 ---
 
-**Ultima atualizacao:** 02/03/2026 — Schema verificado e operacional
+**Ultima atualizacao:** 10/03/2026 — 100 tabelas, 86 RLS, 51 Realtime, 75 RPCs

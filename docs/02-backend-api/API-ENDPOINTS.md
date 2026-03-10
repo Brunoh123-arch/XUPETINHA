@@ -53,7 +53,7 @@ X-Latest-Version: v1
 | Outros | 8 | 14 | 60 req/min |
 | Admin | 4 | 5 | 60 req/min |
 | Health | 1 | 1 | Sem limite |
-| **Total** | **57+** | **92+** | |
+| **Total** | **81** | **81+** | |
 
 > **Tabelas principais que as APIs escrevem:** rides, price_offers, driver_locations, driver_profiles, notifications, wallet_transactions, ratings, reviews, support_tickets, emergency_alerts.
 > **RPCs usadas pelas APIs:** find_nearby_drivers, accept_price_offer, submit_price_offer, calculate_wallet_balance, get_social_feed, get_leaderboard, upsert_driver_location, submit_rating.
@@ -1018,5 +1018,5 @@ O token de sessao e gerenciado automaticamente via cookies pelo middleware Supab
 ---
 
 > Funcoes SQL (RPCs) chamadas pelas APIs: ver docs/03-banco-de-dados/AUDITORIA-COMPLETA.md
-> Tabelas e RLS (73 tabelas, 98+ policies): ver docs/03-banco-de-dados/SCHEMA.md
+> Tabelas e RLS (100 tabelas, 162 policies): ver docs/03-banco-de-dados/SCHEMA.md
 > Adicionar novos endpoints: ver docs/02-backend-api/VERSIONAMENTO.md

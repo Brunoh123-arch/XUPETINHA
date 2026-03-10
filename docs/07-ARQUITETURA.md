@@ -26,8 +26,8 @@
 │                   SUPABASE                           │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
 │  │PostgreSQL│ │  Auth    │ │Realtime  │ │Storage │ │
-│  │102 tables│ │  JWT     │ │Websocket │ │Files   │ │
-│  │87+ RPCs  │ │  RLS     │ │          │ │        │ │
+│  │100 tables│ │  JWT     │ │51 tabelas│ │Files   │ │
+│  │75 RPCs   │ │  RLS 86  │ │Websocket │ │        │ │
 │  └──────────┘ └──────────┘ └──────────┘ └────────┘ │
 └─────────────────────────────────────────────────────┘
           │                        │
@@ -61,7 +61,7 @@
 - Rate limiting via headers Vercel
 
 ### 4. Banco de Dados (Supabase PostgreSQL)
-- 102 tabelas com relacionamentos FK
+- 100 tabelas com relacionamentos FK
 - 87+ RPCs para logica de negocio complexa
 - RLS (Row Level Security) em todas as tabelas
 - Realtime subscriptions para tracking e chat
@@ -118,7 +118,7 @@
 
 ## Seguranca
 
-- Supabase RLS em todas as 102 tabelas
+- Supabase RLS em todas as 100 tabelas
 - JWT verificado em toda request server-side
 - `SUPABASE_SERVICE_ROLE_KEY` nunca exposta ao cliente
 - Parametros SQL sempre via Supabase client (previne SQL injection)

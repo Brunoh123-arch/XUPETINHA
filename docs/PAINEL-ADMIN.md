@@ -483,4 +483,4 @@ Ao finalizar uma corrida (status = `completed`), o sistema envia automaticamente
 
 ---
 
-**Atualizado em 02/03/2026**
+**Atualizado em 10/03/2026**

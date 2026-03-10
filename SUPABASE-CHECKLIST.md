@@ -210,7 +210,7 @@ const { data } = await client.rpc('calculate_wallet_balance', {
 
 ## Arquivos de Referencia
 
-- `docs/03-banco-de-dados/SCHEMA.md` — Schema completo das 80 tabelas
+- `docs/03-banco-de-dados/SCHEMA.md` — Schema completo das 100 tabelas
 - `docs/03-banco-de-dados/ANALISE-SCHEMAS-COMPLETA.md` — Analise de todos os schemas
 - `docs/03-banco-de-dados/AUDITORIA-COMPLETA.md` — Auditoria codigo vs banco
 - `docs/02-backend-api/API-ENDPOINTS.md` — Todos os endpoints da API

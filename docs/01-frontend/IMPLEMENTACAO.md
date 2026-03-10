@@ -1,27 +1,27 @@
-# UPPI - Implementação Completa
+# UPPI - Implementacao Completa
 
-**Ultima Atualizacao:** 06/03/2026  
-**Versao:** 12.0
+**Ultima Atualizacao:** 10/03/2026  
+**Versao:** 13.0
 
-## Visão Geral
+## Visao Geral
 
-O Uppi é um app de transporte completo construído com Next.js 16, Supabase e design iOS-style.
-
----
-
-> Banco de dados: ver docs/03-banco-de-dados/AUDITORIA-COMPLETA.md (73 tabelas, 98+ RLS, 45+ functions RPC)
+O Uppi e um app de transporte completo construido com Next.js 16, Supabase e design iOS-style.
 
 ---
 
-## Stack Técnica
+> Banco de dados: ver docs/03-banco-de-dados/AUDITORIA-COMPLETA.md (100 tabelas, 162 RLS, 75 RPCs)
+
+---
+
+## Stack Tecnica
 
 **Frontend:** Next.js 16 (App Router) + React 19 + TypeScript 5  
 **Styling:** Tailwind CSS + shadcn/ui + design iOS-style  
 **Backend:** Next.js API Routes **v1** (`/api/v1/*`) + Supabase PostgreSQL + PostGIS  
-**Banco:** Supabase conectado, 73 tabelas ativas, RLS ativo  
-**Realtime:** Supabase Realtime (ofertas, chat, tracking)  
+**Banco:** Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas, 86 com RLS, 51 com Realtime  
+**Realtime:** Supabase Realtime (51 tabelas publicadas)  
 **Maps:** Google Maps API + @vis.gl/react-google-maps  
-**Auth:** Supabase Auth (sessões via cookies)
+**Auth:** Supabase Auth (sessoes via cookies)
 
 ---
 
@@ -203,9 +203,9 @@ O Uppi é um app de transporte completo construído com Next.js 16, Supabase e d
 - `<AutoTheme />` - Tema automatico por horario
 - `<IOSSkeleton />` - Skeletons iOS-style
 - `<BottomNavigation />` - Navegacao do passageiro (expandida para todas as rotas)
-- `<DriverBottomNavigation />` - Navegacao do motorista (NOVO 06/03/2026)
+- `<DriverBottomNavigation />` - Navegacao do motorista
 
-### Fluxo de Auth (atualizado em 06/03/2026)
+### Fluxo de Auth
 - `/auth/selection` - NOVO: tela de escolha Passageiro ou Motorista
 - `/auth/passenger` - NOVO: signup exclusivo de passageiro
 - Criar conta → `/auth/selection` → Passageiro: `/auth/passenger` | Motorista: `/auth/driver/welcome`

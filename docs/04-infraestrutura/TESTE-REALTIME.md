@@ -1,8 +1,8 @@
 # Guia de Teste do Sistema Realtime
 
-**Ultima Atualizacao:** 06/03/2026  
-**Status:** Realtime ativo — rides, price_offers, notifications, driver_locations publicadas no canal supabase_realtime  
-**Projeto:** mstnqzgsdnlsajuaezhs
+**Ultima Atualizacao:** 10/03/2026  
+**Status:** Realtime ativo — 51 tabelas publicadas no canal supabase_realtime  
+**Projeto:** jpnwxqjrhzaobnugjnyx
 
 ## Sistema de Tempo Real Configurado ✅
 
