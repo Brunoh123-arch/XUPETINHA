@@ -25,8 +25,8 @@
 Apos executar, voce vera uma mensagem como:
 ```
 SETUP COMPLETO!
-Tabelas criadas: ~65
-Tabelas com RLS: ~50
+Tabelas criadas: 100
+Tabelas com RLS: 86
 ```
 
 ### 4. Configurar Variaveis de Ambiente
@@ -45,13 +45,13 @@ SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key
 
 | Categoria | Quantidade | Detalhes |
 |-----------|------------|----------|
-| Tabelas | ~65 | Todas as tabelas do UPPI |
+| Tabelas | 100 | Todas as tabelas do UPPI |
 | ENUMs | 12 | Tipos customizados |
-| RLS Policies | ~50 | Seguranca por linha |
-| Realtime | ~50 tabelas | Atualizacoes em tempo real |
-| RPCs | 6 | Funcoes principais |
-| Triggers | 15+ | Automacoes |
-| Indices | 20+ | Performance |
+| RLS Policies | 162 | Seguranca por linha |
+| Realtime | 51 tabelas | Atualizacoes em tempo real |
+| RPCs | 75 | Funcoes de negocio |
+| Triggers | 34 | Automacoes |
+| Indices | 260 | Performance |
 | Seed Data | Config + Achievements | Dados iniciais |
 
 ---
