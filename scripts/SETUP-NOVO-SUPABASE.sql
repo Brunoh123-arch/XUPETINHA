@@ -1181,6 +1181,160 @@ CREATE TABLE IF NOT EXISTS webhook_endpoints (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Referral Achievements
+CREATE TABLE IF NOT EXISTS referral_achievements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  achievement_id UUID REFERENCES achievements(id) ON DELETE CASCADE,
+  title TEXT,
+  description TEXT,
+  icon TEXT,
+  reward_credits DECIMAL(10,2) DEFAULT 0,
+  unlocked_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payment Methods (cartoes salvos)
+CREATE TABLE IF NOT EXISTS payment_methods (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT CHECK (type IN ('credit_card', 'debit_card', 'pix')),
+  last_four TEXT,
+  brand TEXT,
+  holder_name TEXT,
+  expiry_month INTEGER,
+  expiry_year INTEGER,
+  is_default BOOLEAN DEFAULT FALSE,
+  gateway_token TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ride Cancellations
+CREATE TABLE IF NOT EXISTS ride_cancellations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  cancelled_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  reason TEXT,
+  reason_code TEXT,
+  fee_charged DECIMAL(10,2) DEFAULT 0,
+  fee_waived BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Driver Earnings (historico diario)
+CREATE TABLE IF NOT EXISTS driver_earnings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  total_rides INTEGER DEFAULT 0,
+  gross_earnings DECIMAL(12,2) DEFAULT 0,
+  platform_fees DECIMAL(12,2) DEFAULT 0,
+  net_earnings DECIMAL(12,2) DEFAULT 0,
+  bonuses DECIMAL(12,2) DEFAULT 0,
+  tips DECIMAL(12,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(driver_id, date)
+);
+
+-- User Sessions
+CREATE TABLE IF NOT EXISTS user_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  device_id TEXT,
+  device_type TEXT,
+  device_name TEXT,
+  ip_address TEXT,
+  user_agent TEXT,
+  last_active_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ride Tips
+CREATE TABLE IF NOT EXISTS ride_tips (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  passenger_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  driver_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Driver Bonuses
+CREATE TABLE IF NOT EXISTS driver_bonuses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT,
+  amount DECIMAL(10,2) NOT NULL,
+  reason TEXT,
+  status TEXT DEFAULT 'pending',
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Devices
+CREATE TABLE IF NOT EXISTS user_devices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  device_id TEXT,
+  platform TEXT,
+  os_version TEXT,
+  app_version TEXT,
+  push_token TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  last_seen_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ride Disputes
+CREATE TABLE IF NOT EXISTS ride_disputes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  raised_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  type TEXT,
+  description TEXT,
+  status TEXT DEFAULT 'open',
+  resolution TEXT,
+  resolved_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Driver Documents
+CREATE TABLE IF NOT EXISTS driver_documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  driver_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  document_type TEXT NOT NULL,
+  document_url TEXT,
+  status TEXT DEFAULT 'pending',
+  verified_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  rejection_reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Preferences
+CREATE TABLE IF NOT EXISTS user_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  preferred_vehicle_type TEXT DEFAULT 'economy',
+  preferred_payment_method TEXT DEFAULT 'pix',
+  auto_tip_percentage INTEGER DEFAULT 0,
+  share_ride_by_default BOOLEAN DEFAULT FALSE,
+  quiet_mode BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Ride Route Points (pontos da rota)
+CREATE TABLE IF NOT EXISTS ride_route_points (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ride_id UUID REFERENCES rides(id) ON DELETE CASCADE,
+  sequence INTEGER NOT NULL,
+  latitude DECIMAL(10,7) NOT NULL,
+  longitude DECIMAL(10,7) NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =====================================================
 -- PARTE 16: TRIGGERS UPDATED_AT
 -- =====================================================
