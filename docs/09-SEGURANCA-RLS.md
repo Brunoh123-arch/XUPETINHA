@@ -1,8 +1,18 @@
 # Seguranca e RLS — Uppi
 
+**Atualizado em:** 10/03/2026
+
+## Resumo
+
+| Metrica | Valor |
+|---------|-------|
+| Tabelas com RLS | **86 de 87** (exceto spatial_ref_sys) |
+| Politicas RLS | **162** |
+| Tabelas com Realtime | **51** |
+
 ## Row Level Security (RLS)
 
-Todas as 102 tabelas tem RLS habilitado. Nenhum usuario pode acessar dados de outro usuario diretamente via Supabase client.
+86 tabelas tem RLS habilitado. Nenhum usuario pode acessar dados de outro usuario diretamente via Supabase client.
 
 ### Padrao de Politicas
 
@@ -120,12 +130,14 @@ if (signature !== expected) {
 
 ## Checklist de Seguranca para Producao
 
-- [x] RLS habilitado em todas as tabelas
-- [x] JWT validado em todas as APIs
-- [x] Service role key apenas server-side
-- [x] Webhook PIX com validacao HMAC
+- [x] RLS habilitado em 86 de 87 tabelas (162 policies)
+- [x] JWT validado em todas as APIs via `supabase.auth.getUser()`
+- [x] Service role key apenas server-side (nunca exposta no client)
+- [x] Webhook PIX com validacao HMAC (Paradise Gateway)
 - [x] Queries com Supabase client (sem SQL injection)
+- [x] Tabela `admin_logs` para auditoria de acoes admin
+- [x] Tabela `error_logs` para monitoramento de erros
 - [ ] Configurar dominio customizado (HTTPS automatico)
-- [ ] Ativar 2FA para conta admin
+- [ ] Ativar 2FA para conta admin (tabela `user_2fa` existe)
 - [ ] Revisar RLS policies trimestralmente
-- [ ] Configurar alertas de anomalia no Supabase
+- [ ] Configurar alertas de anomalia no Supabase Dashboard

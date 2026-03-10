@@ -1,8 +1,21 @@
 # Banco de Dados — Uppi
 
-Supabase (PostgreSQL) com RLS em todas as tabelas.
+**Atualizado em:** 10/03/2026  
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx
 
-**Total: 101 tabelas | 188 RLS policies | 288+ indices**
+Supabase (PostgreSQL) com RLS em 86 tabelas e Realtime em 51.
+
+| Metrica | Valor |
+|---------|-------|
+| Tabelas public | **87** |
+| Tabelas com RLS | **86** |
+| Tabelas com Realtime | **51** |
+| RPCs callable | **75** |
+| Politicas RLS | **162** |
+| Indices | **260** |
+| Triggers | **34** |
+| Migrations | **49** |
+| Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql)
 
 ---
 
@@ -180,25 +193,52 @@ Supabase (PostgreSQL) com RLS em todas as tabelas.
 
 ---
 
-## RPCs Principais (Funcoes PostgreSQL)
+## RPCs Principais (75 funcoes)
 
+### Corridas e Motorista (20)
 | RPC | Descricao |
 |---|---|
-| `get_trust_score(user_id)` | Retorna score de confianca (0-100) |
-| `get_ride_eta(ride_id)` | ETA e posicao do motorista |
-| `calculate_fare(lat, lng, dest_lat, dest_lng, type)` | Calcula tarifa com surge |
-| `calculate_surge_price(lat, lng)` | Multiplicador de preco dinamico |
-| `get_hot_zones_for_driver(driver_id)` | Zonas quentes para motorista |
-| `get_user_achievements(user_id)` | Conquistas do usuario |
+| `find_nearby_drivers(lat, lng, radius, vehicle_type)` | Busca com PostGIS ST_Distance |
+| `accept_ride(ride_id, driver_id)` | Atomica com lock |
+| `complete_ride(ride_id)` | Calcula preco, credita wallet |
+| `start_ride(ride_id)` | Inicia corrida |
+| `cancel_ride(ride_id)` | Cancela corrida |
+| `estimate_ride_price(...)` | Calcula tarifa com surge |
+| `get_surge_multiplier(lat, lng)` | Multiplicador de preco dinamico |
+| `upsert_driver_location(lat, lng, heading, speed)` | Atualiza posicao GPS |
+
+### Financeiro (18)
+| RPC | Descricao |
+|---|---|
+| `request_withdrawal(driver_id, amount)` | Solicita saque |
+| `approve_withdrawal(withdrawal_id)` | Admin aprova saque |
+| `reject_withdrawal(withdrawal_id, reason)` | Admin rejeita saque |
+| `apply_coupon(user_id, coupon_code)` | Aplica cupom |
+| `get_wallet_balance(user_id)` | Saldo da carteira |
 | `get_driver_earnings_stats(driver_id)` | Estatisticas de ganhos |
-| `get_referral_stats(user_id)` | Estatisticas de indicacoes |
+
+### Social e Gamificacao (8)
+| RPC | Descricao |
+|---|---|
 | `get_leaderboard(type, limit)` | Ranking de usuarios |
+| `check_and_award_achievements(user_id)` | Verifica e concede conquistas |
+| `get_social_feed(user_id)` | Feed social do usuario |
+| `process_referral_reward(referral_id)` | Processa recompensa de indicacao |
+
+---
+
+## Tabelas com Realtime (51)
+
+As seguintes tabelas tem Realtime habilitado para atualizacoes em tempo real:
+
+`driver_locations`, `rides`, `ride_tracking`, `messages`, `notifications`, `payments`, `price_offers`, `profiles`, `group_rides`, `group_ride_participants`, `emergency_alerts`, `support_tickets`, `support_messages`, `social_posts`, `social_post_likes`, `post_comments`, `fcm_tokens`, `user_wallets`, `wallet_transactions`, `leaderboard`, `user_achievements`, `referrals`, `scheduled_rides`, `intercity_rides`, `intercity_bookings`, `delivery_orders`, `surge_pricing`, `hot_zones`, `city_zones`, `subscriptions`, `sms_deliveries`, `push_log`, `webhook_deliveries`, `system_config`, `promo_banners`, `promo_codes`, `promo_code_uses`, `driver_profiles`, `driver_reviews`, `driver_withdrawals`, `driver_schedule`, `error_logs`, `favorite_drivers`, `family_members`, `ratings`, `social_follows`, `user_push_tokens`, `group_ride_members`, `emergency_contacts`
 
 ---
 
 ## Seguranca
 
-- **RLS ativo em 100% das tabelas**
+- **RLS ativo em 86 de 87 tabelas** (exceto spatial_ref_sys do PostGIS)
+- 162 politicas RLS configuradas
 - Cada usuario acessa apenas seus proprios dados
 - Admins tem policies separadas via `user_type = 'admin'`
 - Drivers tem policies via `driver_profiles`

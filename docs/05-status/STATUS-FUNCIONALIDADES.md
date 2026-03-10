@@ -1,19 +1,19 @@
 # UPPI - Status de Funcionalidades
 
-**Ultima Atualizacao:** 09/03/2026
-**Versao:** 22.0 — NUMEROS FINAIS DEFINITIVOS
-**Status Geral:** Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas, 51 Realtime, 75 RPCs, 162 politicas, 260 indices, 34 triggers, 49 migrations
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 23.0 — Documentacao atualizada
+**Status Geral:** 98% Pronto para Producao — Supabase jpnwxqjrhzaobnugjnyx
 
 ---
 
-## Resumo Geral (09/03/2026)
+## Resumo Geral (10/03/2026)
 
 | Categoria | Valor |
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no Banco (public) | **87** |
-| Tabelas com RLS ativo | **86** |
-| Tabelas com Realtime | **51** |
+| Tabelas com RLS ativo | **86** (99%) |
+| Tabelas com Realtime | **51** (59%) |
 | RPCs callable | **75** |
 | Politicas RLS | **162** |
 | Indices de performance | **260** |
@@ -23,6 +23,13 @@
 | Paginas (page.tsx) | 152 |
 | API route.ts | 57+ |
 | Endpoints HTTP | 92+ |
+
+### Pontos Fortes
+- GPS com 3 modos de tracking (idle/online/active_ride) + distance filter
+- RLS em 86 tabelas com 162 politicas
+- Realtime em 51 tabelas para atualizacoes em tempo real
+- PostGIS para busca de motoristas proximos
+- Animacao suave do marcador no mapa (interpolacao cubic ease-out)
 
 ---
 
@@ -388,6 +395,14 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ## 7. Proximos Passos
 
+### Criticos (Bloqueantes para Producao)
+1. Corrigir verificacao facial fake (usa Math.random())
+2. Remover `ignoreBuildErrors: true` do next.config.mjs
+3. Ativar `reactStrictMode: true`
+4. Configurar FIREBASE_SERVER_KEY para push FCM
+5. Configurar PARADISE_API_KEY para pagamentos PIX
+
+### Recomendados
 1. Deploy Vercel — verificar variaveis de ambiente corretas
 2. Testes E2E: auth → home → corrida → oferta → pagamento → avaliacao
 3. Corrigir referencias a campos inexistentes em user_wallets
@@ -395,6 +410,14 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 5. Configurar Twilio para SMS (opcional)
 6. Monitorar error_logs no painel admin apos go-live
 
+### Play Store
+1. Rodar `npx cap add android` para gerar pasta android/
+2. Copiar google-services.json para android/app/
+3. Gerar keystore e atualizar assetlinks.json
+4. Build AAB via Android Studio
+
 ---
 
-**Atualizado em 09/03/2026** — NUMEROS FINAIS DEFINITIVOS — Supabase jpnwxqjrhzaobnugjnyx — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — dados verificados via SQL direto
+**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations**
+
+Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.

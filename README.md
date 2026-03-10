@@ -4,28 +4,36 @@
 App de corridas nativo para Android (Play Store) + painel web admin completo.  
 Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)**
 
-### 🎯 Funcionalidades Implementadas
+**Numeros do Projeto (10/03/2026):**
+- 87 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
+- 75 RPCs callable | 162 politicas RLS | 260 indices
+- 152 paginas (page.tsx) | 57+ arquivos de API | 92+ endpoints HTTP
+- 49 migrations aplicadas | 34 triggers customizados
 
-- ✅ **Fluxo de corrida completo** — solicitar, aceitar, rastrear em tempo real, pagar (PIX/carteira), avaliar
-- ✅ **GPS otimizado** — nativo Capacitor, distance filter (5-100m), 3 modos (idle/online/active_ride), economia de bateria
-- ✅ **Mapa com animacao suave** — marcador do carro desliza (interpolacao cubic ease-out), rotacao automatica (bearing)
-- ✅ **Mapa nativo** — @capacitor/google-maps no Android, fallback para Google Maps Web
-- ✅ **PostGIS** — busca motorista mais proximo com ST_Distance, eficiente para cidades
-- ✅ **Realtime** — Supabase Realtime para posicao, status, mensagens, notificacoes
-- ✅ **Pagamentos PIX** — Paradise Gateway, webhook atomico, suporte a carteira interna
-- ✅ **Push FCM** — Firebase nativo no Android, deep links para notificacoes
-- ✅ **Admin dashboard** — 41 telas, analytics, moderacao, financeiro
-- ✅ **Verificacao motorista** — documentos + selfie (com integracao real recomendada)
-- ✅ **Gamificacao** — achievements, leaderboard, pontos, referrals
-- ✅ **Corridas compartilhadas** — group rides com multiplos passageiros
-- ✅ **Corridas agendadas** — agendar para data/hora futura
-- ✅ **Cidade a cidade** — rotas intercity com itinerarios
-- ✅ **Entregas** — modulo separado com rastreamento
-- ✅ **Chat realtime** — passageiro ↔ motorista via Supabase Realtime
-- ✅ **Social** — posts, likes, comments, followers
-- ✅ **Seguranca** — HSTS, X-Frame-Options, CSP headers, RLS, rate limiting, auth JWT
-- ✅ **Error boundaries + Loading states** — error.tsx + loading.tsx globais e por rota
-- ✅ **Validacao Zod** — middleware para APIs, schemas em schemas.ts
+---
+
+## Funcionalidades Implementadas
+
+- **Fluxo de corrida completo** — solicitar, aceitar, rastrear em tempo real, pagar (PIX/carteira), avaliar
+- **GPS otimizado** — nativo Capacitor, distance filter (5-100m), 3 modos (idle/online/active_ride), economia de bateria
+- **Mapa com animacao suave** — marcador do carro desliza (interpolacao cubic ease-out), rotacao automatica (bearing)
+- **Mapa nativo** — @capacitor/google-maps no Android, fallback para Google Maps Web
+- **PostGIS** — busca motorista mais proximo com ST_Distance, eficiente para cidades
+- **Realtime** — Supabase Realtime para posicao, status, mensagens, notificacoes (51 tabelas)
+- **Pagamentos PIX** — Paradise Gateway, webhook atomico, suporte a carteira interna
+- **Push FCM** — Firebase nativo no Android, deep links para notificacoes
+- **Admin dashboard** — 33 telas, analytics, moderacao, financeiro
+- **Verificacao motorista** — documentos + selfie (com integracao real recomendada)
+- **Gamificacao** — achievements, leaderboard, pontos, referrals
+- **Corridas compartilhadas** — group rides com multiplos passageiros
+- **Corridas agendadas** — agendar para data/hora futura
+- **Cidade a cidade** — rotas intercity com itinerarios
+- **Entregas** — modulo separado com rastreamento
+- **Chat realtime** — passageiro ↔ motorista via Supabase Realtime
+- **Social** — posts, likes, comments, followers
+- **Seguranca** — RLS em 86 tabelas, JWT, webhook HMAC, queries parametrizadas
+- **Error boundaries + Loading states** — error.tsx + loading.tsx globais e por rota
+- **Validacao Zod** — middleware para APIs, schemas em schemas.ts
 
 ---
 
@@ -53,35 +61,33 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 ```
 uppi/
 ├── app/
-│   ├── api/v1/          # 83 endpoints REST
-│   ├── uppi/            # 85 telas do passageiro
-│   ├── admin/           # 41 telas do admin
-│   ├── auth/            # Fluxo de autenticacao
+│   ├── api/v1/          # 57+ arquivos, 92+ endpoints REST
+│   ├── uppi/            # Telas do passageiro e motorista
+│   ├── admin/           # 33 telas do admin
+│   ├── auth/            # 12 telas de autenticacao
 │   └── onboarding/      # Onboarding
 ├── components/          # 100+ componentes reutilizaveis
 │   ├── native-map.tsx              # Mapa nativo (Capacitor + fallback web)
-│   ├── driver-marker.tsx            # Marcador animado do motorista
-│   ├── capacitor-provider.tsx       # Inicializacao nativa (GPS, FCM, etc)
-│   ├── pix-modal.tsx                # Modal de pagamento PIX
-│   ├── google-map.tsx               # Fallback Google Maps Web
-│   └── ...
+│   ├── driver-marker.tsx           # Marcador animado do motorista
+│   ├── capacitor-provider.tsx      # Inicializacao nativa (GPS, FCM, etc)
+│   ├── pix-modal.tsx               # Modal de pagamento PIX
+│   └── google-map.tsx              # Fallback Google Maps Web
 ├── hooks/               # Hooks customizados (otimizados)
-│   ├── use-native-geolocation.ts      # GPS nativo Capacitor c/ distance filter
-│   ├── use-native-map.ts              # Hook mapa nativo com animacoes
-│   ├── use-native-push.ts             # Push FCM nativo
-│   ├── use-fcm-push-notifications.ts  # Guard de plataforma para FCM
-│   └── ...
+│   ├── use-native-geolocation.ts   # GPS nativo c/ distance filter e 3 modos
+│   ├── use-native-map.ts           # Hook mapa nativo com animacoes
+│   ├── use-native-push.ts          # Push FCM nativo
+│   └── use-fcm-push-notifications.ts
 ├── lib/
 │   ├── supabase/        # Cliente Supabase (server + client)
 │   ├── services/        # payment-service, tracking-service
 │   ├── capacitor.ts     # Utilitarios Capacitor
 │   └── google-maps/     # Provider Google Maps
-├── scripts/             # Migrations SQL (001 a 012)
+├── scripts/             # Migrations SQL (001 a 049)
 ├── public/
 │   ├── icons/           # Icones PWA (72px a 512px)
 │   ├── screenshots/     # Screenshots Play Store
 │   └── sw.js            # Service Worker
-├── docs/                # Documentacao completa
+├── docs/                # 35+ arquivos de documentacao
 ├── capacitor.config.ts  # Configuracao Capacitor
 └── proxy.ts             # Middleware Next.js 16
 ```
@@ -174,43 +180,42 @@ npx cap open android
 
 ## Banco de Dados (Supabase PostgreSQL)
 
-### Tabelas (102 total)
-Grupos principais:
-- **Core**: rides, profiles, drivers, vehicles, messages
-- **Financeiro**: payments, user_wallets, wallet_transactions, price_offers, surge_pricing
-- **GPS**: driver_locations, hot_zones, popular_routes
-- **Social**: social_posts, social_likes, social_comments, social_follows
-- **Gamificacao**: achievements, leaderboard, referrals, points
-- **Notificacoes**: notifications, fcm_tokens, push_log
-- **Admin**: admin_logs, system_config, webhooks
-- **Suporte**: support_tickets, support_messages, emergency_alerts
-- **Outros**: addresses, favorites, coupons, subscriptions, user_2fa, etc
+**Projeto:** jpnwxqjrhzaobnugjnyx | **Tabelas:** 87 | **RLS:** 86 tabelas | **Realtime:** 51 tabelas
 
-### RPCs (87+)
-Criticas:
-- `find_nearby_drivers(lat, lng, radius, vehicle_type)` — PostGIS ST_Distance
-- `accept_ride(ride_id, driver_id)` — atomica
-- `complete_ride(ride_id)` — calcula preco, credita wallet
-- `request_withdrawal(driver_id, amount)` — atomica
-- `mark_all_notifications_read(user_id)` — bulk update
-- `get_driver_earnings_stats(driver_id)` — stats com GROUP BY
-- `apply_coupon(user_id, coupon_code)` — verifica validade
-- `get_active_ride(user_id)` — para passageiro/motorista
-- `create_emergency_alert(user_id, lat, lng)` — broadcast para proximos
+### Tabelas por Categoria
+- **Core**: rides, profiles, driver_profiles, vehicles, messages
+- **Financeiro**: payments, user_wallets, wallet_transactions, price_offers, surge_pricing, driver_withdrawals
+- **GPS**: driver_locations, hot_zones, popular_routes, city_zones
+- **Social**: social_posts, social_likes, social_comments, social_follows, user_social_stats
+- **Gamificacao**: achievements, user_achievements, leaderboard, referrals
+- **Notificacoes**: notifications, fcm_tokens, user_push_tokens, push_log
+- **Admin**: admin_logs, system_config, webhooks, webhook_deliveries
+- **Suporte**: support_tickets, support_messages, emergency_alerts, emergency_contacts
+
+### RPCs (75 funcoes)
+
+**Corridas e Motorista (20):**
+`find_nearby_drivers`, `accept_ride`, `complete_ride`, `start_ride`, `cancel_ride`, `create_ride`, `estimate_ride_price`, `get_surge_multiplier`, `upsert_driver_location`, `submit_price_offer`, `accept_price_offer`
+
+**Financeiro (18):**
+`request_withdrawal`, `approve_withdrawal`, `reject_withdrawal`, `apply_coupon`, `get_wallet_balance`, `get_driver_wallet_balance`, `calculate_wallet_balance`, `get_admin_financial_summary`
+
+**Social e Gamificacao (8):**
+`get_leaderboard`, `check_and_award_achievements`, `get_social_feed`, `process_referral_reward`, `refresh_leaderboard`
 
 ### RLS (Row Level Security)
-- 184 policies habilitadas
+- 162 policies habilitadas em 86 tabelas
 - Cada usuario so acessa seus dados
-- Admin acessa tudo
+- Admin acessa tudo via `user_type = 'admin'`
 - Service role pode fazer operacoes atomicas
 
 ### Indices
-- 288 indices de performance
+- 260 indices de performance
 - Geoespaciais: `USING GIST (geometry)` para driver_locations
 - B-tree: ride_id, user_id, driver_id, created_at
 - Partial: `WHERE status = 'active'` para queries rapidas
 
-**Migrations**: `/scripts/001-*.sql` ate `/scripts/012-*.sql` — executadas em ordem.
+**Migrations**: `/scripts/` — 49 migrations aplicadas.
 
 ---
 
