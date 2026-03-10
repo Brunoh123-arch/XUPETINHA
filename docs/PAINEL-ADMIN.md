@@ -1,8 +1,8 @@
 # UPPI - Painel Administrativo
 
-**Ultima Atualizacao:** 02/03/2026
-**Versao:** 4.0
-**Total de Paginas:** 33
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 5.0
+**Total de Paginas:** 42
 **Rota base:** /admin
 **Autenticacao:** profiles.is_admin = true (verificado em layout.tsx via requireAdmin)
 
@@ -10,7 +10,7 @@
 
 ## 1. Visao Geral
 
-O painel admin e uma aplicacao Next.js completa com **33 paginas**, sidebar com **5 grupos** de navegacao, header com notificacoes em tempo real e tema escuro proprio. Controla 100% do app em tempo real via Supabase Realtime.
+O painel admin e uma aplicacao Next.js completa com **42 paginas**, sidebar com **5 grupos** de navegacao, header com notificacoes em tempo real e tema escuro proprio. Controla 100% do app em tempo real via Supabase Realtime.
 
 ### Componentes base
 | Arquivo | Descricao |

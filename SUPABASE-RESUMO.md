@@ -1,20 +1,20 @@
 # Supabase - Status da Integracao
 
-**Ultima Atualizacao:** 09/03/2026
+**Ultima Atualizacao:** 10/03/2026
 **Projeto:** jpnwxqjrhzaobnugjnyx
 **Status:** Totalmente Operacional
 
 ---
 
-## Status Geral — VALORES FINAIS DEFINITIVOS (verificado via SQL em 09/03/2026)
+## Status Geral (10/03/2026)
 
 ```
 PROJETO:    jpnwxqjrhzaobnugjnyx
-MIGRATIONS: 49 entradas (migrations 001-035)
-TABELAS:    87 (schema public)
+MIGRATIONS: 49 (migrations 001-049)
+TABELAS:    100 (schema public)
 RLS:        86 tabelas ativas (exceto spatial_ref_sys)
-REALTIME:   51 tabelas (verificado via pg_publication_tables em 09/03/2026)
-RPCs:       75 funcoes de negocio callable (excluindo PostGIS/triggers internos)
+REALTIME:   51 tabelas
+RPCs:       75 funcoes de negocio callable
 POLICIES:   162 politicas RLS
 INDEXES:    260 indices de performance
 TRIGGERS:   34 customizados
@@ -34,10 +34,10 @@ VIEWS:      3 (ride_offers + 2 PostGIS do sistema)
 - [x] Trigger automatico: on_auth_user_created cria profiles + wallet + settings
 
 ### Banco de Dados
-- [x] 87 tabelas no schema public (migrations 001-034)
+- [x] 100 tabelas no schema public (migrations 001-049)
 - [x] RLS em 86 tabelas (162 politicas)
 - [x] 34 triggers customizados
-- [x] 235 indices de performance
+- [x] 260 indices de performance
 - [x] 1 View (ride_offers)
 - [x] PostGIS instalado (find_nearby_drivers usa ST_Distance)
 

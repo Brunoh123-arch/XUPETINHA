@@ -1,16 +1,16 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 09/03/2026
-**Versao:** 18.0 — SCHEMA FINAL DEFINITIVO
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 19.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
-**Projeto Supabase:** jpnwxqjrhzaobnugjnyx (ativo — verificado em 09/03/2026)
-**Tabelas no schema public:** 87 (verificadas via SQL em 09/03/2026 — migrations 001-034)
+**Projeto Supabase:** jpnwxqjrhzaobnugjnyx
+**Tabelas no schema public:** 100 (migrations 001-049)
 **Tabelas com RLS ativo:** 86 (exceto spatial_ref_sys — sistema PostGIS)
-**Tabelas com Realtime:** 51 (verificadas via pg_publication_tables em 09/03/2026)
-**RPCs de negocio callable:** 75 (excluindo funcoes PostGIS internas — verificado via SQL em 09/03/2026)
-**Politicas RLS:** 162 (verificadas em 09/03/2026)
-**Indices:** 235 (verificados em 09/03/2026)
-**Triggers customizados:** 34 (verificados via SQL em 09/03/2026)
+**Tabelas com Realtime:** 51
+**RPCs de negocio callable:** 75
+**Politicas RLS:** 162
+**Indices:** 260
+**Triggers customizados:** 34
 **View:** 1 (ride_offers — alias de price_offers)
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
@@ -20,7 +20,7 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **87** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
+| **public** | **100** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
 | auth | 21 | Gerenciadas pelo Supabase Auth |
 | storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
@@ -31,7 +31,7 @@
 
 ---
 
-## 1. Tabelas do Schema Public (87 tabelas — verificadas em 09/03/2026, migrations 001-034)
+## 1. Tabelas do Schema Public (100 tabelas — migrations 001-049)
 
 ### 7 Novas Tabelas (migrations 033-034)
 - `fcm_tokens` — tokens Firebase Cloud Messaging por dispositivo

@@ -14,17 +14,17 @@ O projeto Uppi esta **98% pronto** para producao. A arquitetura esta solida, com
 
 | Metrica | Valor |
 |---------|-------|
-| Tabelas PostgreSQL | 87 |
-| Tabelas com RLS | 86 (99%) |
-| Tabelas com Realtime | 51 (59%) |
+| Tabelas PostgreSQL | 100 |
+| Tabelas com RLS | 86 (86%) |
+| Tabelas com Realtime | 51 (51%) |
 | RPCs callable | 75 |
 | Politicas RLS | 162 |
 | Indices | 260 |
 | Triggers | 34 |
 | Migrations | 49 |
-| Paginas (page.tsx) | 152 |
-| Arquivos API | 57+ |
-| Endpoints HTTP | 92+ |
+| Paginas (page.tsx) | 149 |
+| Arquivos API (route.ts) | 81 |
+| Admin Dashboard | 42 telas |
 
 ---
 

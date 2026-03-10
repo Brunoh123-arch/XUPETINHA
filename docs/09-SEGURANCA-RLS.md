@@ -6,7 +6,7 @@
 
 | Metrica | Valor |
 |---------|-------|
-| Tabelas com RLS | **86 de 87** (exceto spatial_ref_sys) |
+| Tabelas com RLS | **86 de 100** (exceto spatial_ref_sys e novas) |
 | Politicas RLS | **162** |
 | Tabelas com Realtime | **51** |
 

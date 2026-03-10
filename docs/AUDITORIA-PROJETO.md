@@ -1,8 +1,9 @@
 # AUDITORIA COMPLETA - PROJETO UPPI
 
-**Data:** 09/03/2026
-**Versao:** 16.0 — Numeros atualizados para valores reais definitivos
-**Status Geral:** 100% Operacional — Supabase jpnwxqjrhzaobnugjnyx — 87 tabelas public, 86 com RLS, 51 com Realtime, 75 RPCs, 162 politicas, 235 indices, 35 triggers — migrations 001-034
+**Data:** 10/03/2026
+**Versao:** 17.0 — Numeros corrigidos
+**Status Geral:** 98% Operacional — Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas public, 86 com RLS, 51 com Realtime, 75 RPCs, 162 politicas, 260 indices, 34 triggers — migrations 001-049
+**Frontend:** 149 telas | 81 APIs | 42 admin
 
 > **NOTA IMPORTANTE:** Os numeros abaixo desta linha foram registrados em 02/03/2026 com projeto Supabase anterior. Os valores reais atuais (09/03/2026, jpnwxqjrhzaobnugjnyx) estao no SCHEMA.md e STATUS-FUNCIONALIDADES.md.
 
@@ -29,22 +30,22 @@
 
 | Categoria | Status | Detalhes |
 |-----------|--------|----------|
-| **Frontend** | 100% | 157 paginas (75 uppi + 12 auth + 33 admin + outros) |
-| **Backend API** | 100% | 57 route.ts, 92+ handlers em /api/v1/ |
-| **Banco de Dados** | 100% | 80 tabelas public (6 novas em 06/03/2026), RLS corrigida, Realtime ativo |
+| **Frontend** | 100% | 149 telas (85 uppi + 12 auth + 42 admin + 10 outros) |
+| **Backend API** | 100% | 81 route.ts em /api/v1/ |
+| **Banco de Dados** | 100% | 100 tabelas public, 86 com RLS, 51 com Realtime |
 | **Versionamento** | 100% | /api/v1/* ativo, middleware implementado |
 | **Componentes** | 100% | 48 custom + 85 ui (54 shadcn + 31 iOS) = 133 total |
 | **Services** | 100% | 13 services de dominio |
 | **Hooks** | 100% | 12 hooks customizados |
 | **Integracoes** | 100% | Supabase + Google Maps + Web Push VAPID + Resend |
-| **Documentacao** | 100% | 17 docs em docs/ |
-| **Build** | 100% | 152 paginas geradas, 0 erros TypeScript |
+| **Documentacao** | 100% | 35+ docs em docs/ |
+| **Build** | 98% | 149 telas geradas, ignoreBuildErrors ativo |
 
-**Score Geral: 100/100** — 74 tabelas public / 176 total (todos schemas), APIs corrigidas, build limpo
+**Score Geral: 98/100** — 100 tabelas public, 149 telas, 81 APIs
 
 ---
 
-## 1. FRONTEND — Paginas (152 paginas)
+## 1. FRONTEND — Paginas (149 telas)
 
 ### Auth (9 paginas) — /auth/
 - /auth/welcome
@@ -134,7 +135,7 @@
 - /uppi/legal/terms
 - /uppi/privacy | /uppi/terms (aliases)
 
-### Admin (33 paginas) — /admin/
+### Admin (42 paginas) — /admin/
 
 **Visao Geral (4)**
 - /admin — dashboard KPIs + AreaChart + BarChart
@@ -186,7 +187,7 @@
 
 ---
 
-## 2. BACKEND — API Routes (57 arquivos)
+## 2. BACKEND — API Routes (81 arquivos)
 
 **Base URL:** /api/v1  
 **Auth:** Supabase Auth via cookie  

@@ -1,11 +1,11 @@
-# UPPI - API Endpoints (92+ handlers em 57+ route.ts)
+# UPPI - API Endpoints (81 route.ts)
 
-**Ultima Atualizacao:** 09/03/2026
-**Versao:** 13.0
+**Ultima Atualizacao:** 10/03/2026
+**Versao:** 14.0
 **Base URL:** `/api/v1` (versionamento obrigatorio)
 **Auth:** Supabase Auth (Bearer Token via cookie)
 **Rate Limiting:** Sliding window em todas as rotas
-**Status:** Supabase jpnwxqjrhzaobnugjnyx — 80 tabelas ativas, 35 com Realtime, 42 RPCs
+**Status:** Supabase jpnwxqjrhzaobnugjnyx — 100 tabelas, 51 Realtime, 75 RPCs
 
 ---
 

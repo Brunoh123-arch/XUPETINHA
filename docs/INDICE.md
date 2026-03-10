@@ -1,9 +1,10 @@
 # UPPI - Indice Completo do Projeto
 
-**Ultima atualizacao:** 09/03/2026
-**Versao:** 16.0
-**Arquitetura:** Frontend + Backend + Banco (87 tabelas public / 86 com RLS / 51 com Realtime) + API (57+ routes, 92+ handlers) + Auth + Admin
-**Supabase:** jpnwxqjrhzaobnugjnyx — verificado via SQL em 09/03/2026 — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations — 0 FK quebradas / 0 RPCs faltando**
+**Ultima atualizacao:** 10/03/2026
+**Versao:** 17.0
+**Arquitetura:** Frontend + Backend + Banco (100 tabelas public / 86 com RLS / 51 com Realtime) + API (81 routes) + Auth + Admin
+**Supabase:** jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations**
+**Frontend:** 149 telas (page.tsx) | 81 APIs (route.ts) | 42 admin
 
 ---
 
@@ -17,7 +18,7 @@ docs/
   CONFIGURACAO-COMPLETA.md                   Env vars, integracoes, proximos passos
   SUPABASE-CONEXAO.md                        Conexao Supabase: projeto, migrations, RPCs, variaveis
   VAPID-SETUP.md                             Setup Web Push (VAPID) para push notifications
-  PAINEL-ADMIN.md                            Painel admin completo: 33 paginas
+  PAINEL-ADMIN.md                            Painel admin completo: 42 paginas
 
   01-frontend/
     IMPLEMENTACAO.md                         Funcionalidades, componentes React, UX
@@ -38,8 +39,8 @@ docs/
     TESTE-REALTIME.md                        Guia de teste Supabase Realtime (passo a passo)
 
   05-status/
-    STATUS-FUNCIONALIDADES.md                Checklist completo: 87 tabelas, 75 RPCs,
-                                             152 paginas, 57 APIs, 51 tabelas Realtime (09/03/2026)
+    STATUS-FUNCIONALIDADES.md                Checklist completo: 100 tabelas, 75 RPCs,
+                                             149 telas, 81 APIs, 51 tabelas Realtime (10/03/2026)
 
   06-deploy/
     PLAY-STORE.md                            Guia de publicacao (TWA/Capacitor/FCM)
@@ -157,7 +158,7 @@ app/
       profile/page.tsx                       Com DriverBottomNavigation
       wallet/page.tsx                        Com DriverBottomNavigation
 
-  admin/                                     Painel administrativo (33 paginas)
+  admin/                                     Painel administrativo (42 paginas)
     layout.tsx
     page.tsx                                 Dashboard KPIs + AreaChart + BarChart
     login/page.tsx
@@ -198,7 +199,7 @@ app/
     legal/page.tsx
 ```
 
-### 2.2 Backend - API Routes (app/api/v1/) — 57 arquivos
+### 2.2 Backend - API Routes (app/api/v1/) — 81 arquivos
 
 ```
 app/api/v1/
@@ -396,17 +397,17 @@ package.json                                 Dependencias completas
 
 ---
 
-## 5. Banco de Dados - Estado Real (09/03/2026 — jpnwxqjrhzaobnugjnyx)
+## 5. Banco de Dados - Estado Real (10/03/2026 — jpnwxqjrhzaobnugjnyx)
 
 | Categoria              | Quantidade | Observacao |
 |------------------------|-----------|------------|
-| Tabelas (schema public)| **87**    | Verificadas via SQL em 09/03/2026 — migrations 001-034 |
+| Tabelas (schema public)| **100**   | Verificadas em 10/03/2026 — migrations 001-049 |
 | Tabelas com RLS ativo  | **86**    | Exceto spatial_ref_sys (PostGIS sistema) |
 | Tabelas com Realtime   | **51**    | Verificadas via pg_publication_tables |
 | RPCs callable          | **75**    | Excluindo funcoes PostGIS internas |
 | Politicas RLS          | **162**   | Verificadas via pg_policies |
-| Indices                | **235**   | Verificados via pg_indexes |
-| Trigger functions      | **35**    | Incluindo triggers de corrida, gamificacao e cascata |
+| Indices                | **260**   | Verificados via pg_indexes |
+| Trigger functions      | **34**    | Incluindo triggers de corrida, gamificacao e cascata |
 | Views                  | **1**     | ride_offers (alias price_offers) |
 | Tabelas (auth)         | 21        | Gerenciadas pelo Supabase Auth |
 | Tabelas (storage)      | 8         | Gerenciadas pelo Supabase Storage |

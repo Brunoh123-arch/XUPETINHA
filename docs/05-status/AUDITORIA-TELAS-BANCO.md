@@ -1,22 +1,22 @@
 # AUDITORIA COMPLETA — TELAS CONECTADAS AO BANCO
 
-**Data:** 09/03/2026
-**Versao:** 2.0 — Varredura definitiva: 152 pages.tsx vs. grep de conexoes
+**Data:** 10/03/2026
+**Versao:** 3.0 — Varredura: 149 pages.tsx vs. grep de conexoes
 **Metodo:** grep sistematico em todos os `page.tsx` buscando `.from(`, `.rpc(`, `fetch('/api`, `createClient`, `supabase.auth`
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx
 
 ---
 
-## RESUMO EXECUTIVO — AUDITORIA DEFINITIVA (152 pages.tsx)
+## RESUMO EXECUTIVO — AUDITORIA (149 telas)
 
 | Grupo | Total | COM banco | Redirecionamentos puros | SEM banco (correto) | FALTANTE (problema) |
 |---|---|---|---|---|---|
-| `/uppi/*` passageiro/motorista | 89 | **81** | 5 | 3 (showcase/estatico) | **0** |
-| `/admin/*` | 43 | **42** | 0 | 1 (login so auth) | **0** |
-| `/auth/*` | 8 | **5** | 3 (redirect) | 0 | **0** |
+| `/uppi/*` passageiro/motorista | 85 | **77** | 5 | 3 (showcase/estatico) | **0** |
+| `/admin/*` | 42 | **41** | 0 | 1 (login so auth) | **0** |
+| `/auth/*` | 12 | **8** | 4 (redirect) | 0 | **0** |
 | `/onboarding/*` | 3 | 1 | 2 (redirects) | 0 | **0** |
-| Raiz e legado | 9 | **4** | 3 (legado) | 2 (estatico) | **0** |
-| **TOTAL** | **152** | **133** | **13** | **6** | **0** |
+| Raiz e legado | 7 | **4** | 1 (legado) | 2 (estatico) | **0** |
+| **TOTAL** | **149** | **131** | **12** | **6** | **0** |
 
 ---
 

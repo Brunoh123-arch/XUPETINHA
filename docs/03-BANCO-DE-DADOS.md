@@ -7,7 +7,7 @@ Supabase (PostgreSQL) com RLS em 86 tabelas e Realtime em 51.
 
 | Metrica | Valor |
 |---------|-------|
-| Tabelas public | **87** |
+| Tabelas public | **100** |
 | Tabelas com RLS | **86** |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |

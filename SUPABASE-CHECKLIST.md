@@ -1,6 +1,6 @@
 # Checklist de Integracao Supabase — UPPI
 
-**Ultima Atualizacao:** 09/03/2026
+**Ultima Atualizacao:** 10/03/2026
 **Projeto:** jpnwxqjrhzaobnugjnyx
 **Status:** Totalmente Operacional
 
@@ -18,13 +18,13 @@
 
 ---
 
-## Banco de Dados (verificado via SQL em 09/03/2026 — VALORES FINAIS DEFINITIVOS)
+## Banco de Dados (10/03/2026)
 
-- [x] **87 tabelas no schema public** (migrations 001-035 / 49 entradas)
+- [x] **100 tabelas no schema public** (migrations 001-049)
 - [x] **86 tabelas com RLS ativo** (exceto spatial_ref_sys — PostGIS)
-- [x] **51 tabelas com Realtime publicado** (verificado via pg_publication_tables em 09/03/2026)
+- [x] **51 tabelas com Realtime publicado**
 - [x] **162 politicas RLS**
-- [x] **260 indices de performance** (migrations 001-035)
+- [x] **260 indices de performance**
 - [x] **34 triggers customizados**
 - [x] **3 Views** (ride_offers + 2 PostGIS sistema)
 - [x] **0 FK quebradas** — integridade referencial 100%
