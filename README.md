@@ -5,9 +5,9 @@ App de corridas nativo para Android (Play Store) + painel web admin completo.
 Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)**
 
 **Numeros do Projeto (10/03/2026):**
-- 87 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
+- 100 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
 - 75 RPCs callable | 162 politicas RLS | 260 indices
-- 152 paginas (page.tsx) | 57+ arquivos de API | 92+ endpoints HTTP
+- 149 telas (page.tsx) | 82 arquivos de API (route.ts)
 - 49 migrations aplicadas | 34 triggers customizados
 
 ---
@@ -22,7 +22,7 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 - **Realtime** — Supabase Realtime para posicao, status, mensagens, notificacoes (51 tabelas)
 - **Pagamentos PIX** — Paradise Gateway, webhook atomico, suporte a carteira interna
 - **Push FCM** — Firebase nativo no Android, deep links para notificacoes
-- **Admin dashboard** — 33 telas, analytics, moderacao, financeiro
+- **Admin dashboard** — 42 telas, analytics, moderacao, financeiro
 - **Verificacao motorista** — documentos + selfie (com integracao real recomendada)
 - **Gamificacao** — achievements, leaderboard, pontos, referrals
 - **Corridas compartilhadas** — group rides com multiplos passageiros
@@ -61,11 +61,11 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 ```
 uppi/
 ├── app/
-│   ├── api/v1/          # 57+ arquivos, 92+ endpoints REST
-│   ├── uppi/            # Telas do passageiro e motorista
-│   ├── admin/           # 33 telas do admin
+│   ├── api/v1/          # 82 arquivos de API (route.ts)
+│   ├── uppi/            # 85+ telas do passageiro e motorista
+│   ├── admin/           # 42 telas do admin dashboard
 │   ├── auth/            # 12 telas de autenticacao
-│   └── onboarding/      # Onboarding
+│   └── onboarding/      # 3 telas de onboarding
 ├── components/          # 100+ componentes reutilizaveis
 │   ├── native-map.tsx              # Mapa nativo (Capacitor + fallback web)
 │   ├── driver-marker.tsx           # Marcador animado do motorista
@@ -180,7 +180,7 @@ npx cap open android
 
 ## Banco de Dados (Supabase PostgreSQL)
 
-**Projeto:** jpnwxqjrhzaobnugjnyx | **Tabelas:** 87 | **RLS:** 86 tabelas | **Realtime:** 51 tabelas
+**Projeto:** jpnwxqjrhzaobnugjnyx | **Tabelas:** 100 | **RLS:** 86 tabelas | **Realtime:** 51 tabelas
 
 ### Tabelas por Categoria
 - **Core**: rides, profiles, driver_profiles, vehicles, messages

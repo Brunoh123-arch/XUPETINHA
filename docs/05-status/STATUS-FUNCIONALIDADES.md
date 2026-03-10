@@ -11,18 +11,18 @@
 | Categoria | Valor |
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no Banco (public) | **87** |
-| Tabelas com RLS ativo | **86** (99%) |
-| Tabelas com Realtime | **51** (59%) |
+| Tabelas no Banco (public) | **100** |
+| Tabelas com RLS ativo | **86** |
+| Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
 | Politicas RLS | **162** |
 | Indices de performance | **260** |
 | Triggers customizados | **34** |
 | Views | **3** (ride_offers + 2 PostGIS sistema) |
 | Migrations aplicadas | **49** |
-| Paginas (page.tsx) | 152 |
-| API route.ts | 57+ |
-| Endpoints HTTP | 92+ |
+| Paginas (page.tsx) | **149** |
+| API route.ts | **82** |
+| Admin dashboard | **42 telas** |
 
 ### Pontos Fortes
 - GPS com 3 modos de tracking (idle/online/active_ride) + distance filter
@@ -33,7 +33,7 @@
 
 ---
 
-## 1. Frontend - Paginas (152 total)
+## 1. Frontend - Paginas (149 total)
 
 ### Auth (12) — /auth/
 - [x] /auth/welcome
@@ -126,7 +126,7 @@
 - [x] /uppi/legal/terms
 - [x] /uppi/privacy | /uppi/terms
 
-### Admin (33) — /admin/
+### Admin (42) — /admin/
 
 **Visao Geral**
 - [x] /admin (dashboard KPIs)
@@ -178,7 +178,7 @@
 
 ---
 
-## 2. Backend - API Routes (57+ arquivos)
+## 2. Backend - API Routes (82 arquivos)
 
 - [x] /api/v1/health
 - [x] /api/v1/profile — GET + PATCH
@@ -242,7 +242,7 @@
 | Item | Status |
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | **87** (migrations 001-035) |
+| Tabelas public | **100** (migrations 001-049) |
 | Tabelas com RLS | **86** (exceto spatial_ref_sys) |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -418,6 +418,6 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **87 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations**
+**Atualizado em 10/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **149 telas / 82 APIs / 42 admin**
 
 Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.
