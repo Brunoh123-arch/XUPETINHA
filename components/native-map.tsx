@@ -311,6 +311,85 @@ export const NativeMap = forwardRef<NativeMapHandle, NativeMapProps>(
   }
 )
 
+/**
+ * Anima marcador suavemente entre duas posicoes (igual Uber)
+ * Usa interpolacao linear com requestAnimationFrame
+ */
+function animateMarkerPosition(
+  marker: any,
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+  duration: number = 2000,
+  onComplete?: () => void
+) {
+  const startTime = performance.now()
+  
+  function animate(currentTime: number) {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
+    
+    // Ease-out para movimento mais natural
+    const easeProgress = 1 - Math.pow(1 - progress, 3)
+    
+    const currentLat = fromLat + (toLat - fromLat) * easeProgress
+    const currentLng = fromLng + (toLng - fromLng) * easeProgress
+    
+    if (marker?.setPosition) {
+      marker.setPosition({ lat: currentLat, lng: currentLng })
+    }
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate)
+    } else {
+      onComplete?.()
+    }
+  }
+  
+  requestAnimationFrame(animate)
+}
+
+/**
+ * Calcula o bearing (direcao) entre dois pontos geograficos
+ * Retorna angulo em graus (0-360, onde 0 = norte)
+ */
+function calculateBearing(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number
+): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const toDeg = (rad: number) => (rad * 180) / Math.PI
+  
+  const dLng = toRad(lng2 - lng1)
+  const lat1Rad = toRad(lat1)
+  const lat2Rad = toRad(lat2)
+  
+  const x = Math.sin(dLng) * Math.cos(lat2Rad)
+  const y = Math.cos(lat1Rad) * Math.sin(lat2Rad) - 
+            Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLng)
+  
+  let bearing = toDeg(Math.atan2(x, y))
+  return (bearing + 360) % 360
+}
+
+/**
+ * Cria icone do carro com rotacao
+ */
+function createCarIcon(heading: number = 0, color: string = '#FF6B00') {
+  // SVG do carro apontando para cima (0 graus = norte)
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+      <g transform="rotate(${heading}, 20, 20)">
+        <path d="M20 5 L30 35 L20 28 L10 35 Z" fill="${color}" stroke="#fff" stroke-width="2"/>
+      </g>
+    </svg>
+  `
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg)
+}
+
 // Decode Google polyline
 function decodePolyline(encoded: string): Array<{ lat: number; lng: number }> {
   const points: Array<{ lat: number; lng: number }> = []

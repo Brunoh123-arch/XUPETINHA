@@ -217,38 +217,105 @@ export default function RideTrackingPage() {
     }
   }, [])
 
+  // Referencia para ultima posicao conhecida (para calcular bearing)
+  const lastDriverPositionRef = useRef<{ lat: number; lng: number } | null>(null)
+  const animationFrameRef = useRef<number | null>(null)
+
+  // Calcular bearing (direcao) entre dois pontos
+  const calculateBearing = useCallback((lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const toRad = (deg: number) => (deg * Math.PI) / 180
+    const toDeg = (rad: number) => (rad * 180) / Math.PI
+    const dLng = toRad(lng2 - lng1)
+    const y = Math.sin(dLng) * Math.cos(toRad(lat2))
+    const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - 
+              Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng)
+    return (toDeg(Math.atan2(y, x)) + 360) % 360
+  }, [])
+
+  // Criar icone SVG do carro
+  const createCarIcon = useCallback((rotation: number) => {
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+        <g transform="rotate(${rotation}, 24, 24)">
+          <rect x="16" y="8" width="16" height="32" rx="4" fill="#10b981"/>
+          <rect x="18" y="14" width="12" height="12" rx="2" fill="#fff" fill-opacity="0.3"/>
+          <rect x="17" y="36" width="5" height="3" rx="1" fill="#ff4444"/>
+          <rect x="26" y="36" width="5" height="3" rx="1" fill="#ff4444"/>
+          <rect x="17" y="9" width="5" height="3" rx="1" fill="#ffff88"/>
+          <rect x="26" y="9" width="5" height="3" rx="1" fill="#ffff88"/>
+          <path d="M24 2 L28 8 L20 8 Z" fill="#10b981"/>
+        </g>
+      </svg>
+    `
+    return {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      scaledSize: new window.google.maps.Size(48, 48),
+      anchor: new window.google.maps.Point(24, 24),
+    }
+  }, [])
+
   const updateDriverMarker = useCallback((location: DriverLocation) => {
     const map = mapRef.current?.getMapInstance()
     if (!map || !window.google) return
 
-    const position = { lat: location.latitude, lng: location.longitude }
+    const newPosition = { lat: location.latitude, lng: location.longitude }
+    const lastPos = lastDriverPositionRef.current
+
+    // Calcular bearing automaticamente se nao fornecido
+    let heading = location.heading ?? 0
+    if (lastPos && heading === 0) {
+      heading = calculateBearing(lastPos.lat, lastPos.lng, newPosition.lat, newPosition.lng)
+    }
 
     if (!driverMarkerRef.current) {
-      // Usar Marker legado para compatibilidade máxima com Maps carregado dinamicamente
+      // Criar marcador inicial com icone de carro
       driverMarkerRef.current = new window.google.maps.Marker({
-        position,
+        position: newPosition,
         map,
-        icon: {
-          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 6,
-          fillColor: '#10b981',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-          rotation: location.heading ?? 0,
-        },
+        icon: createCarIcon(heading),
         title: 'Motorista',
+        zIndex: 1000,
       })
-    } else {
-      driverMarkerRef.current.setPosition(position)
-      const icon = driverMarkerRef.current.getIcon() as google.maps.Symbol
-      if (icon) {
-        icon.rotation = location.heading ?? 0
-        driverMarkerRef.current.setIcon(icon)
+      lastDriverPositionRef.current = newPosition
+    } else if (lastPos) {
+      // ANIMACAO SUAVE — interpolar entre posicoes (igual Uber)
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
       }
+
+      const startTime = performance.now()
+      const duration = 2000 // 2 segundos de animacao
+
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        
+        // Ease-out cubic para movimento mais natural
+        const easeProgress = 1 - Math.pow(1 - progress, 3)
+        
+        const currentLat = lastPos.lat + (newPosition.lat - lastPos.lat) * easeProgress
+        const currentLng = lastPos.lng + (newPosition.lng - lastPos.lng) * easeProgress
+
+        if (driverMarkerRef.current) {
+          driverMarkerRef.current.setPosition({ lat: currentLat, lng: currentLng })
+        }
+
+        if (progress < 1) {
+          animationFrameRef.current = requestAnimationFrame(animate)
+        } else {
+          lastDriverPositionRef.current = newPosition
+        }
+      }
+
+      // Atualizar icone com rotacao
+      driverMarkerRef.current.setIcon(createCarIcon(heading))
+      
+      requestAnimationFrame(animate)
     }
-    map.panTo(position)
-  }, [])
+
+    // Pan suave do mapa para acompanhar o motorista
+    map.panTo(newPosition)
+  }, [calculateBearing, createCarIcon])
 
   // Ações do motorista
   const handleDriverAction = async (newStatus: RideStatus) => {
