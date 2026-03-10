@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, memo } from 'react'
 
 interface DriverMarkerProps {
   map: any // Google Maps instance
@@ -19,8 +19,9 @@ interface DriverMarkerProps {
  * - Animacao suave entre posicoes (interpolacao)
  * - Rotacao do icone na direcao do movimento
  * - Performance otimizada com requestAnimationFrame
+ * - React.memo para evitar re-renders desnecessarios
  */
-export function DriverMarker({
+export const DriverMarker = memo(function DriverMarker({
   map,
   driverId,
   lat,

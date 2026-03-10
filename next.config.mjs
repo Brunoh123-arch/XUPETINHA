@@ -27,7 +27,44 @@ const nextConfig = {
     unoptimized: true,
   },
   async headers() {
+    // Headers de seguranca para todas as rotas
+    const securityHeaders = [
+      {
+        key: 'X-DNS-Prefetch-Control',
+        value: 'on',
+      },
+      {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'SAMEORIGIN',
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)',
+      },
+    ]
+
     return [
+      {
+        // Aplicar headers de seguranca em todas as rotas
+        source: '/:path*',
+        headers: securityHeaders,
+      },
       {
         // Digital Asset Links must be served with this content-type
         source: '/.well-known/assetlinks.json',
