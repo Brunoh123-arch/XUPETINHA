@@ -1335,6 +1335,19 @@ CREATE TABLE IF NOT EXISTS ride_route_points (
   timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- App Versions (controle de versoes)
+CREATE TABLE IF NOT EXISTS app_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  platform TEXT CHECK (platform IN ('android', 'ios', 'web')),
+  version TEXT NOT NULL,
+  build_number INTEGER,
+  min_supported_version TEXT,
+  force_update BOOLEAN DEFAULT FALSE,
+  changelog TEXT,
+  release_date TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- =====================================================
 -- PARTE 16: TRIGGERS UPDATED_AT
 -- =====================================================
