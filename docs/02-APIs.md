@@ -1,9 +1,11 @@
 # Documentacao de APIs — Uppi
 
+**Atualizado em:** 10/03/2026
+
 Base URL: `https://uppi.vercel.app/api`
 Autenticacao: Cookie de sessao Supabase (SSR) em todos os endpoints protegidos.
 
-Total: **83 endpoints** em **79 arquivos route.ts**
+Total: **81 arquivos route.ts**
 
 ---
 

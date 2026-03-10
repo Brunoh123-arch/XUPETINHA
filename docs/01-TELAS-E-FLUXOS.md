@@ -1,6 +1,8 @@
 # Telas e Fluxos — Uppi
 
-Total: **160 telas** (85 passageiro, 41 admin, 10 auth/onboarding, 24 motorista dentro de /uppi)
+**Atualizado em:** 10/03/2026
+
+Total: **149 telas** (85 passageiro, 42 admin, 12 auth, 3 onboarding, 7 outras)
 
 ---
 

@@ -10,9 +10,9 @@
 Projeto **100% funcional** — plataforma de mobilidade (Uber-like) brasileira, multilíngue, com fluxos completos para passageiro, motorista e admin.
 
 ### Status Geral
-- ✅ **Backend:** Completo (102 tabelas, 870 RPCs, 81 APIs REST, 184 RLS policies)
-- ✅ **Frontend:** Completo (152 telas, 94 componentes reutilizaveis)
-- ✅ **Database:** Auditado (288 indices de performance)
+- ✅ **Backend:** Completo (100 tabelas, 75 RPCs, 81 APIs REST, 162 RLS policies)
+- ✅ **Frontend:** Completo (149 telas, 94 componentes reutilizaveis)
+- ✅ **Database:** Auditado (260 indices de performance)
 - ✅ **Integracao:** Supabase SSR, Paradise PIX Gateway, Google Maps/Places/Distance
 - ✅ **Build:** Corrigido (Next.js 16 com proxy.ts)
 
@@ -28,9 +28,9 @@ Projeto **100% funcional** — plataforma de mobilidade (Uber-like) brasileira, 
 - **Mobilidade:** iOS-first (haptic feedback, safe area, bottom nav)
 
 ### Backend (Node.js + PostgreSQL)
-- **BD:** Supabase (PostgreSQL 15)
+- **BD:** Supabase (PostgreSQL 15) — 100 tabelas
 - **Auth:** Supabase JWT (scope user_id)
-- **Seguranca:** RLS em 100% das tabelas
+- **Seguranca:** RLS em 86 de 100 tabelas (162 politicas)
 - **Cache:** Redis via Upstash (opcional)
 - **Webhooks:** Paradise PIX, SMS operators, custom endpoints
 
@@ -47,7 +47,7 @@ Projeto **100% funcional** — plataforma de mobilidade (Uber-like) brasileira, 
 
 ## METRICAS DO CODIGO
 
-### Frontend (152 Telas)
+### Frontend (149 Telas)
 
 **Passageiro (app/uppi/)** — 57 telas
 - `/home` — Home com promocoes, historico, corridas ativas
@@ -202,7 +202,7 @@ Total: **94 componentes**
 
 ## BANCO DE DADOS
 
-### Tabelas (102 Total)
+### Tabelas (100 Total)
 
 **Core Users** (8)
 ```
@@ -254,7 +254,7 @@ waitlist, feedback, mobile_sessions, session_tracking,
 appointment_bookings
 ```
 
-### RPCs (870 Total) — Principais
+### RPCs (75 Total) — Principais
 
 | RPC | Funcao |
 |---|---|
@@ -269,7 +269,7 @@ appointment_bookings
 | `get_leaderboard` | Ranking de motoristas |
 | `needs_facial_verification` | Motorista precisa verificacao? |
 
-### RLS Policies (184 Total)
+### RLS Policies (162 Total)
 
 Todos os dados protegidos com Row Level Security:
 - Usuarios so veem dados proprios (auth.uid() filter)
@@ -277,7 +277,7 @@ Todos os dados protegidos com Row Level Security:
 - Passageiros so veem corridas solicitadas
 - Admin pode ver tudo
 
-### Indices (288 Total)
+### Indices (260 Total)
 
 Otimizacoes de performance:
 - Indices em FK (user_id, driver_id, ride_id)
@@ -440,13 +440,13 @@ Otimizacoes de performance:
 
 | Metrica | Valor |
 |---|---|
-| Telas Frontend | 152 |
+| Telas Frontend | 149 |
 | APIs REST | 81 |
 | Components Reutilizaveis | 94 |
-| Tabelas no Banco | 102 |
-| RPCs/Funcoes | 870 |
-| RLS Policies | 184 |
-| Indices | 288 |
+| Tabelas no Banco | 100 |
+| RPCs/Funcoes | 75 |
+| RLS Policies | 162 |
+| Indices | 260 |
 | Usuarios por Tipo | 3 (passageiro, motorista, admin) |
 | Idiomas Suportados | 2+ (PT-BR, EN) |
 | Tempo de Build | ~3-4 min (Turbopack) |
