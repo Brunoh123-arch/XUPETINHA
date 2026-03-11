@@ -167,7 +167,7 @@ class AuthService {
     try {
       const client = this.getClient()
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
       })
       if (error) throw error
       return { error: null }
