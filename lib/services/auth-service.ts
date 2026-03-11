@@ -166,8 +166,9 @@ class AuthService {
   async resetPassword(email: string) {
     try {
       const client = this.getClient()
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+        redirectTo: `${siteUrl}/auth/callback?type=recovery`,
       })
       if (error) throw error
       return { error: null }
