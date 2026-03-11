@@ -20,9 +20,10 @@
 | Triggers customizados | **34** |
 | Views | **3** (ride_offers + 2 PostGIS sistema) |
 | Migrations aplicadas | **49** |
-| Paginas (page.tsx) | **150** |
-| API route.ts | **85** |
-| Admin dashboard | **43 telas** |
+| Paginas (page.tsx) | **152** |
+| API route.ts | **84** |
+| Admin dashboard | **42 telas** |
+| Components | **152** |
 
 ### Pontos Fortes
 - GPS com 3 modos de tracking (idle/online/active_ride) + distance filter
@@ -33,7 +34,7 @@
 
 ---
 
-## 1. Frontend - Paginas (150 total)
+## 1. Frontend - Paginas (152 total)
 
 ### Auth (12) — /auth/
 - [x] /auth/welcome
@@ -126,7 +127,7 @@
 - [x] /uppi/legal/terms
 - [x] /uppi/privacy | /uppi/terms
 
-### Admin (43) — /admin/
+### Admin (42) — /admin/
 
 **Visao Geral**
 - [x] /admin (dashboard KPIs)
@@ -178,7 +179,7 @@
 
 ---
 
-## 2. Backend - API Routes (85 arquivos)
+## 2. Backend - API Routes (84 arquivos)
 
 - [x] /api/v1/health
 - [x] /api/v1/profile — GET + PATCH
@@ -418,6 +419,6 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 11/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **150 telas / 85 APIs / 43 admin**
+**Atualizado em 11/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **152 telas / 84 APIs / 42 admin / 152 components**
 
 Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.
