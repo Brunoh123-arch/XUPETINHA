@@ -4,10 +4,10 @@
 App de corridas nativo para Android (Play Store) + painel web admin completo.  
 Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)**
 
-**Numeros do Projeto (10/03/2026):**
+**Numeros do Projeto (11/03/2026):**
 - 100 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
 - 75 RPCs callable | 162 politicas RLS | 260 indices
-- 149 telas (page.tsx) | 81 arquivos de API (route.ts)
+- 155 telas (page.tsx) | 82 arquivos de API (route.ts)
 - 49 migrations aplicadas | 34 triggers customizados
 
 ---

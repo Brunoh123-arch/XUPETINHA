@@ -1,7 +1,7 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 10/03/2026
-**Versao:** 19.0
+**Ultima Atualizacao:** 11/03/2026
+**Versao:** 20.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx
 **Tabelas no schema public:** 100 (migrations 001-049)
