@@ -7,6 +7,7 @@ import { UppiLogo } from "@/components/revolut-logo"
 import { Eye, EyeOff, ArrowLeft, Check, Phone } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 const requirements = [
   { label: "Mínimo 8 caracteres", test: (p: string) => p.length >= 8 },
@@ -35,7 +36,7 @@ export default function PassengerSignupPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     })
   }
@@ -50,10 +51,7 @@ export default function PassengerSignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_SITE_URL 
-            ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-            : `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
         data: {
           full_name: name,
           role: "passenger",

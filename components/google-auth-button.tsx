@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 function GoogleIcon() {
   return (
@@ -27,10 +28,7 @@ export function GoogleAuthButton({ label = "Continuar com Google" }: GoogleAuthB
     setError("")
     try {
       const supabase = createClient()
-      const redirectTo =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/auth/callback`
-          : "/auth/callback"
+      const redirectTo = `${getSiteUrl()}/auth/callback`
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",

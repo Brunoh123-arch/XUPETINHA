@@ -6,6 +6,7 @@ import { UppiLogo } from "@/components/revolut-logo"
 import { ArrowLeft, Mail } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -22,13 +23,8 @@ export default function ForgotPasswordPage() {
     setError("")
 
     const supabase = createClient()
-    // Usar URL de producao para evitar localhost nos emails
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL 
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` 
-      : window.location.origin
-    
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/auth/callback?type=recovery`,
+      redirectTo: `${getSiteUrl()}/auth/callback?type=recovery`,
     })
 
     if (resetError) {

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/utils'
 
 export interface SignUpData {
   email: string
@@ -87,7 +88,7 @@ class AuthService {
       const client = this.getClient()
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${getSiteUrl()}/auth/callback` },
       })
       if (error) throw error
       return { data, error: null }
@@ -102,7 +103,7 @@ class AuthService {
       const client = this.getClient()
       const { data, error } = await client.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${getSiteUrl()}/auth/callback` },
       })
       if (error) throw error
       return { data, error: null }
@@ -166,9 +167,8 @@ class AuthService {
   async resetPassword(email: string) {
     try {
       const client = this.getClient()
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback?type=recovery`,
+        redirectTo: `${getSiteUrl()}/auth/callback?type=recovery`,
       })
       if (error) throw error
       return { error: null }
