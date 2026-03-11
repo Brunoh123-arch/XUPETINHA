@@ -6,6 +6,7 @@ import { UppiLogo } from "@/components/revolut-logo"
 import { ArrowLeft, Mail } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -21,21 +22,43 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError("")
 
-    const supabase = createClient()
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo:
-        process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${window.location.origin}/reset-password`,
-    })
+    try {
+      const supabase = createClient()
+      
+      // Gerar token de recuperacao via Supabase
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${getSiteUrl()}/auth/callback?type=recovery`,
+      })
 
-    if (resetError) {
+      if (resetError) {
+        setError("Ocorreu um erro ao enviar o e-mail. Tente novamente.")
+        setLoading(false)
+        return
+      }
+
+      // Enviar email customizado via nossa API (em paralelo ao do Supabase)
+      // O Supabase ainda envia o email padrao, mas podemos configurar para desabilitar
+      // e usar apenas o nosso via Supabase Auth Hooks
+      fetch('/api/email/auth', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-internal-key': 'internal-call'
+        },
+        body: JSON.stringify({
+          type: 'password_reset',
+          email,
+          name: email.split('@')[0],
+          url: `${getSiteUrl()}/auth/callback?type=recovery`,
+        }),
+      }).catch(() => {}) // Silenciar erro se API customizada falhar
+
+      setSent(true)
+    } catch {
       setError("Ocorreu um erro ao enviar o e-mail. Tente novamente.")
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSent(true)
-    setLoading(false)
   }
 
   if (sent) {

@@ -7,6 +7,7 @@ import { UppiLogo } from "@/components/revolut-logo"
 import { Eye, EyeOff, ArrowLeft, Phone } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -59,7 +60,7 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${getSiteUrl()}/auth/callback`,
       },
     })
   }

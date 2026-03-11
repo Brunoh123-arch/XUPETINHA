@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { createClient } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/utils'
 
 export default function DriverLoginPage() {
   const router = useRouter()
@@ -52,7 +53,7 @@ export default function DriverLoginPage() {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/uppi/driver` },
+        options: { redirectTo: `${getSiteUrl()}/auth/callback?next=/uppi/driver` },
       })
       if (error) iosToast.error(error.message)
     } catch {
@@ -68,7 +69,7 @@ export default function DriverLoginPage() {
       const supabase = createClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=/uppi/driver` },
+        options: { redirectTo: `${getSiteUrl()}/auth/callback?next=/uppi/driver` },
       })
       if (error) iosToast.error(error.message)
     } catch {

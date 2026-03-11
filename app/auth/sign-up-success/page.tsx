@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, Mail } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
+import { getSiteUrl } from "@/lib/utils"
 
 export default function SignUpSuccessPage() {
   const router = useRouter()
@@ -22,9 +23,7 @@ export default function SignUpSuccessPage() {
       type: "signup",
       email,
       options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback`,
       },
     })
 
