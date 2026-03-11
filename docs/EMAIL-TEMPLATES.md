@@ -58,9 +58,12 @@ Edite o objeto `BRAND` em `/lib/email.ts`:
 const BRAND = {
   name: 'UPPI',
   tagline: 'Sua corrida, do seu jeito',
+  blue: '#3b82f6',        // azul da logo
+  orange: '#f97316',      // laranja da logo
   primaryColor: '#f97316', // laranja
-  secondaryColor: '#22c55e', // verde
-  fromEmail: 'UPPI <noreply@seudominio.com>',
+  secondaryColor: '#3b82f6', // azul
+  logoUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/aea87665-c904-40c2-97ee-07cf7c0a3723-GCOI62oxS3Fr70FcCwhVmBsXuE4HMa.jpg',
+  fromEmail: 'UPPI <onboarding@resend.dev>',
 }
 ```
 

@@ -7,7 +7,7 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 **Numeros do Projeto (11/03/2026):**
 - 100 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
 - 75 RPCs callable | 162 politicas RLS | 260 indices
-- 155 telas (page.tsx) | 82 arquivos de API (route.ts)
+- 152 telas (page.tsx) | 85 arquivos de API (route.ts)
 - 49 migrations aplicadas | 34 triggers customizados
 
 ---
