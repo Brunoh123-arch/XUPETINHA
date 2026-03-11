@@ -281,13 +281,23 @@ export async function sendEmailChangeEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: newEmail,
-    subject: `Confirme seu novo email na ${BRAND.name}`,
-    html: getEmailWrapper(content, 'Confirme a alteracao do seu email'),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: newEmail,
+      subject: `Confirme seu novo email na ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Confirme a alteracao do seu email'),
+    })
+    
+    if (error) {
+      console.error('sendEmailChangeEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendEmailChangeEmail error:', err)
+    return false
+  }
 }
 
 /**
@@ -338,13 +348,23 @@ export async function sendInviteEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: email,
-    subject: `${inviterName} convidou voce para o ${BRAND.name}!`,
-    html: getEmailWrapper(content, `Voce foi convidado para o ${BRAND.name}`),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `${inviterName} convidou voce para o ${BRAND.name}!`,
+      html: getEmailWrapper(content, `Voce foi convidado para o ${BRAND.name}`),
+    })
+    
+    if (error) {
+      console.error('sendInviteEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendInviteEmail error:', err)
+    return false
+  }
 }
 
 /**
@@ -408,13 +428,23 @@ export async function sendWelcomeEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: email,
-    subject: `Bem-vindo ao ${BRAND.name}!`,
-    html: getEmailWrapper(content, `Sua conta ${BRAND.name} esta pronta!`),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Bem-vindo ao ${BRAND.name}!`,
+      html: getEmailWrapper(content, `Sua conta ${BRAND.name} esta pronta!`),
+    })
+    
+    if (error) {
+      console.error('sendWelcomeEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendWelcomeEmail error:', err)
+    return false
+  }
 }
 
 export interface RideReportData {
@@ -647,13 +677,18 @@ export async function sendRideReportEmail(data: RideReportData): Promise<boolean
 </html>
 `
 
-    const result = await sendWithBrevo({
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
       to: data.passengerEmail,
       subject: `Relatorio da sua corrida - ${formatCurrency(data.finalPrice)} | Uppi`,
       html,
     })
 
-    return result.success
+    if (error) {
+      console.error('sendRideReportEmail error:', error)
+      return false
+    }
+    return true
   } catch (err) {
     console.error('sendRideReportEmail error:', err)
     return false
