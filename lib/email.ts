@@ -29,8 +29,8 @@ const BRAND = {
   textDark: '#71717a',
   // Bordas
   borderColor: '#27272a',
-  // Logo URL (hospedada publicamente)
-  logoUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gemini_Generated_Image_xvfz7rxvfz7rxvfz%20%281%29%20%282%29-17Min90yb8UbSPG9gtivC6VeLdDAzK.png',
+  // Logo URL oficial (hospedada publicamente)
+  logoUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/aea87665-c904-40c2-97ee-07cf7c0a3723-GCOI62oxS3Fr70FcCwhVmBsXuE4HMa.jpg',
   fromEmail: process.env.RESEND_FROM_EMAIL || 'UPPI <onboarding@resend.dev>',
 }
 
@@ -171,23 +171,26 @@ export async function sendConfirmSignupEmail(
   
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
-          Bem-vindo a ${BRAND.name}!
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#128075;', BRAND.blue)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
+          Bem-vindo ao ${BRAND.name}!
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, estamos felizes em te ter conosco!
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          Ola <strong style="color:${BRAND.orange};">${firstName}</strong>, estamos muito felizes em te ter conosco!
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
-          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
-            Para comecar a usar o ${BRAND.name}, confirme seu email clicando no botao abaixo:
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:32px;border:1px solid ${BRAND.borderColor};margin-bottom:28px;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 24px 0;line-height:1.6;">
+            Para comecar a usar todos os recursos do ${BRAND.name}, confirme seu email clicando no botao abaixo:
           </p>
-          ${getButtonHtml('Confirmar meu email', confirmationUrl, BRAND.secondaryColor)}
+          ${getButtonHtml('Confirmar meu email', confirmationUrl, 'blue')}
         </div>
         
-        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
-          Se voce nao criou uma conta no ${BRAND.name}, ignore este email.
+        <p style="color:${BRAND.textDark};font-size:13px;margin:0;">
+          Se voce nao criou uma conta, pode ignorar este email com seguranca.
         </p>
       </td>
     </tr>
@@ -224,24 +227,27 @@ export async function sendPasswordResetEmail(
   
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#128274;', BRAND.orange)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
           Recuperar senha
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, recebemos uma solicitacao para redefinir sua senha.
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          Ola <strong style="color:${BRAND.orange};">${firstName}</strong>, recebemos uma solicitacao para redefinir sua senha.
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
-          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
-            Clique no botao abaixo para criar uma nova senha:
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:32px;border:1px solid ${BRAND.borderColor};margin-bottom:24px;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 24px 0;line-height:1.6;">
+            Clique no botao abaixo para criar uma nova senha segura:
           </p>
-          ${getButtonHtml('Redefinir minha senha', resetUrl)}
+          ${getButtonHtml('Redefinir minha senha', resetUrl, 'orange')}
         </div>
         
-        <div style="background:#7f1d1d;border-radius:8px;padding:16px;margin-top:24px;border:1px solid #991b1b;">
-          <p style="color:#fecaca;font-size:13px;margin:0;text-align:center;">
-            <strong>Atencao:</strong> Este link expira em 1 hora. Se voce nao solicitou a recuperacao de senha, ignore este email.
+        <div style="background:rgba(239,68,68,0.1);border-radius:12px;padding:16px 20px;border:1px solid rgba(239,68,68,0.2);">
+          <p style="color:#fca5a5;font-size:13px;margin:0;line-height:1.5;">
+            <strong>Atencao:</strong> Este link expira em 1 hora.<br/>Se voce nao solicitou, ignore este email.
           </p>
         </div>
       </td>
@@ -279,22 +285,25 @@ export async function sendMagicLinkEmail(
   
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#128279;', BRAND.blue)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
           Seu link de acesso
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, use o botao abaixo para acessar sua conta.
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          Ola <strong style="color:${BRAND.orange};">${firstName}</strong>, use o botao abaixo para acessar sua conta instantaneamente.
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
-          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
-            Clique para entrar instantaneamente:
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:32px;border:1px solid ${BRAND.borderColor};margin-bottom:24px;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 24px 0;line-height:1.6;">
+            Clique para entrar sem precisar de senha:
           </p>
-          ${getButtonHtml('Entrar na minha conta', magicLinkUrl, BRAND.secondaryColor)}
+          ${getButtonHtml('Entrar na minha conta', magicLinkUrl, 'blue')}
         </div>
         
-        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
+        <p style="color:${BRAND.textDark};font-size:13px;margin:0;">
           Este link expira em 1 hora e so pode ser usado uma vez.
         </p>
       </td>
@@ -332,26 +341,27 @@ export async function sendEmailChangeEmail(
   
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#9993;', BRAND.orange)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
           Confirme seu novo email
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, voce solicitou a alteracao do email da sua conta ${BRAND.name}.
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          Ola <strong style="color:${BRAND.orange};">${firstName}</strong>, voce solicitou a alteracao do email da sua conta.
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
-          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 8px 0;">
-            Novo email:
-          </p>
-          <p style="color:${BRAND.primaryColor};font-size:16px;font-weight:700;margin:0 0 20px 0;">
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:32px;border:1px solid ${BRAND.borderColor};margin-bottom:24px;">
+          <p style="color:${BRAND.textMuted};font-size:14px;margin:0 0 8px 0;">Novo email:</p>
+          <p style="color:${BRAND.textLight};font-size:18px;font-weight:700;margin:0 0 24px 0;word-break:break-all;">
             ${newEmail}
           </p>
-          ${getButtonHtml('Confirmar novo email', confirmUrl)}
+          ${getButtonHtml('Confirmar novo email', confirmUrl, 'orange')}
         </div>
         
-        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
-          Se voce nao solicitou esta alteracao, ignore este email ou entre em contato conosco.
+        <p style="color:${BRAND.textDark};font-size:13px;margin:0;">
+          Se voce nao solicitou esta alteracao, ignore este email.
         </p>
       </td>
     </tr>
@@ -386,40 +396,47 @@ export async function sendInviteEmail(
 ): Promise<boolean> {
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#127881;', BRAND.blue)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
           Voce foi convidado!
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          <strong style="color:${BRAND.primaryColor};">${inviterName}</strong> convidou voce para fazer parte do ${BRAND.name}!
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          <strong style="color:${BRAND.orange};">${inviterName}</strong> convidou voce para fazer parte do ${BRAND.name}!
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
-          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
-            Aceite o convite e crie sua conta:
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:32px;border:1px solid ${BRAND.borderColor};margin-bottom:28px;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 24px 0;line-height:1.6;">
+            Aceite o convite e comece a usar:
           </p>
-          ${getButtonHtml('Aceitar convite', inviteUrl, BRAND.secondaryColor)}
+          ${getButtonHtml('Aceitar convite', inviteUrl, 'blue')}
         </div>
         
-        <div style="margin-top:24px;text-align:center;">
-          <p style="color:${BRAND.textMuted};font-size:14px;margin:0 0 8px 0;">Por que usar o ${BRAND.name}?</p>
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td style="padding:8px;text-align:center;">
-                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
-                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Corridas seguras</p>
-              </td>
-              <td style="padding:8px;text-align:center;">
-                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
-                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Precos justos</p>
-              </td>
-              <td style="padding:8px;text-align:center;">
-                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
-                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Suporte 24h</p>
-              </td>
-            </tr>
-          </table>
-        </div>
+        <!-- Beneficios -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+          <tr>
+            <td style="padding:12px;text-align:center;width:33%;">
+              <div style="background:${BRAND.bgCardLight};border-radius:12px;padding:16px 8px;border:1px solid ${BRAND.borderColor};">
+                <div style="color:${BRAND.blue};font-size:24px;margin-bottom:8px;">&#128663;</div>
+                <p style="color:${BRAND.textLight};font-size:12px;font-weight:600;margin:0;">Corridas seguras</p>
+              </div>
+            </td>
+            <td style="padding:12px;text-align:center;width:33%;">
+              <div style="background:${BRAND.bgCardLight};border-radius:12px;padding:16px 8px;border:1px solid ${BRAND.borderColor};">
+                <div style="color:${BRAND.orange};font-size:24px;margin-bottom:8px;">&#128176;</div>
+                <p style="color:${BRAND.textLight};font-size:12px;font-weight:600;margin:0;">Precos justos</p>
+              </div>
+            </td>
+            <td style="padding:12px;text-align:center;width:33%;">
+              <div style="background:${BRAND.bgCardLight};border-radius:12px;padding:16px 8px;border:1px solid ${BRAND.borderColor};">
+                <div style="color:${BRAND.blue};font-size:24px;margin-bottom:8px;">&#128222;</div>
+                <p style="color:${BRAND.textLight};font-size:12px;font-weight:600;margin:0;">Suporte 24h</p>
+              </div>
+            </td>
+          </tr>
+        </table>
       </td>
     </tr>
   `
@@ -454,51 +471,51 @@ export async function sendWelcomeEmail(
   
   const content = `
     <tr>
-      <td style="background:${BRAND.bgCard};padding:32px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <span style="font-size:48px;">&#127881;</span>
-        </div>
-        <h1 style="color:${BRAND.textLight};font-size:24px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+      <td class="content" style="padding:40px 32px;text-align:center;">
+        ${getIconCircle('&#10024;', BRAND.orange)}
+        
+        <h1 style="color:${BRAND.textLight};font-size:28px;font-weight:800;margin:0 0 12px 0;letter-spacing:-0.5px;">
           Bem-vindo ao ${BRAND.name}, ${firstName}!
         </h1>
-        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
-          Sua conta foi confirmada com sucesso. Agora voce pode aproveitar todas as vantagens do ${BRAND.name}!
+        
+        <p style="color:${BRAND.textMuted};font-size:16px;line-height:1.7;margin:0 0 32px 0;">
+          Sua conta foi confirmada com sucesso. Agora voce pode aproveitar todas as vantagens!
         </p>
         
-        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};">
-          <p style="color:${BRAND.primaryColor};font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 16px 0;">
-            O que voce pode fazer agora:
+        <div style="background:${BRAND.bgCardLight};border-radius:16px;padding:28px;border:1px solid ${BRAND.borderColor};text-align:left;">
+          <p style="color:${BRAND.orange};font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 20px 0;text-align:center;">
+            O que voce pode fazer
           </p>
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="padding:8px 0;">
-                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+              <td style="padding:10px 0;border-bottom:1px solid ${BRAND.borderColor};">
+                <span style="color:${BRAND.blue};font-size:18px;margin-right:14px;">&#128663;</span>
                 <span style="color:${BRAND.textLight};font-size:14px;">Solicitar corridas com motoristas verificados</span>
               </td>
             </tr>
             <tr>
-              <td style="padding:8px 0;">
-                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+              <td style="padding:10px 0;border-bottom:1px solid ${BRAND.borderColor};">
+                <span style="color:${BRAND.orange};font-size:18px;margin-right:14px;">&#128179;</span>
                 <span style="color:${BRAND.textLight};font-size:14px;">Pagar com PIX, cartao ou dinheiro</span>
               </td>
             </tr>
             <tr>
-              <td style="padding:8px 0;">
-                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+              <td style="padding:10px 0;border-bottom:1px solid ${BRAND.borderColor};">
+                <span style="color:${BRAND.blue};font-size:18px;margin-right:14px;">&#128205;</span>
                 <span style="color:${BRAND.textLight};font-size:14px;">Acompanhar sua corrida em tempo real</span>
               </td>
             </tr>
             <tr>
-              <td style="padding:8px 0;">
-                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+              <td style="padding:10px 0;">
+                <span style="color:${BRAND.orange};font-size:18px;margin-right:14px;">&#127873;</span>
                 <span style="color:${BRAND.textLight};font-size:14px;">Convidar amigos e ganhar descontos</span>
               </td>
             </tr>
           </table>
         </div>
         
-        <p style="color:${BRAND.textMuted};font-size:13px;margin:24px 0 0 0;text-align:center;">
-          Duvidas? Estamos aqui para ajudar! Entre em contato pelo app.
+        <p style="color:${BRAND.textDark};font-size:13px;margin:28px 0 0 0;">
+          Duvidas? Estamos aqui para ajudar pelo app!
         </p>
       </td>
     </tr>
