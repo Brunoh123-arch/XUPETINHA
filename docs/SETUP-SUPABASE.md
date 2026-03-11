@@ -1,7 +1,7 @@
 # Guia de Setup - Novo Projeto Supabase
 
-**Data:** 10/03/2026
-**Versao:** 1.0
+**Data:** 11/03/2026
+**Versao:** 1.1
 
 ---
 
