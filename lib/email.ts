@@ -4,6 +4,445 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY)
 }
 
+// ============================================
+// CONFIGURACAO DA MARCA
+// ============================================
+const BRAND = {
+  name: 'UPPI',
+  tagline: 'Sua corrida, do seu jeito',
+  primaryColor: '#f97316', // orange-500
+  secondaryColor: '#22c55e', // green-500
+  bgDark: '#0f172a', // slate-900
+  bgCard: '#1e293b', // slate-800
+  textLight: '#f1f5f9', // slate-100
+  textMuted: '#94a3b8', // slate-400
+  borderColor: '#334155', // slate-700
+  fromEmail: process.env.RESEND_FROM_EMAIL || 'UPPI <noreply@resend.dev>',
+}
+
+// ============================================
+// TEMPLATE BASE
+// ============================================
+function getEmailWrapper(content: string, preheader?: string): string {
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${BRAND.name}</title>
+  ${preheader ? `<span style="display:none;font-size:1px;color:#0f172a;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</span>` : ''}
+</head>
+<body style="margin:0;padding:0;background:${BRAND.bgDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.bgDark};padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <!-- Header -->
+          <tr>
+            <td style="background:${BRAND.bgCard};border-radius:16px 16px 0 0;padding:32px;text-align:center;border-bottom:1px solid ${BRAND.borderColor};">
+              <div style="display:inline-block;background:${BRAND.primaryColor};border-radius:12px;padding:12px 24px;margin-bottom:8px;">
+                <span style="color:#fff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${BRAND.name}</span>
+              </div>
+              <p style="color:${BRAND.textMuted};font-size:13px;margin:8px 0 0 0;">${BRAND.tagline}</p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          ${content}
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background:${BRAND.bgDark};border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.bgCard};">
+              <p style="color:#475569;font-size:12px;margin:0 0 4px 0;">${BRAND.name} - Tecnologia em mobilidade urbana</p>
+              <p style="color:#334155;font-size:11px;margin:0;">Este e-mail foi enviado automaticamente. Nao responda a esta mensagem.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+}
+
+function getButtonHtml(text: string, url: string, color: string = BRAND.primaryColor): string {
+  return `
+    <a href="${url}" style="display:inline-block;background:${color};color:#fff;font-size:16px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;margin:8px 0;">
+      ${text}
+    </a>
+  `
+}
+
+// ============================================
+// EMAILS DE AUTENTICACAO
+// ============================================
+
+/**
+ * Email de confirmacao de cadastro
+ */
+export async function sendConfirmSignupEmail(
+  email: string,
+  name: string,
+  confirmationUrl: string
+): Promise<boolean> {
+  const firstName = name?.split(' ')[0] || 'Usuario'
+  
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Bem-vindo a ${BRAND.name}!
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, estamos felizes em te ter conosco!
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
+            Para comecar a usar o ${BRAND.name}, confirme seu email clicando no botao abaixo:
+          </p>
+          ${getButtonHtml('Confirmar meu email', confirmationUrl, BRAND.secondaryColor)}
+        </div>
+        
+        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
+          Se voce nao criou uma conta no ${BRAND.name}, ignore este email.
+        </p>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Confirme seu cadastro na ${BRAND.name}`,
+      html: getEmailWrapper(content, `Confirme seu email para comecar a usar o ${BRAND.name}`),
+    })
+    
+    if (error) {
+      console.error('sendConfirmSignupEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendConfirmSignupEmail error:', err)
+    return false
+  }
+}
+
+/**
+ * Email de recuperacao de senha
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  resetUrl: string
+): Promise<boolean> {
+  const firstName = name?.split(' ')[0] || 'Usuario'
+  
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Recuperar senha
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, recebemos uma solicitacao para redefinir sua senha.
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
+            Clique no botao abaixo para criar uma nova senha:
+          </p>
+          ${getButtonHtml('Redefinir minha senha', resetUrl)}
+        </div>
+        
+        <div style="background:#7f1d1d;border-radius:8px;padding:16px;margin-top:24px;border:1px solid #991b1b;">
+          <p style="color:#fecaca;font-size:13px;margin:0;text-align:center;">
+            <strong>Atencao:</strong> Este link expira em 1 hora. Se voce nao solicitou a recuperacao de senha, ignore este email.
+          </p>
+        </div>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Recupere sua senha da ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Clique para redefinir sua senha'),
+    })
+    
+    if (error) {
+      console.error('sendPasswordResetEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendPasswordResetEmail error:', err)
+    return false
+  }
+}
+
+/**
+ * Email de Magic Link (login sem senha)
+ */
+export async function sendMagicLinkEmail(
+  email: string,
+  name: string,
+  magicLinkUrl: string
+): Promise<boolean> {
+  const firstName = name?.split(' ')[0] || 'Usuario'
+  
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Seu link de acesso
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, use o botao abaixo para acessar sua conta.
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
+            Clique para entrar instantaneamente:
+          </p>
+          ${getButtonHtml('Entrar na minha conta', magicLinkUrl, BRAND.secondaryColor)}
+        </div>
+        
+        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
+          Este link expira em 1 hora e so pode ser usado uma vez.
+        </p>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Seu link de acesso ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Clique para acessar sua conta'),
+    })
+    
+    if (error) {
+      console.error('sendMagicLinkEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendMagicLinkEmail error:', err)
+    return false
+  }
+}
+
+/**
+ * Email de confirmacao de mudanca de email
+ */
+export async function sendEmailChangeEmail(
+  newEmail: string,
+  name: string,
+  confirmUrl: string
+): Promise<boolean> {
+  const firstName = name?.split(' ')[0] || 'Usuario'
+  
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Confirme seu novo email
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          Ola <strong style="color:${BRAND.primaryColor};">${firstName}</strong>, voce solicitou a alteracao do email da sua conta ${BRAND.name}.
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 8px 0;">
+            Novo email:
+          </p>
+          <p style="color:${BRAND.primaryColor};font-size:16px;font-weight:700;margin:0 0 20px 0;">
+            ${newEmail}
+          </p>
+          ${getButtonHtml('Confirmar novo email', confirmUrl)}
+        </div>
+        
+        <p style="color:#64748b;font-size:13px;margin:24px 0 0 0;text-align:center;">
+          Se voce nao solicitou esta alteracao, ignore este email ou entre em contato conosco.
+        </p>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: newEmail,
+      subject: `Confirme seu novo email na ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Confirme a alteracao do seu email'),
+    })
+    
+    if (error) {
+      console.error('sendEmailChangeEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendEmailChangeEmail error:', err)
+    return false
+  }
+}
+
+/**
+ * Email de convite para novo usuario
+ */
+export async function sendInviteEmail(
+  email: string,
+  inviterName: string,
+  inviteUrl: string
+): Promise<boolean> {
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <h1 style="color:${BRAND.textLight};font-size:22px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Voce foi convidado!
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          <strong style="color:${BRAND.primaryColor};">${inviterName}</strong> convidou voce para fazer parte do ${BRAND.name}!
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};text-align:center;">
+          <p style="color:${BRAND.textLight};font-size:15px;margin:0 0 20px 0;">
+            Aceite o convite e crie sua conta:
+          </p>
+          ${getButtonHtml('Aceitar convite', inviteUrl, BRAND.secondaryColor)}
+        </div>
+        
+        <div style="margin-top:24px;text-align:center;">
+          <p style="color:${BRAND.textMuted};font-size:14px;margin:0 0 8px 0;">Por que usar o ${BRAND.name}?</p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:8px;text-align:center;">
+                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
+                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Corridas seguras</p>
+              </td>
+              <td style="padding:8px;text-align:center;">
+                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
+                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Precos justos</p>
+              </td>
+              <td style="padding:8px;text-align:center;">
+                <span style="color:${BRAND.secondaryColor};font-size:20px;">&#10003;</span>
+                <p style="color:${BRAND.textLight};font-size:13px;margin:4px 0 0 0;">Suporte 24h</p>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `${inviterName} convidou voce para o ${BRAND.name}!`,
+      html: getEmailWrapper(content, `Voce foi convidado para o ${BRAND.name}`),
+    })
+    
+    if (error) {
+      console.error('sendInviteEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendInviteEmail error:', err)
+    return false
+  }
+}
+
+/**
+ * Email de boas-vindas apos confirmacao
+ */
+export async function sendWelcomeEmail(
+  email: string,
+  name: string
+): Promise<boolean> {
+  const firstName = name?.split(' ')[0] || 'Usuario'
+  
+  const content = `
+    <tr>
+      <td style="background:${BRAND.bgCard};padding:32px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <span style="font-size:48px;">&#127881;</span>
+        </div>
+        <h1 style="color:${BRAND.textLight};font-size:24px;font-weight:700;margin:0 0 8px 0;text-align:center;">
+          Bem-vindo ao ${BRAND.name}, ${firstName}!
+        </h1>
+        <p style="color:${BRAND.textMuted};font-size:15px;line-height:1.6;margin:0 0 24px 0;text-align:center;">
+          Sua conta foi confirmada com sucesso. Agora voce pode aproveitar todas as vantagens do ${BRAND.name}!
+        </p>
+        
+        <div style="background:${BRAND.bgDark};border-radius:12px;padding:24px;border:1px solid ${BRAND.borderColor};">
+          <p style="color:${BRAND.primaryColor};font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 16px 0;">
+            O que voce pode fazer agora:
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:8px 0;">
+                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+                <span style="color:${BRAND.textLight};font-size:14px;">Solicitar corridas com motoristas verificados</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;">
+                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+                <span style="color:${BRAND.textLight};font-size:14px;">Pagar com PIX, cartao ou dinheiro</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;">
+                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+                <span style="color:${BRAND.textLight};font-size:14px;">Acompanhar sua corrida em tempo real</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 0;">
+                <span style="color:${BRAND.secondaryColor};font-size:16px;margin-right:12px;">&#10003;</span>
+                <span style="color:${BRAND.textLight};font-size:14px;">Convidar amigos e ganhar descontos</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <p style="color:${BRAND.textMuted};font-size:13px;margin:24px 0 0 0;text-align:center;">
+          Duvidas? Estamos aqui para ajudar! Entre em contato pelo app.
+        </p>
+      </td>
+    </tr>
+  `
+  
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Bem-vindo ao ${BRAND.name}! &#127881;`,
+      html: getEmailWrapper(content, `Sua conta ${BRAND.name} esta pronta!`),
+    })
+    
+    if (error) {
+      console.error('sendWelcomeEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendWelcomeEmail error:', err)
+    return false
+  }
+}
+
 export interface RideReportData {
   rideId: string
   passengerName: string

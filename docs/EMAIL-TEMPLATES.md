@@ -1,8 +1,76 @@
-# UPPI - Templates de Email Personalizados
+# UPPI - Sistema de Emails Personalizados
 
 **Data:** 11/03/2026
 
-## Como Configurar no Supabase Dashboard
+## Opcao 1: Sistema via Resend (RECOMENDADO)
+
+O projeto ja tem um sistema de emails customizados integrado via **Resend**. Os templates ficam salvos no codigo (`/lib/email.ts`) e funcionam automaticamente em qualquer conta Supabase.
+
+### Vantagens:
+- Templates salvos no codigo (nao perde ao trocar de Supabase)
+- Design personalizado com a marca UPPI
+- Gratuito ate 3000 emails/mes
+- Facil de customizar
+
+### Como Configurar:
+
+1. **Crie uma conta no Resend**: https://resend.com
+2. **Obtenha sua API Key** no dashboard do Resend
+3. **Configure as variaveis de ambiente** na Vercel:
+
+```env
+RESEND_API_KEY=re_xxxxxxxxxx
+RESEND_FROM_EMAIL=UPPI <noreply@seudominio.com>
+INTERNAL_API_KEY=sua_chave_interna_secreta
+```
+
+4. **(Opcional) Verifique seu dominio** no Resend para usar um email personalizado
+
+### Emails Disponiveis:
+
+| Funcao | Descricao |
+|--------|-----------|
+| `sendConfirmSignupEmail()` | Confirmacao de cadastro |
+| `sendPasswordResetEmail()` | Recuperacao de senha |
+| `sendMagicLinkEmail()` | Login sem senha |
+| `sendEmailChangeEmail()` | Confirmacao de novo email |
+| `sendInviteEmail()` | Convite para novos usuarios |
+| `sendWelcomeEmail()` | Boas-vindas apos confirmacao |
+| `sendRideReportEmail()` | Relatorio de corrida |
+
+### API de Envio:
+
+```bash
+POST /api/email/auth
+{
+  "type": "password_reset",
+  "email": "usuario@email.com",
+  "name": "Nome do Usuario",
+  "url": "https://seusite.com/reset-password?token=xxx"
+}
+```
+
+### Customizar a Marca:
+
+Edite o objeto `BRAND` em `/lib/email.ts`:
+
+```typescript
+const BRAND = {
+  name: 'UPPI',
+  tagline: 'Sua corrida, do seu jeito',
+  primaryColor: '#f97316', // laranja
+  secondaryColor: '#22c55e', // verde
+  fromEmail: 'UPPI <noreply@seudominio.com>',
+}
+```
+
+---
+
+## Opcao 2: Templates no Supabase Dashboard (Alternativa)
+
+Se preferir usar os emails nativos do Supabase, configure os templates abaixo no dashboard. **Atencao:** esses templates serao perdidos se voce trocar de projeto Supabase.
+
+### Como Configurar:
 
 1. Acesse o **Dashboard do Supabase**: https://supabase.com/dashboard
 2. Selecione seu projeto
