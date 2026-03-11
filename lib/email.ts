@@ -14,18 +14,28 @@ function getResend() {
 const BRAND = {
   name: 'UPPI',
   tagline: 'Sua corrida, do seu jeito',
-  primaryColor: '#f97316', // orange-500
-  secondaryColor: '#22c55e', // green-500
-  bgDark: '#0f172a', // slate-900
-  bgCard: '#1e293b', // slate-800
-  textLight: '#f1f5f9', // slate-100
-  textMuted: '#94a3b8', // slate-400
-  borderColor: '#334155', // slate-700
+  // Cores baseadas na logo (azul e laranja)
+  blue: '#3b82f6',
+  orange: '#f97316',
+  primaryColor: '#f97316', // laranja
+  secondaryColor: '#3b82f6', // azul
+  // Tons escuros
+  bgDark: '#0a0a0a',
+  bgCard: '#141414',
+  bgCardLight: '#1a1a1a',
+  // Textos
+  textLight: '#ffffff',
+  textMuted: '#a1a1aa',
+  textDark: '#71717a',
+  // Bordas
+  borderColor: '#27272a',
+  // Logo URL (hospedada publicamente)
+  logoUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Gemini_Generated_Image_xvfz7rxvfz7rxvfz%20%281%29%20%282%29-17Min90yb8UbSPG9gtivC6VeLdDAzK.png',
   fromEmail: process.env.RESEND_FROM_EMAIL || 'UPPI <onboarding@resend.dev>',
 }
 
 // ============================================
-// TEMPLATE BASE
+// TEMPLATE BASE - Design Profissional
 // ============================================
 function getEmailWrapper(content: string, preheader?: string): string {
   return `
@@ -34,34 +44,90 @@ function getEmailWrapper(content: string, preheader?: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>${BRAND.name}</title>
-  ${preheader ? `<span style="display:none;font-size:1px;color:#0f172a;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</span>` : ''}
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    .hover-orange:hover { background-color: #ea580c !important; }
+    .hover-blue:hover { background-color: #2563eb !important; }
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; padding: 16px !important; }
+      .content { padding: 24px 20px !important; }
+      .logo { width: 60px !important; height: 60px !important; }
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:${BRAND.bgDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:${BRAND.bgDark};padding:32px 16px;">
+<body style="margin:0;padding:0;background:#050505;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;">
+  ${preheader ? `<div style="display:none;font-size:1px;color:#050505;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</div>` : ''}
+  
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050505;padding:40px 16px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-          <!-- Header -->
+        <table class="container" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px;width:100%;">
+          
+          <!-- Header com Logo -->
           <tr>
-            <td style="background:${BRAND.bgCard};border-radius:16px 16px 0 0;padding:32px;text-align:center;border-bottom:1px solid ${BRAND.borderColor};">
-              <div style="display:inline-block;background:${BRAND.primaryColor};border-radius:12px;padding:12px 24px;margin-bottom:8px;">
-                <span style="color:#fff;font-size:24px;font-weight:800;letter-spacing:-0.5px;">${BRAND.name}</span>
-              </div>
-              <p style="color:${BRAND.textMuted};font-size:13px;margin:8px 0 0 0;">${BRAND.tagline}</p>
+            <td style="padding-bottom:32px;text-align:center;">
+              <img src="${BRAND.logoUrl}" alt="${BRAND.name}" class="logo" width="80" height="80" style="display:block;margin:0 auto;width:80px;height:80px;border-radius:20px;" />
             </td>
           </tr>
           
-          <!-- Content -->
-          ${content}
+          <!-- Card Principal -->
+          <tr>
+            <td style="background:linear-gradient(180deg, ${BRAND.bgCard} 0%, ${BRAND.bgDark} 100%);border-radius:24px;overflow:hidden;border:1px solid ${BRAND.borderColor};">
+              
+              <!-- Barra de cor no topo -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="height:4px;background:linear-gradient(90deg, ${BRAND.blue} 0%, ${BRAND.orange} 100%);"></td>
+                </tr>
+              </table>
+              
+              <!-- Conteudo -->
+              ${content}
+              
+            </td>
+          </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="background:${BRAND.bgDark};border-radius:0 0 16px 16px;padding:24px 32px;text-align:center;border-top:1px solid ${BRAND.bgCard};">
-              <p style="color:#475569;font-size:12px;margin:0 0 4px 0;">${BRAND.name} - Tecnologia em mobilidade urbana</p>
-              <p style="color:#334155;font-size:11px;margin:0;">Este e-mail foi enviado automaticamente. Nao responda a esta mensagem.</p>
+            <td style="padding:32px 24px;text-align:center;">
+              <!-- Logo pequena no footer -->
+              <img src="${BRAND.logoUrl}" alt="${BRAND.name}" width="32" height="32" style="display:block;margin:0 auto 16px auto;width:32px;height:32px;border-radius:8px;opacity:0.6;" />
+              
+              <p style="color:${BRAND.textDark};font-size:13px;margin:0 0 8px 0;font-weight:500;">
+                ${BRAND.name} - Tecnologia em mobilidade urbana
+              </p>
+              <p style="color:#52525b;font-size:12px;margin:0 0 16px 0;">
+                Este e-mail foi enviado automaticamente. Nao responda.
+              </p>
+              
+              <!-- Links do footer -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <a href="#" style="color:${BRAND.textDark};font-size:12px;text-decoration:none;margin:0 12px;">Termos</a>
+                    <span style="color:#3f3f46;">|</span>
+                    <a href="#" style="color:${BRAND.textDark};font-size:12px;text-decoration:none;margin:0 12px;">Privacidade</a>
+                    <span style="color:#3f3f46;">|</span>
+                    <a href="#" style="color:${BRAND.textDark};font-size:12px;text-decoration:none;margin:0 12px;">Suporte</a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
+          
         </table>
       </td>
     </tr>
@@ -71,11 +137,21 @@ function getEmailWrapper(content: string, preheader?: string): string {
 `
 }
 
-function getButtonHtml(text: string, url: string, color: string = BRAND.primaryColor): string {
+function getButtonHtml(text: string, url: string, variant: 'orange' | 'blue' = 'orange'): string {
+  const bgColor = variant === 'orange' ? BRAND.orange : BRAND.blue
+  const hoverClass = variant === 'orange' ? 'hover-orange' : 'hover-blue'
   return `
-    <a href="${url}" style="display:inline-block;background:${color};color:#fff;font-size:16px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;margin:8px 0;">
+    <a href="${url}" class="${hoverClass}" style="display:inline-block;background:${bgColor};color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:12px;margin:8px 0;box-shadow:0 4px 14px 0 rgba(0,0,0,0.4);transition:all 0.2s ease;">
       ${text}
     </a>
+  `
+}
+
+function getIconCircle(emoji: string, bgColor: string = BRAND.orange): string {
+  return `
+    <div style="display:inline-block;width:56px;height:56px;line-height:56px;background:${bgColor};border-radius:16px;font-size:24px;text-align:center;margin-bottom:20px;">
+      ${emoji}
+    </div>
   `
 }
 
