@@ -1,53 +1,11 @@
+import { Resend } from 'resend'
+
 // ============================================
-// BREVO (ex-Sendinblue) - 9.000 emails/mes gratis
+// RESEND - 3.000 emails/mes gratis
 // ============================================
 
-interface BrevoEmailParams {
-  to: string
-  subject: string
-  html: string
-}
-
-async function sendWithBrevo(params: BrevoEmailParams): Promise<{ success: boolean; error?: string; messageId?: string }> {
-  const apiKey = process.env.BREVO_API_KEY
-  
-  if (!apiKey) {
-    console.error('[Email] BREVO_API_KEY nao configurada')
-    return { success: false, error: 'BREVO_API_KEY nao configurada' }
-  }
-  
-  try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': apiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: {
-          name: process.env.BREVO_FROM_NAME || 'UPPI',
-          email: process.env.BREVO_FROM_EMAIL || 'noreply@uppi.app',
-        },
-        to: [{ email: params.to }],
-        subject: params.subject,
-        htmlContent: params.html,
-      }),
-    })
-    
-    const data = await response.json()
-    
-    if (!response.ok) {
-      console.error('[Email] Brevo error:', data)
-      return { success: false, error: data.message || 'Erro ao enviar email' }
-    }
-    
-    console.log('[Email] Enviado com sucesso:', data.messageId)
-    return { success: true, messageId: data.messageId }
-  } catch (err) {
-    console.error('[Email] Erro:', err)
-    return { success: false, error: err instanceof Error ? err.message : 'Erro desconhecido' }
-  }
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
 }
 
 // ============================================
@@ -63,6 +21,7 @@ const BRAND = {
   textLight: '#f1f5f9', // slate-100
   textMuted: '#94a3b8', // slate-400
   borderColor: '#334155', // slate-700
+  fromEmail: process.env.RESEND_FROM_EMAIL || 'UPPI <onboarding@resend.dev>',
 }
 
 // ============================================
@@ -158,13 +117,23 @@ export async function sendConfirmSignupEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: email,
-    subject: `Confirme seu cadastro na ${BRAND.name}`,
-    html: getEmailWrapper(content, `Confirme seu email para comecar a usar o ${BRAND.name}`),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Confirme seu cadastro na ${BRAND.name}`,
+      html: getEmailWrapper(content, `Confirme seu email para comecar a usar o ${BRAND.name}`),
+    })
+    
+    if (error) {
+      console.error('sendConfirmSignupEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendConfirmSignupEmail error:', err)
+    return false
+  }
 }
 
 /**
@@ -203,13 +172,23 @@ export async function sendPasswordResetEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: email,
-    subject: `Recupere sua senha da ${BRAND.name}`,
-    html: getEmailWrapper(content, 'Clique para redefinir sua senha'),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Recupere sua senha da ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Clique para redefinir sua senha'),
+    })
+    
+    if (error) {
+      console.error('sendPasswordResetEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendPasswordResetEmail error:', err)
+    return false
+  }
 }
 
 /**
@@ -246,13 +225,23 @@ export async function sendMagicLinkEmail(
     </tr>
   `
   
-  const result = await sendWithBrevo({
-    to: email,
-    subject: `Seu link de acesso ${BRAND.name}`,
-    html: getEmailWrapper(content, 'Clique para acessar sua conta'),
-  })
-  
-  return result.success
+  try {
+    const { error } = await getResend().emails.send({
+      from: BRAND.fromEmail,
+      to: email,
+      subject: `Seu link de acesso ${BRAND.name}`,
+      html: getEmailWrapper(content, 'Clique para acessar sua conta'),
+    })
+    
+    if (error) {
+      console.error('sendMagicLinkEmail error:', error)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error('sendMagicLinkEmail error:', err)
+    return false
+  }
 }
 
 /**
