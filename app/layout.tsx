@@ -16,7 +16,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Uppi - Viagens com Preco Justo',
   description: 'Negocie o preco da sua corrida diretamente com motoristas. Transparencia e economia em cada viagem.',
-  generator: 'v0.app',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
