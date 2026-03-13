@@ -8,6 +8,7 @@ import type { Ride, Profile, DriverProfile } from '@/lib/types/database'
 import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
+import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 
 type RideStatus = Ride['status']
 
@@ -39,6 +40,8 @@ export default function DriverActiveRidePage() {
   const [cancelling, setCancelling] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const mapRef = useRef<NativeMapHandle>(null)
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
     loadRide()
@@ -291,17 +294,41 @@ export default function DriverActiveRidePage() {
       {/* Full-screen status bar at top */}
       <div className={cn('absolute top-0 left-0 right-0 z-30 h-1.5', cfg.bg)} />
 
-      {/* Map placeholder (visual background) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#16213e] to-[#0f3460]">
-        <div className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-        {/* Animated route visualization */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0ms' }} />
-        </div>
+      {/* Native Map — usa @capacitor/google-maps no dispositivo, JS Maps no web */}
+      <div className="absolute inset-0">
+        {ride && (
+          <NativeMap
+            ref={mapRef}
+            showUserLocation
+            showRoute={!!(
+              (ride.status === 'accepted' ? ride.pickup_lat : ride.dropoff_lat) &&
+              (ride.status === 'accepted' ? ride.pickup_lng : ride.dropoff_lng)
+            )}
+            origin={driverLocation ?? undefined}
+            destination={
+              ride.status === 'accepted'
+                ? (ride.pickup_lat && ride.pickup_lng
+                    ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
+                    : undefined)
+                : (ride.dropoff_lat && ride.dropoff_lng
+                    ? { lat: ride.dropoff_lat, lng: ride.dropoff_lng }
+                    : undefined)
+            }
+            markers={[
+              ...(ride.pickup_lat && ride.pickup_lng
+                ? [{ id: 'pickup', lat: ride.pickup_lat, lng: ride.pickup_lng, title: 'Buscar passageiro' }]
+                : []),
+              ...(ride.dropoff_lat && ride.dropoff_lng && ride.status !== 'accepted'
+                ? [{ id: 'dropoff', lat: ride.dropoff_lat, lng: ride.dropoff_lng, title: 'Destino' }]
+                : []),
+            ]}
+            onLocationFound={(lat, lng) => {
+              setDriverLocation({ lat, lng })
+              mapRef.current?.panTo(lat, lng)
+            }}
+            className="w-full h-full"
+          />
+        )}
       </div>
 
       {/* Header floating */}
@@ -448,28 +475,25 @@ export default function DriverActiveRidePage() {
             </div>
           </div>
 
-          {/* Navigation */}
-          <div className="py-2 border-b border-[color:var(--border)]">
+          {/* Abrir navegação externa */}
+          <div className="py-1 border-b border-[color:var(--border)]">
             <button
               type="button"
               onClick={openNativeNavigation}
-              className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl bg-[#4285F4] ios-press active:scale-[0.98] transition-transform shadow-md"
-              aria-label="Iniciar navegação no Google Maps"
+              className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#4285F4]/10 border border-[#4285F4]/20 ios-press active:scale-[0.98] transition-transform"
+              aria-label="Abrir navegação no Google Maps"
             >
-              {/* Google Maps pin icon */}
-              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
+              <svg className="w-4 h-4 text-[#4285F4] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <div className="flex-1 text-left min-w-0">
+                <span className="text-[12px] font-semibold text-[#4285F4]">Abrir no Google Maps</span>
+                <span className="text-[11px] text-[color:var(--muted-foreground)] ml-1.5 truncate">
+                  · {getNavTarget().isGoingToPickup ? 'buscar passageiro' : 'destino final'}
+                </span>
               </div>
-              <div className="flex-1 text-left">
-                <p className="text-[13px] font-bold text-white leading-tight">Iniciar navegação</p>
-                <p className="text-[11px] text-white/70 leading-tight mt-0.5 truncate">
-                  {getNavTarget().isGoingToPickup ? 'Buscar passageiro' : 'Ir ao destino'} · {getNavTarget().address}
-                </p>
-              </div>
-              <svg className="w-5 h-5 text-white/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <svg className="w-3.5 h-3.5 text-[color:var(--muted-foreground)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
             </button>
           </div>
