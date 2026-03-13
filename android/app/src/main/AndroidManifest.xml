@@ -32,6 +32,18 @@
     <!-- Microphone (gravacao de audio) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!--
+        FOREGROUND_SERVICE + FOREGROUND_SERVICE_LOCATION
+        Obrigatório para que o Google Maps Navigation SDK possa manter
+        o serviço de guia de voz e rastreamento GPS rodando enquanto o
+        motorista bloqueia a tela ou abre outro app (WhatsApp, etc).
+        Sem isso o Android pode matar o processo do Capacitor por pressão
+        de memória, silenciando a voz turn-by-turn.
+        Android 14+ exige a declaração do tipo 'location' explicitamente.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
     <!-- ===================== APPLICATION ===================== -->
 
     <application

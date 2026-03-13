@@ -216,8 +216,8 @@ export default function DriverActiveRidePage() {
    *    igual Uber). Se o SDK não estiver disponível (APK sem a dependência),
    *    cai no deep link google.navigation: que abre o Google Maps externo.
    *
-   * 2. iOS nativo: deep link comgooglemaps:// → fallback Apple Maps.
-   *    (o plugin iOS será adicionado em iteração futura)
+   * 2. iOS nativo: tenta NavigationPlugin (NavigationViewController com GMSNavigationMapView).
+   *    Fallback: deep link comgooglemaps:// → Apple Maps.
    *
    * 3. Web/desktop: abre o Google Maps no browser.
    */
@@ -257,7 +257,20 @@ export default function DriverActiveRidePage() {
         }
 
       } else if (isNative && platform === 'ios') {
-        // iOS: deep link comgooglemaps → fallback Apple Maps
+        // Tenta primeiro o Navigation SDK in-app via plugin iOS (NavigationViewController)
+        try {
+          const { NavigationPlugin } = await import('@/plugins/navigation')
+          const { available } = await NavigationPlugin.isAvailable()
+
+          if (available) {
+            await NavigationPlugin.startNavigation({ lat, lng, label })
+            return
+          }
+        } catch {
+          // Plugin não carregou — usa fallback de deep link
+        }
+
+        // Fallback: deep link comgooglemaps → Apple Maps
         try {
           const { App } = await import('@capacitor/app')
           const canOpen = await App.canOpenUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
