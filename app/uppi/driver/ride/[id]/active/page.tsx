@@ -203,27 +203,47 @@ export default function DriverActiveRidePage() {
     return { lat, lng, address, isGoingToPickup }
   }
 
-  const openGoogleMaps = () => {
+  const openNativeNavigation = () => {
     if (!ride) return
     const { lat, lng, address } = getNavTarget()
-    const dest = lat && lng ? `${lat},${lng}` : encodeURIComponent(address || '')
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
-  }
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+    const isAndroid = /android/i.test(navigator.userAgent)
 
-  const openWaze = () => {
-    if (!ride) return
-    const { lat, lng, address } = getNavTarget()
-    const url = lat && lng
-      ? `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`
-      : `https://waze.com/ul?q=${encodeURIComponent(address || '')}&navigate=yes`
-    window.open(url, '_blank')
-  }
-
-  const openAppleMaps = () => {
-    if (!ride) return
-    const { lat, lng, address } = getNavTarget()
-    const dest = lat && lng ? `${lat},${lng}` : encodeURIComponent(address || '')
-    window.open(`https://maps.apple.com/?daddr=${dest}&dirflg=d`, '_blank')
+    if (lat && lng) {
+      if (isIOS) {
+        // Deep link nativo do Google Maps no iOS
+        const gmLink = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`
+        const fallback = `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
+        const start = Date.now()
+        const iframe = document.createElement('iframe')
+        iframe.style.display = 'none'
+        iframe.src = gmLink
+        document.body.appendChild(iframe)
+        setTimeout(() => {
+          document.body.removeChild(iframe)
+          if (Date.now() - start < 1500) {
+            window.location.href = fallback
+          }
+        }, 1200)
+      } else if (isAndroid) {
+        // Intent nativo do Google Maps no Android (navigation mode)
+        window.location.href = `google.navigation:q=${lat},${lng}&mode=d`
+      } else {
+        // Desktop: abre Google Maps web em modo de direção
+        const dest = `${lat},${lng}`
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
+      }
+    } else {
+      // Fallback por endereço
+      const dest = encodeURIComponent(address || '')
+      if (isIOS) {
+        window.location.href = `maps://?daddr=${dest}&dirflg=d`
+      } else if (isAndroid) {
+        window.location.href = `google.navigation:q=${dest}&mode=d`
+      } else {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
+      }
+    }
   }
 
   const stepIndex = STATUS_STEPS.indexOf(ride?.status as RideStatus)
@@ -428,81 +448,30 @@ export default function DriverActiveRidePage() {
             </div>
           </div>
 
-          {/* Navigation SDK */}
+          {/* Navigation */}
           <div className="py-2 border-b border-[color:var(--border)]">
-            <div className="flex items-center justify-between mb-2.5">
-              <p className="text-[11px] font-bold text-[color:var(--muted-foreground)] uppercase tracking-wider">
-                Navegar para {getNavTarget().isGoingToPickup ? 'o passageiro' : 'o destino'}
-              </p>
-              <span className={cn(
-                'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                getNavTarget().isGoingToPickup
-                  ? 'bg-blue-500/15 text-blue-500'
-                  : 'bg-orange-500/15 text-orange-500'
-              )}>
-                {getNavTarget().isGoingToPickup ? 'Pickup' : 'Destino'}
-              </span>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {/* Google Maps */}
-              <button
-                type="button"
-                onClick={openGoogleMaps}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-[color:var(--muted)]/40 border border-[color:var(--border)] ios-press active:scale-95 transition-transform"
-                aria-label="Abrir no Google Maps"
-              >
-                <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M24 4C15.163 4 8 11.163 8 20c0 12 16 26 16 26s16-14 16-26c0-8.837-7.163-16-16-16z" fill="#EA4335"/>
-                  <path d="M24 4C15.163 4 8 11.163 8 20c0 4.285 1.699 8.174 4.458 11.072L28.03 5.09A15.934 15.934 0 0024 4z" fill="#FBBC04"/>
-                  <path d="M24 4c3.858 0 7.39 1.365 10.131 3.622L19.97 27.697A11.924 11.924 0 0124 28c2.18 0 4.22-.585 5.972-1.607L12.458 31.072C15.275 33.998 19.42 36 24 36c0 0 16-14 16-26C40 11.163 32.837 4 24 4z" fill="#34A853"/>
-                  <path d="M12.458 31.072C9.699 28.174 8 24.285 8 20c0-4.97 2.267-9.408 5.83-12.378L29.972 26.393A11.979 11.979 0 0124 28a11.924 11.924 0 01-4.03-.303l-7.512 3.375z" fill="#4285F4"/>
-                  <circle cx="24" cy="20" r="6" fill="white"/>
+            <button
+              type="button"
+              onClick={openNativeNavigation}
+              className="w-full flex items-center gap-3 py-3 px-4 rounded-2xl bg-[#4285F4] ios-press active:scale-[0.98] transition-transform shadow-md"
+              aria-label="Iniciar navegação no Google Maps"
+            >
+              {/* Google Maps pin icon */}
+              <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                 </svg>
-                <span className="text-[11px] font-semibold text-[color:var(--foreground)]">Google Maps</span>
-              </button>
-
-              {/* Waze */}
-              <button
-                type="button"
-                onClick={openWaze}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-[color:var(--muted)]/40 border border-[color:var(--border)] ios-press active:scale-95 transition-transform"
-                aria-label="Abrir no Waze"
-              >
-                <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="24" cy="22" r="18" fill="#33CCFF"/>
-                  <ellipse cx="24" cy="32" rx="10" ry="6" fill="#00B4D8"/>
-                  <circle cx="19" cy="20" r="2.5" fill="#1A1A2E"/>
-                  <circle cx="29" cy="20" r="2.5" fill="#1A1A2E"/>
-                  <path d="M19 26c1.2 2 8.8 2 10 0" stroke="#1A1A2E" strokeWidth="1.5" strokeLinecap="round"/>
-                  <path d="M30 10 Q34 6 38 10" stroke="#1A1A2E" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                  <path d="M32 8 Q35 4 38 7" stroke="#1A1A2E" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-                </svg>
-                <span className="text-[11px] font-semibold text-[color:var(--foreground)]">Waze</span>
-              </button>
-
-              {/* Apple Maps */}
-              <button
-                type="button"
-                onClick={openAppleMaps}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl bg-[color:var(--muted)]/40 border border-[color:var(--border)] ios-press active:scale-95 transition-transform"
-                aria-label="Abrir no Apple Maps"
-              >
-                <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="48" height="48" rx="10" fill="url(#applemap_grad)"/>
-                  <defs>
-                    <linearGradient id="applemap_grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                      <stop stopColor="#3EC6F5"/>
-                      <stop offset="1" stopColor="#1A8FE3"/>
-                    </linearGradient>
-                  </defs>
-                  <path d="M12 36l8-12 5 4 7-14 4 22H12z" fill="white" fillOpacity="0.9"/>
-                  <path d="M12 36l8-12 5 4 7-14" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  <circle cx="34" cy="16" r="3" fill="#FF3B30"/>
-                  <circle cx="34" cy="16" r="1.5" fill="white"/>
-                </svg>
-                <span className="text-[11px] font-semibold text-[color:var(--foreground)]">Apple Maps</span>
-              </button>
-            </div>
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[13px] font-bold text-white leading-tight">Iniciar navegação</p>
+                <p className="text-[11px] text-white/70 leading-tight mt-0.5 truncate">
+                  {getNavTarget().isGoingToPickup ? 'Buscar passageiro' : 'Ir ao destino'} · {getNavTarget().address}
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-white/80 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
 
           {/* Fare & Payment */}
