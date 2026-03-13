@@ -8,6 +8,8 @@ import type { Ride, Profile, DriverProfile } from '@/lib/types/database'
 import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
+import { NativeMap, type NativeMapHandle } from '@/components/native-map'
+
 
 type RideStatus = Ride['status']
 
@@ -39,6 +41,8 @@ export default function DriverActiveRidePage() {
   const [cancelling, setCancelling] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const mapRef = useRef<NativeMapHandle>(null)
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
     loadRide()
@@ -193,6 +197,73 @@ export default function DriverActiveRidePage() {
     return m[method || ''] || method || '—'
   }
 
+  // Navigation helpers
+  const getNavTarget = () => {
+    // Se ainda está indo buscar o passageiro, destino é o pickup
+    const isGoingToPickup = ride?.status === 'accepted'
+    const lat = isGoingToPickup ? ride?.pickup_lat : ride?.dropoff_lat
+    const lng = isGoingToPickup ? ride?.pickup_lng : ride?.dropoff_lng
+    const address = isGoingToPickup ? ride?.pickup_address : ride?.dropoff_address
+    return { lat, lng, address, isGoingToPickup }
+  }
+
+  /**
+   * Lança o Google Maps em modo turn-by-turn nativo.
+   * Android: usa App.openUrl com o intent google.navigation (abre Navigation SDK nativo do Google Maps)
+   * iOS: deep link comgooglemaps:// -> fallback Apple Maps
+   * Web: Google Maps web em modo de direção
+   */
+  const openNativeNavigation = async () => {
+    if (!ride) return
+    const { lat, lng, address } = getNavTarget()
+
+    const { Capacitor } = await import('@capacitor/core')
+    const isNative = Capacitor.isNativePlatform()
+    const platform = Capacitor.getPlatform() // 'android' | 'ios' | 'web'
+
+    if (lat && lng) {
+      if (isNative && platform === 'android') {
+        // Intent nativo Android — abre o Google Maps Navigation SDK com turn-by-turn
+        try {
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `google.navigation:q=${lat},${lng}&mode=d` })
+        } catch {
+          // Fallback se Google Maps nao estiver instalado
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving` })
+        }
+      } else if (isNative && platform === 'ios') {
+        // Deep link iOS — tenta Google Maps, fallback Apple Maps
+        try {
+          const { App } = await import('@capacitor/app')
+          const canOpen = await App.canOpenUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
+          if (canOpen.value) {
+            await App.openUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
+          } else {
+            await App.openUrl({ url: `maps://?daddr=${lat},${lng}&dirflg=d` })
+          }
+        } catch {
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `maps://?daddr=${lat},${lng}&dirflg=d` })
+        }
+      } else {
+        // Web/desktop
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
+      }
+    } else if (address) {
+      const dest = encodeURIComponent(address)
+      if (isNative && platform === 'android') {
+        const { App } = await import('@capacitor/app')
+        await App.openUrl({ url: `google.navigation:q=${dest}&mode=d` })
+      } else if (isNative && platform === 'ios') {
+        const { App } = await import('@capacitor/app')
+        await App.openUrl({ url: `maps://?daddr=${dest}&dirflg=d` })
+      } else {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
+      }
+    }
+  }
+
   const stepIndex = STATUS_STEPS.indexOf(ride?.status as RideStatus)
 
   if (loading) {
@@ -238,17 +309,41 @@ export default function DriverActiveRidePage() {
       {/* Full-screen status bar at top */}
       <div className={cn('absolute top-0 left-0 right-0 z-30 h-1.5', cfg.bg)} />
 
-      {/* Map placeholder (visual background) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#16213e] to-[#0f3460]">
-        <div className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }}
-        />
-        {/* Animated route visualization */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-30">
-          <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0ms' }} />
-        </div>
+      {/* Native Map — usa @capacitor/google-maps no dispositivo, JS Maps no web */}
+      <div className="absolute inset-0">
+        {ride && (
+          <NativeMap
+            ref={mapRef}
+            showUserLocation
+            showRoute={!!(
+              (ride.status === 'accepted' ? ride.pickup_lat : ride.dropoff_lat) &&
+              (ride.status === 'accepted' ? ride.pickup_lng : ride.dropoff_lng)
+            )}
+            origin={driverLocation ?? undefined}
+            destination={
+              ride.status === 'accepted'
+                ? (ride.pickup_lat && ride.pickup_lng
+                    ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
+                    : undefined)
+                : (ride.dropoff_lat && ride.dropoff_lng
+                    ? { lat: ride.dropoff_lat, lng: ride.dropoff_lng }
+                    : undefined)
+            }
+            markers={[
+              ...(ride.pickup_lat && ride.pickup_lng
+                ? [{ id: 'pickup', lat: ride.pickup_lat, lng: ride.pickup_lng, title: 'Buscar passageiro' }]
+                : []),
+              ...(ride.dropoff_lat && ride.dropoff_lng && ride.status !== 'accepted'
+                ? [{ id: 'dropoff', lat: ride.dropoff_lat, lng: ride.dropoff_lng, title: 'Destino' }]
+                : []),
+            ]}
+            onLocationFound={(lat, lng) => {
+              setDriverLocation({ lat, lng })
+              mapRef.current?.panTo(lat, lng)
+            }}
+            className="w-full h-full"
+          />
+        )}
       </div>
 
       {/* Header floating */}
@@ -282,7 +377,7 @@ export default function DriverActiveRidePage() {
       </div>
 
       {/* Progress Steps */}
-      <div className="absolute top-[72px] left-0 right-0 z-20 px-6">
+      <div className="absolute top-[80px] left-0 right-0 z-10 px-6">
         <div className="flex items-center gap-0">
           {STATUS_STEPS.filter(s => s !== 'completed').map((step, i) => {
             const stepCfg = STATUS_CFG[step]
@@ -393,23 +488,37 @@ export default function DriverActiveRidePage() {
                 <p className="text-[14px] text-[color:var(--foreground)] font-medium leading-tight">{ride.dropoff_address}</p>
               </div>
             </div>
+          </div>
+
+          {/* Navegação turn-by-turn nativa */}
+          {['accepted', 'in_progress'].includes(ride.status) && (
             <button
               type="button"
-              onClick={() => {
-                const dest = ride.dropoff_lat && ride.dropoff_lng
-                  ? `${ride.dropoff_lat},${ride.dropoff_lng}`
-                  : encodeURIComponent(ride.dropoff_address)
-                window.open(`https://maps.google.com/maps?daddr=${dest}`, '_blank')
-              }}
-              className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center ios-press self-center"
-              aria-label="Abrir no Maps"
+              onClick={openNativeNavigation}
+              className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl bg-[#1A73E8] ios-press active:scale-[0.98] transition-transform shadow-lg"
+              aria-label="Iniciar navegação turn-by-turn no Google Maps"
             >
-              <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              {/* Nav icon */}
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21.71 11.29l-9-9a1 1 0 00-1.42 0l-9 9a1 1 0 000 1.42l9 9a1 1 0 001.42 0l9-9a1 1 0 000-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 011-1h5V7.5l3.5 3.5-3.5 3.5z"/>
+                </svg>
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-[14px] font-bold text-white leading-tight">
+                  Navegar com Google Maps
+                </p>
+                <p className="text-[11px] text-white/70 leading-snug mt-0.5 truncate">
+                  {getNavTarget().isGoingToPickup
+                    ? `Buscar ${ride.passenger?.full_name || 'passageiro'}`
+                    : `Destino: ${ride.dropoff_address}`}
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-white/60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
+          )}
 
           {/* Fare & Payment */}
           <div className="grid grid-cols-3 gap-3 py-2 border-b border-[color:var(--border)]">
