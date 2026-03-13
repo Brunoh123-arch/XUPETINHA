@@ -9,7 +9,7 @@ import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { NativeMap, type NativeMapHandle } from '@/components/native-map'
-import { DriverTurnByTurn } from '@/components/driver-turn-by-turn'
+
 
 type RideStatus = Ride['status']
 
@@ -207,43 +207,57 @@ export default function DriverActiveRidePage() {
     return { lat, lng, address, isGoingToPickup }
   }
 
-  const openNativeNavigation = () => {
+  /**
+   * Lança o Google Maps em modo turn-by-turn nativo.
+   * Android: usa App.openUrl com o intent google.navigation (abre Navigation SDK nativo do Google Maps)
+   * iOS: deep link comgooglemaps:// -> fallback Apple Maps
+   * Web: Google Maps web em modo de direção
+   */
+  const openNativeNavigation = async () => {
     if (!ride) return
     const { lat, lng, address } = getNavTarget()
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
-    const isAndroid = /android/i.test(navigator.userAgent)
+
+    const { Capacitor } = await import('@capacitor/core')
+    const isNative = Capacitor.isNativePlatform()
+    const platform = Capacitor.getPlatform() // 'android' | 'ios' | 'web'
 
     if (lat && lng) {
-      if (isIOS) {
-        // Deep link nativo do Google Maps no iOS
-        const gmLink = `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving`
-        const fallback = `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`
-        const start = Date.now()
-        const iframe = document.createElement('iframe')
-        iframe.style.display = 'none'
-        iframe.src = gmLink
-        document.body.appendChild(iframe)
-        setTimeout(() => {
-          document.body.removeChild(iframe)
-          if (Date.now() - start < 1500) {
-            window.location.href = fallback
+      if (isNative && platform === 'android') {
+        // Intent nativo Android — abre o Google Maps Navigation SDK com turn-by-turn
+        try {
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `google.navigation:q=${lat},${lng}&mode=d` })
+        } catch {
+          // Fallback se Google Maps nao estiver instalado
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving` })
+        }
+      } else if (isNative && platform === 'ios') {
+        // Deep link iOS — tenta Google Maps, fallback Apple Maps
+        try {
+          const { App } = await import('@capacitor/app')
+          const canOpen = await App.canOpenUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
+          if (canOpen.value) {
+            await App.openUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
+          } else {
+            await App.openUrl({ url: `maps://?daddr=${lat},${lng}&dirflg=d` })
           }
-        }, 1200)
-      } else if (isAndroid) {
-        // Intent nativo do Google Maps no Android (navigation mode)
-        window.location.href = `google.navigation:q=${lat},${lng}&mode=d`
+        } catch {
+          const { App } = await import('@capacitor/app')
+          await App.openUrl({ url: `maps://?daddr=${lat},${lng}&dirflg=d` })
+        }
       } else {
-        // Desktop: abre Google Maps web em modo de direção
-        const dest = `${lat},${lng}`
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
+        // Web/desktop
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
       }
-    } else {
-      // Fallback por endereço
-      const dest = encodeURIComponent(address || '')
-      if (isIOS) {
-        window.location.href = `maps://?daddr=${dest}&dirflg=d`
-      } else if (isAndroid) {
-        window.location.href = `google.navigation:q=${dest}&mode=d`
+    } else if (address) {
+      const dest = encodeURIComponent(address)
+      if (isNative && platform === 'android') {
+        const { App } = await import('@capacitor/app')
+        await App.openUrl({ url: `google.navigation:q=${dest}&mode=d` })
+      } else if (isNative && platform === 'ios') {
+        const { App } = await import('@capacitor/app')
+        await App.openUrl({ url: `maps://?daddr=${dest}&dirflg=d` })
       } else {
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
       }
@@ -362,24 +376,8 @@ export default function DriverActiveRidePage() {
         </button>
       </div>
 
-      {/* Turn-by-Turn Navigation Banner */}
-      <div className="absolute top-[72px] left-0 right-0 z-20">
-        <DriverTurnByTurn
-          origin={driverLocation}
-          destination={
-            ride.status === 'accepted'
-              ? (ride.pickup_lat && ride.pickup_lng ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null)
-              : (ride.dropoff_lat && ride.dropoff_lng ? { lat: ride.dropoff_lat, lng: ride.dropoff_lng } : null)
-          }
-          destinationLabel={
-            ride.status === 'accepted' ? (ride.passenger?.full_name || 'passageiro') : ride.dropoff_address
-          }
-          active={['accepted', 'in_progress'].includes(ride.status)}
-        />
-      </div>
-
-      {/* Progress Steps — flutua abaixo do banner turn-by-turn */}
-      <div className="absolute top-[205px] left-0 right-0 z-10 px-6">
+      {/* Progress Steps */}
+      <div className="absolute top-[80px] left-0 right-0 z-10 px-6">
         <div className="flex items-center gap-0">
           {STATUS_STEPS.filter(s => s !== 'completed').map((step, i) => {
             const stepCfg = STATUS_CFG[step]
@@ -492,28 +490,35 @@ export default function DriverActiveRidePage() {
             </div>
           </div>
 
-          {/* Abrir navegação externa */}
-          <div className="py-1 border-b border-[color:var(--border)]">
+          {/* Navegação turn-by-turn nativa */}
+          {['accepted', 'in_progress'].includes(ride.status) && (
             <button
               type="button"
               onClick={openNativeNavigation}
-              className="w-full flex items-center gap-2.5 py-2.5 px-3 rounded-xl bg-[#4285F4]/10 border border-[#4285F4]/20 ios-press active:scale-[0.98] transition-transform"
-              aria-label="Abrir navegação no Google Maps"
+              className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl bg-[#1A73E8] ios-press active:scale-[0.98] transition-transform shadow-lg"
+              aria-label="Iniciar navegação turn-by-turn no Google Maps"
             >
-              <svg className="w-4 h-4 text-[#4285F4] shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              <div className="flex-1 text-left min-w-0">
-                <span className="text-[12px] font-semibold text-[#4285F4]">Abrir no Google Maps</span>
-                <span className="text-[11px] text-[color:var(--muted-foreground)] ml-1.5 truncate">
-                  · {getNavTarget().isGoingToPickup ? 'buscar passageiro' : 'destino final'}
-                </span>
+              {/* Nav icon */}
+              <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21.71 11.29l-9-9a1 1 0 00-1.42 0l-9 9a1 1 0 000 1.42l9 9a1 1 0 001.42 0l9-9a1 1 0 000-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 011-1h5V7.5l3.5 3.5-3.5 3.5z"/>
+                </svg>
               </div>
-              <svg className="w-3.5 h-3.5 text-[color:var(--muted-foreground)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-[14px] font-bold text-white leading-tight">
+                  Navegar com Google Maps
+                </p>
+                <p className="text-[11px] text-white/70 leading-snug mt-0.5 truncate">
+                  {getNavTarget().isGoingToPickup
+                    ? `Buscar ${ride.passenger?.full_name || 'passageiro'}`
+                    : `Destino: ${ride.dropoff_address}`}
+                </p>
+              </div>
+              <svg className="w-5 h-5 text-white/60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
+          )}
 
           {/* Fare & Payment */}
           <div className="grid grid-cols-3 gap-3 py-2 border-b border-[color:var(--border)]">
