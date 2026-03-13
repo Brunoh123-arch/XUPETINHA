@@ -32,6 +32,18 @@
     <!-- Microphone (gravacao de audio) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!--
+        FOREGROUND_SERVICE + FOREGROUND_SERVICE_LOCATION
+        Obrigatório para que o Google Maps Navigation SDK possa manter
+        o serviço de guia de voz e rastreamento GPS rodando enquanto o
+        motorista bloqueia a tela ou abre outro app (WhatsApp, etc).
+        Sem isso o Android pode matar o processo do Capacitor por pressão
+        de memória, silenciando a voz turn-by-turn.
+        Android 14+ exige a declaração do tipo 'location' explicitamente.
+    -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+
     <!-- ===================== APPLICATION ===================== -->
 
     <application
@@ -93,6 +105,20 @@
 
         </activity>
 
+        <!-- ===== NAVIGATION SDK ACTIVITY (in-app turn-by-turn) ===== -->
+        <!--
+            NavigationActivity é lançada pelo NavigationPlugin quando o motorista
+            clica em "Iniciar Navegação". Ela embute o SupportNavigationFragment
+            do Google Maps Navigation SDK, exibindo o mapa e o guia de voz
+            sem sair do app — exatamente como a Uber.
+        -->
+        <activity
+            android:name=".plugins.NavigationActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <!-- ===== FCM MESSAGE SERVICE ===== -->
         <!-- O Capacitor @capacitor/push-notifications ja registra o servico via AAR -->
         <!-- Este entry e necessario apenas se voce customizar o servico -->
@@ -139,5 +165,39 @@
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
+
+    <!-- ===================== QUERIES (Android 11+) ===================== -->
+    <!-- Necessario para App.openUrl() e App.canOpenUrl() abrirem apps externos -->
+    <queries>
+        <!-- Google Maps (app nativo) -->
+        <package android:name="com.google.android.apps.maps" />
+
+        <!-- Waze -->
+        <package android:name="com.waze" />
+
+        <!-- Navegacao via intent geo: (fallback universal) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+
+        <!-- Navegacao via intent google.navigation: -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="google.navigation" />
+        </intent>
+
+        <!-- Navegacao via comgooglemaps: -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="comgooglemaps" />
+        </intent>
+
+        <!-- Waze via waze: scheme -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="waze" />
+        </intent>
+    </queries>
 
 </manifest>

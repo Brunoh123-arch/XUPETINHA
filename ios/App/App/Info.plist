@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- ─── App metadata ──────────────────────────────────────────────── -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>pt_BR</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>Uppi</string>
+
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+
+    <!-- ─── Capacitor / WebView ────────────────────────────────────────── -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+
+    <!-- ─── Permissões de acesso (strings exibidas ao usuário no iOS) ─── -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>A Uppi usa sua localização para mostrar sua posição no mapa e traçar rotas em tempo real.</string>
+
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>A Uppi precisa da sua localização em segundo plano para continuar o rastreamento durante a corrida mesmo com a tela bloqueada.</string>
+
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>A Uppi usa sua localização em segundo plano para garantir que a rota e a voz de navegação continuem funcionando com a tela bloqueada.</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>A Uppi usa a câmera para tirar foto de perfil e enviar documentos de motorista.</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>A Uppi usa o microfone para gravações de suporte.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>A Uppi usa a biblioteca de fotos para envio de documentos.</string>
+
+    <!-- ─── Background Modes ─────────────────────────────────────────────
+         OBRIGATÓRIO para que a voz turn-by-turn e o GPS continuem
+         funcionando quando o motorista bloqueia a tela ou troca de app.
+
+         audio        → mantém AVSpeechSynthesizer (voz) ativo em background
+         location     → mantém CLLocationManager ativo em background
+         fetch        → permite polling de atualizações de corrida
+    ────────────────────────────────────────────────────────────────────── -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+        <string>location</string>
+        <string>fetch</string>
+        <string>remote-notification</string>
+    </array>
+
+    <!-- ─── Deep links / URL Schemes ─────────────────────────────────── -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <!-- uppi://ride/[id] — deep link interno -->
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>app.uppi.mobile</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>uppi</string>
+                <string>app.uppi.mobile</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- ─── Queries — App.canOpenUrl() para apps de navegação externos ──
+         Necessário para que App.canOpenUrl() retorne true no iOS 9+.
+         Usado no fallback da tela de corrida ativa quando o Navigation
+         SDK nativo não estiver disponível.
+    ────────────────────────────────────────────────────────────────────── -->
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>comgooglemaps</string>
+        <string>googlemaps</string>
+        <string>google.navigation</string>
+        <string>waze</string>
+    </array>
+
+    <!-- ─── Interface ─────────────────────────────────────────────────── -->
+    <key>UIMainStoryboardFile</key>
+    <string>Main</string>
+
+    <key>UILaunchStoryboardName</key>
+    <string>LaunchScreen</string>
+
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <true/>
+
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+
+    <!-- ─── Google Maps API Key ───────────────────────────────────────── -->
+    <!-- Lida programaticamente no AppDelegate via GMSServices.provideAPIKey() -->
+    <!-- Não coloque a chave diretamente aqui — use um arquivo de segredos    -->
+
+</dict>
+</plist>
