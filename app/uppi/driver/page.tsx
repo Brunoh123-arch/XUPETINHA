@@ -97,11 +97,11 @@ export default function DriverPage() {
       if (!user) { router.push('/onboarding/splash'); return }
       setUserId(user.id)
 
-      const [{ data: driverProfile }, { data: profile }, { data: favData }] = await Promise.all([
-        supabase.from('driver_profiles').select('vehicle_type, is_available, acceptance_rate, trust_score, is_verified').eq('id', user.id).single(),
-        supabase.from('profiles').select('full_name').eq('id', user.id).single(),
-        supabase.from('favorite_drivers').select('id', { count: 'exact' }).eq('driver_id', user.id),
+      const [{ data: driverProfile }, { data: profile }] = await Promise.all([
+        supabase.from('driver_profiles').select('vehicle_type, is_available, acceptance_rate, is_verified').eq('id', user.id).single(),
+        supabase.from('profiles').select('full_name, trust_score').eq('id', user.id).single(),
       ])
+      const favData: { length: number } = { length: 0 }
 
       // Sem perfil de motorista → redirecionar para cadastro
       if (!driverProfile) {
@@ -116,8 +116,8 @@ export default function DriverPage() {
         return
       }
 
-      if (driverProfile?.trust_score) setTrustScore(driverProfile.trust_score)
-      if (favData) setFavoritePassengers(favData.length)
+      if (profile?.trust_score) setTrustScore(profile.trust_score)
+      setFavoritePassengers(favData.length)
 
       if (profile) setDriverName(profile.full_name || '')
       const vType = driverProfile?.vehicle_type || null
