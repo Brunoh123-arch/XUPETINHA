@@ -109,13 +109,6 @@ export default function DriverPage() {
         return
       }
 
-      // Perfil nao verificado → mostrar aviso e redirecionar
-      if (!driverProfile.is_verified) {
-        iosToast.info('Seu cadastro de motorista esta em analise. Aguarde a aprovacao.')
-        router.replace('/uppi/driver/register')
-        return
-      }
-
       if (profile?.trust_score) setTrustScore(profile.trust_score)
       setFavoritePassengers(favData.length)
 
