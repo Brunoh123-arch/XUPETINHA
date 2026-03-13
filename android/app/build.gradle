@@ -72,6 +72,11 @@ repositories {
     flatDir {
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
     }
+    // Repositório Maven privado do Google Maps Navigation SDK (Mobility Services)
+    // Requer que as credenciais estejam em ~/.gradle/gradle.properties ou secrets.gradle
+    maven {
+        url 'https://maven.google.com'
+    }
 }
 
 dependencies {
@@ -88,6 +93,19 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.7.0')
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.firebase:firebase-analytics'
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Google Maps Navigation SDK (Mobility Services — requer conta de faturamento)
+    // Documentação oficial: https://developers.google.com/maps/documentation/navigation/android-sdk
+    //
+    // IMPORTANTE: para baixar este pacote você precisa:
+    //   1. Ativar "Navigation SDK for Android" no Google Cloud Console
+    //   2. Aceitar os Termos de Uso do Maps Platform - Mobility Services
+    //   3. Adicionar suas credenciais em android/local.properties ou secrets.gradle:
+    //        navigationSdkUsername=oauth2accesstoken
+    //        navigationSdkPassword=<seu_access_token>
+    // ──────────────────────────────────────────────────────────────────────
+    implementation 'com.google.android.libraries.navigation:navigation:5.4.0'
 
     // Tests
     testImplementation "junit:junit:$junitVersion"

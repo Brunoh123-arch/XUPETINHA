@@ -208,32 +208,56 @@ export default function DriverActiveRidePage() {
   }
 
   /**
-   * Lança o Google Maps em modo turn-by-turn nativo.
-   * Android: usa App.openUrl com o intent google.navigation (abre Navigation SDK nativo do Google Maps)
-   * iOS: deep link comgooglemaps:// -> fallback Apple Maps
-   * Web: Google Maps web em modo de direção
+   * Lança a navegação turn-by-turn.
+   *
+   * Estratégia em camadas (melhor → fallback):
+   *
+   * 1. Android nativo: tenta o CapacitorNavigationPlugin (Navigation SDK in-app,
+   *    igual Uber). Se o SDK não estiver disponível (APK sem a dependência),
+   *    cai no deep link google.navigation: que abre o Google Maps externo.
+   *
+   * 2. iOS nativo: deep link comgooglemaps:// → fallback Apple Maps.
+   *    (o plugin iOS será adicionado em iteração futura)
+   *
+   * 3. Web/desktop: abre o Google Maps no browser.
    */
   const openNativeNavigation = async () => {
     if (!ride) return
-    const { lat, lng, address } = getNavTarget()
+    const { lat, lng, address, isGoingToPickup } = getNavTarget()
+    const label = isGoingToPickup
+      ? `Buscar ${ride.passenger?.full_name ?? 'passageiro'}`
+      : ride.dropoff_address ?? 'Destino'
 
     const { Capacitor } = await import('@capacitor/core')
     const isNative = Capacitor.isNativePlatform()
-    const platform = Capacitor.getPlatform() // 'android' | 'ios' | 'web'
+    const platform = Capacitor.getPlatform()
 
     if (lat && lng) {
       if (isNative && platform === 'android') {
-        // Intent nativo Android — abre o Google Maps Navigation SDK com turn-by-turn
+        // Tenta primeiro o Navigation SDK in-app via plugin customizado
+        try {
+          const { NavigationPlugin } = await import('@/plugins/navigation')
+          const { available } = await NavigationPlugin.isAvailable()
+
+          if (available) {
+            await NavigationPlugin.startNavigation({ lat, lng, label })
+            return
+          }
+        } catch {
+          // Plugin não carregou — usa fallback de deep link
+        }
+
+        // Fallback: deep link abrindo Google Maps externo
         try {
           const { App } = await import('@capacitor/app')
           await App.openUrl({ url: `google.navigation:q=${lat},${lng}&mode=d` })
         } catch {
-          // Fallback se Google Maps nao estiver instalado
           const { App } = await import('@capacitor/app')
           await App.openUrl({ url: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving` })
         }
+
       } else if (isNative && platform === 'ios') {
-        // Deep link iOS — tenta Google Maps, fallback Apple Maps
+        // iOS: deep link comgooglemaps → fallback Apple Maps
         try {
           const { App } = await import('@capacitor/app')
           const canOpen = await App.canOpenUrl({ url: `comgooglemaps://?daddr=${lat},${lng}&directionsmode=driving` })
@@ -246,10 +270,12 @@ export default function DriverActiveRidePage() {
           const { App } = await import('@capacitor/app')
           await App.openUrl({ url: `maps://?daddr=${lat},${lng}&dirflg=d` })
         }
+
       } else {
         // Web/desktop
         window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
       }
+
     } else if (address) {
       const dest = encodeURIComponent(address)
       if (isNative && platform === 'android') {

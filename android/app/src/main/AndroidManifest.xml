@@ -93,6 +93,20 @@
 
         </activity>
 
+        <!-- ===== NAVIGATION SDK ACTIVITY (in-app turn-by-turn) ===== -->
+        <!--
+            NavigationActivity é lançada pelo NavigationPlugin quando o motorista
+            clica em "Iniciar Navegação". Ela embute o SupportNavigationFragment
+            do Google Maps Navigation SDK, exibindo o mapa e o guia de voz
+            sem sair do app — exatamente como a Uber.
+        -->
+        <activity
+            android:name=".plugins.NavigationActivity"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <!-- ===== FCM MESSAGE SERVICE ===== -->
         <!-- O Capacitor @capacitor/push-notifications ja registra o servico via AAR -->
         <!-- Este entry e necessario apenas se voce customizar o servico -->
