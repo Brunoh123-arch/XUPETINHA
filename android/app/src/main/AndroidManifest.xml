@@ -140,4 +140,38 @@
         android:name="android.hardware.telephony"
         android:required="false" />
 
+    <!-- ===================== QUERIES (Android 11+) ===================== -->
+    <!-- Necessario para App.openUrl() e App.canOpenUrl() abrirem apps externos -->
+    <queries>
+        <!-- Google Maps (app nativo) -->
+        <package android:name="com.google.android.apps.maps" />
+
+        <!-- Waze -->
+        <package android:name="com.waze" />
+
+        <!-- Navegacao via intent geo: (fallback universal) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+
+        <!-- Navegacao via intent google.navigation: -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="google.navigation" />
+        </intent>
+
+        <!-- Navegacao via comgooglemaps: -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="comgooglemaps" />
+        </intent>
+
+        <!-- Waze via waze: scheme -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="waze" />
+        </intent>
+    </queries>
+
 </manifest>
