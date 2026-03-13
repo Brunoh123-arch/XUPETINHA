@@ -9,6 +9,7 @@ import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { NativeMap, type NativeMapHandle } from '@/components/native-map'
+import { DriverTurnByTurn } from '@/components/driver-turn-by-turn'
 
 type RideStatus = Ride['status']
 
@@ -361,8 +362,24 @@ export default function DriverActiveRidePage() {
         </button>
       </div>
 
-      {/* Progress Steps */}
-      <div className="absolute top-[72px] left-0 right-0 z-20 px-6">
+      {/* Turn-by-Turn Navigation Banner */}
+      <div className="absolute top-[72px] left-0 right-0 z-20">
+        <DriverTurnByTurn
+          origin={driverLocation}
+          destination={
+            ride.status === 'accepted'
+              ? (ride.pickup_lat && ride.pickup_lng ? { lat: ride.pickup_lat, lng: ride.pickup_lng } : null)
+              : (ride.dropoff_lat && ride.dropoff_lng ? { lat: ride.dropoff_lat, lng: ride.dropoff_lng } : null)
+          }
+          destinationLabel={
+            ride.status === 'accepted' ? (ride.passenger?.full_name || 'passageiro') : ride.dropoff_address
+          }
+          active={['accepted', 'in_progress'].includes(ride.status)}
+        />
+      </div>
+
+      {/* Progress Steps — flutua abaixo do banner turn-by-turn */}
+      <div className="absolute top-[205px] left-0 right-0 z-10 px-6">
         <div className="flex items-center gap-0">
           {STATUS_STEPS.filter(s => s !== 'completed').map((step, i) => {
             const stepCfg = STATUS_CFG[step]
