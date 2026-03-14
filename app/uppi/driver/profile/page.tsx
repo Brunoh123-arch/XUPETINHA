@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import type { Profile, DriverProfile } from '@/lib/types/database'
 import { DriverBottomNavigation } from '@/components/driver-bottom-navigation'
+import { useNativeCamera } from '@/hooks/use-native-camera'
+import { storageService } from '@/lib/services/storage-service'
 
 const VEHICLE_LABELS: Record<string, string> = {
   economy: 'Carro Econômico', electric: 'Elétrico', premium: 'Premium',
@@ -30,7 +32,25 @@ export default function DriverProfilePage() {
   const [vehiclePlate, setVehiclePlate] = useState('')
   const [vehicleYear, setVehicleYear] = useState('')
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { takePhoto } = useNativeCamera()
+
+  const handleAvatarUpload = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const result = await takePhoto({ quality: 90, fileName: `avatar_${user.id}.jpg` })
+      if (!result) return
+
+      const { url, error } = await storageService.uploadAvatar(result.file, user.id)
+      if (error || !url) return
+
+      await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
+      setProfile(prev => prev ? { ...prev, avatar_url: url } : null)
+    } catch (err) {
+      console.error('[DriverProfile] Erro ao enviar foto:', err)
+    }
+  }
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null
@@ -153,7 +173,8 @@ export default function DriverProfilePage() {
             </div>
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              aria-label="Trocar foto de perfil"
+              onClick={handleAvatarUpload}
               className="absolute bottom-0 right-0 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-md ios-press"
             >
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -161,7 +182,6 @@ export default function DriverProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </button>
-            <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" aria-label="Selecionar foto" />
           </div>
 
           {/* Rating badge */}

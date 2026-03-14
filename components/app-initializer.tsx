@@ -25,6 +25,19 @@ export function AppInitializer() {
     if (!Capacitor.isNativePlatform()) return
 
     setupPushNotifications(router)
+
+    // Escuta taps de notificação que vêm do use-fcm-push-notifications
+    // (evita duplicação de listeners: só este componente faz o roteamento)
+    const handleFcmTap = (e: Event) => {
+      const action = (e as CustomEvent).detail
+      const data = action?.notification?.data ?? {}
+      routeFromPushData(data, router)
+    }
+    window.addEventListener('fcm-notification-tap', handleFcmTap)
+
+    return () => {
+      window.removeEventListener('fcm-notification-tap', handleFcmTap)
+    }
   }, [])
 
   return null

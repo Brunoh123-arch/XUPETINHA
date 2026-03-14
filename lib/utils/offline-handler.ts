@@ -17,15 +17,45 @@ const DEFAULT_CONFIG: Required<RetryConfig> = {
   timeout: 10000,
 }
 
+// Cache do status de rede para evitar import assíncrono a cada verificação
+let _cachedNetworkStatus: boolean | null = null
+
 /**
- * Check if user is online
+ * Inicializa o cache de status de rede via @capacitor/network.
+ * Chamado uma vez no initOfflineHandling().
+ */
+async function initNetworkCache(): Promise<void> {
+  try {
+    const { Network } = await import('@capacitor/network')
+    const status = await Network.getStatus()
+    _cachedNetworkStatus = status.connected
+
+    await Network.addListener('networkStatusChange', (status) => {
+      _cachedNetworkStatus = status.connected
+      // Propaga para o sistema de eventos do offline-handler
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(status.connected ? 'online' : 'offline'))
+      }
+    })
+  } catch {
+    // Fallback seguro — ambientes web sem plugin
+    _cachedNetworkStatus = typeof navigator !== 'undefined' ? navigator.onLine : true
+  }
+}
+
+/**
+ * Verifica se o dispositivo está conectado à internet.
+ * Usa @capacitor/network (nativo) com fallback para navigator.onLine.
  */
 export function isOnline(): boolean {
+  if (_cachedNetworkStatus !== null) return _cachedNetworkStatus
+  // Antes do cache estar pronto, usa fallback web
   return typeof navigator !== 'undefined' ? navigator.onLine : true
 }
 
 /**
- * Wait for online connection
+ * Aguarda a conexão ser restaurada.
+ * Escuta o CustomEvent 'online' que o listener do Network dispara.
  */
 export function waitForOnline(): Promise<void> {
   return new Promise((resolve) => {
@@ -241,14 +271,19 @@ class OfflineQueue {
 export const offlineQueue = new OfflineQueue()
 
 /**
- * Initialize offline handling
+ * Initialize offline handling.
+ * Deve ser chamado uma vez na montagem do app (client-providers / app-initializer).
  */
 export function initOfflineHandling(): void {
   if (typeof window === 'undefined') return
 
   offlineQueue.init()
 
-  // Listen to online/offline events
+  // Inicializa o plugin @capacitor/network e mantém _cachedNetworkStatus atualizado.
+  // Os CustomEvents 'online'/'offline' são disparados pelo listener do Network acima.
+  initNetworkCache()
+
+  // Escuta os CustomEvents emitidos pelo initNetworkCache (e pela web como fallback)
   window.addEventListener('offline', () => {
     iosToast.error('Sem conexao com a internet')
     triggerHaptic('error')

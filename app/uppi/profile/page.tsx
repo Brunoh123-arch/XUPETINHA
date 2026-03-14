@@ -19,11 +19,13 @@ import { profileUpdateSchema, validateForm } from '@/lib/validations/schemas'
 import { setManualThemePreference, clearManualThemePreference } from '@/components/auto-theme'
 import { profileService } from '@/lib/services/profile-service'
 import { storageService } from '@/lib/services/storage-service'
+import { useNativeCamera } from '@/hooks/use-native-camera'
 
 export default function ProfilePage() {
   const router = useRouter()
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
+  const { takePhoto } = useNativeCamera()
   
   const [profile, setProfile] = useState<Profile | null>(null)
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null)
@@ -93,16 +95,16 @@ export default function ProfilePage() {
     }
   }
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const handleAvatarUpload = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { url, error } = await storageService.uploadAvatar(user.id, file)
-      
+      const result = await takePhoto({ quality: 90, fileName: `avatar_${user.id}.jpg` })
+      if (!result) return
+
+      const { url, error } = await storageService.uploadAvatar(result.file, user.id)
+
       if (error) {
         iosToast.error('Erro ao enviar foto')
         return
@@ -159,19 +161,14 @@ export default function ProfilePage() {
                 {profile?.full_name?.charAt(0) || 'U'}
               </AvatarFallback>
             </Avatar>
-            <label 
-              htmlFor="avatar-upload"
+            <button
+              type="button"
+              aria-label="Trocar foto de perfil"
+              onClick={handleAvatarUpload}
               className="absolute bottom-0 right-0 bg-gradient-to-br from-[#007AFF] to-[#0066CC] text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg active:scale-95 transition-transform ios-press"
             >
               <Camera className="w-5 h-5" strokeWidth={2.5} />
-            </label>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarUpload}
-            />
+            </button>
           </div>
           <h2 className="text-[28px] font-bold text-foreground tracking-[-0.6px] mb-1">{profile?.full_name}</h2>
           <p className="text-[15px] text-[#8E8E93] mb-6">{profile?.phone}</p>
