@@ -6,7 +6,11 @@
  */
 
 import { WebPlugin } from '@capacitor/core'
-import type { NavigationDestination, NavigationPluginInterface, NavigationStatus } from './index'
+import type {
+  NavigationDestination,
+  NavigationPluginInterface,
+  NavigationStatus,
+} from './index'
 
 export class NavigationPluginWeb extends WebPlugin implements NavigationPluginInterface {
   async isAvailable(): Promise<{ available: boolean }> {
@@ -25,4 +29,6 @@ export class NavigationPluginWeb extends WebPlugin implements NavigationPluginIn
   async stopNavigation(): Promise<void> {
     // Não há nada a encerrar no fallback web
   }
+
+  // addListener e removeAllListeners são herdados de WebPlugin (no-op no web)
 }

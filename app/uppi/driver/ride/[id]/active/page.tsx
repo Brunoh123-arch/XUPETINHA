@@ -9,6 +9,7 @@ import { trackingService } from '@/lib/services/tracking-service'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { NativeMap, type NativeMapHandle } from '@/components/native-map'
+import type { NavigationProgress } from '@/plugins/navigation'
 
 
 type RideStatus = Ride['status']
@@ -27,6 +28,75 @@ interface RideWithPassenger extends Ride {
   passenger?: Pick<Profile, 'full_name' | 'avatar_url' | 'phone'>
 }
 
+// ─── Helpers turn-by-turn ────────────────────────────────────────────────────
+
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`
+  return `${(meters / 1000).toFixed(1)} km`
+}
+
+function formatEta(seconds: number): string {
+  const m = Math.ceil(seconds / 60)
+  if (m < 60) return `${m} min`
+  const h = Math.floor(m / 60)
+  const rem = m % 60
+  return rem > 0 ? `${h}h ${rem}min` : `${h}h`
+}
+
+type ManeuverType = import('@/plugins/navigation').NavigationProgress['maneuverType']
+
+function ManeuverIcon({ type }: { type: ManeuverType }) {
+  // Todos os ícones usam strokeLinecap="round" e strokeWidth={2.5}
+  const cls = 'w-6 h-6 text-white'
+  switch (type) {
+    case 'turn_left':
+    case 'turn_sharp_left':
+    case 'turn_slight_left':
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      )
+    case 'turn_right':
+    case 'turn_sharp_right':
+    case 'turn_slight_right':
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      )
+    case 'uturn':
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h13a4 4 0 010 8h-1M3 10l4-4M3 10l4 4" />
+        </svg>
+      )
+    case 'roundabout':
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <circle cx="12" cy="12" r="4" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4a8 8 0 018 8" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20 12l-2-2m0 0l-2 2" />
+        </svg>
+      )
+    case 'destination':
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    default: // straight / unknown
+      return (
+        <svg className={cls} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      )
+  }
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────────
+
 export default function DriverActiveRidePage() {
   const params = useParams()
   const router = useRouter()
@@ -43,14 +113,96 @@ export default function DriverActiveRidePage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const mapRef = useRef<NativeMapHandle>(null)
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
+  /** Progresso turn-by-turn recebido do Navigation SDK nativo via listener */
+  const [navProgress, setNavProgress] = useState<NavigationProgress | null>(null)
+  const [navActive, setNavActive] = useState(false)
+  const navListenerRef = useRef<{ remove: () => void } | null>(null)
 
   useEffect(() => {
     loadRide()
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
       trackingService.stopTracking()
+      // Remove listener do Navigation SDK ao desmontar a página
+      navListenerRef.current?.remove()
     }
   }, [rideId])
+
+  /**
+   * Quando a navegação in-app é iniciada (navActive=true), registra o listener
+   * de progresso turn-by-turn no Navigation SDK e ativa o follow mode no mapa.
+   * Limpa tudo automaticamente quando navActive volta a false.
+   */
+  useEffect(() => {
+    if (!navActive) {
+      navListenerRef.current?.remove()
+      navListenerRef.current = null
+      mapRef.current?.setFollowMode(false)
+      setNavProgress(null)
+      return
+    }
+
+    mapRef.current?.setFollowMode(true)
+
+    async function subscribeToNavProgress() {
+      try {
+        const { NavigationPlugin } = await import('@/plugins/navigation')
+
+        const progressListener = await NavigationPlugin.addListener(
+          'navigationProgress',
+          (progress) => {
+            setNavProgress(progress)
+            // Atualiza câmera com bearing do SDK para experiência "modo estrada"
+            if (
+              progress.currentLat !== undefined &&
+              progress.currentLng !== undefined &&
+              progress.currentHeading !== undefined
+            ) {
+              mapRef.current?.updateCamera(
+                progress.currentLat,
+                progress.currentLng,
+                progress.currentHeading,
+              )
+            }
+          }
+        )
+
+        const arrivedListener = await NavigationPlugin.addListener(
+          'arrivedAtDestination',
+          () => {
+            setNavProgress(null)
+            setNavActive(false)
+          }
+        )
+
+        const stoppedListener = await NavigationPlugin.addListener(
+          'navigationStopped',
+          () => {
+            setNavProgress(null)
+            setNavActive(false)
+          }
+        )
+
+        // Combina todos os removes em um único ref
+        navListenerRef.current = {
+          remove: () => {
+            progressListener.remove()
+            arrivedListener.remove()
+            stoppedListener.remove()
+          }
+        }
+      } catch {
+        // Plugin não disponível (web fallback) — não faz nada
+      }
+    }
+
+    subscribeToNavProgress()
+
+    return () => {
+      navListenerRef.current?.remove()
+      navListenerRef.current = null
+    }
+  }, [navActive])
 
   // Timer for in_progress
   useEffect(() => {
@@ -241,6 +393,7 @@ export default function DriverActiveRidePage() {
 
           if (available) {
             await NavigationPlugin.startNavigation({ lat, lng, label })
+            setNavActive(true)
             return
           }
         } catch {
@@ -264,6 +417,7 @@ export default function DriverActiveRidePage() {
 
           if (available) {
             await NavigationPlugin.startNavigation({ lat, lng, label })
+            setNavActive(true)
             return
           }
         } catch {
@@ -354,6 +508,7 @@ export default function DriverActiveRidePage() {
           <NativeMap
             ref={mapRef}
             showUserLocation
+            followMode={navActive}
             showRoute={!!(
               (ride.status === 'accepted' ? ride.pickup_lat : ride.dropoff_lat) &&
               (ride.status === 'accepted' ? ride.pickup_lng : ride.dropoff_lng)
@@ -384,6 +539,57 @@ export default function DriverActiveRidePage() {
           />
         )}
       </div>
+
+      {/* Banner turn-by-turn — visível apenas quando navActive + navProgress */}
+      {navActive && navProgress && (
+        <div className="absolute top-0 left-0 right-0 z-40 pt-safe-offset-2 px-3 pointer-events-none">
+          <div className="flex items-center gap-3 bg-[#1A73E8] rounded-2xl px-4 py-3 shadow-xl">
+            {/* Ícone da manobra */}
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <ManeuverIcon type={navProgress.maneuverType} />
+            </div>
+
+            {/* Instrução + distância */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-bold text-white leading-tight truncate">
+                {navProgress.nextStepInstruction || 'Siga em frente'}
+              </p>
+              {navProgress.distanceToNextStepMeters > 0 && (
+                <p className="text-[12px] text-white/75 mt-0.5">
+                  {formatDistance(navProgress.distanceToNextStepMeters)}
+                  {navProgress.currentRoadName ? ` · ${navProgress.currentRoadName}` : ''}
+                </p>
+              )}
+            </div>
+
+            {/* ETA */}
+            {navProgress.timeToDestinationSeconds > 0 && (
+              <div className="text-right shrink-0">
+                <p className="text-[14px] font-bold text-white">{formatEta(navProgress.timeToDestinationSeconds)}</p>
+                <p className="text-[10px] text-white/65">{formatDistance(navProgress.distanceToDestinationMeters)}</p>
+              </div>
+            )}
+
+            {/* Botão fechar navegação */}
+            <button
+              type="button"
+              aria-label="Encerrar navegação"
+              className="pointer-events-auto w-8 h-8 bg-white/20 rounded-full flex items-center justify-center ml-1 shrink-0"
+              onClick={async () => {
+                try {
+                  const { NavigationPlugin } = await import('@/plugins/navigation')
+                  await NavigationPlugin.stopNavigation()
+                } catch {}
+                setNavActive(false)
+              }}
+            >
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Header floating */}
       <div className="absolute top-0 left-0 right-0 z-20 pt-safe-offset-4 px-4 flex items-center justify-between">
