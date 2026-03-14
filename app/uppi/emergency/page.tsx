@@ -350,7 +350,7 @@ export default function EmergencyPage() {
               />
               <button
                 type="button"
-                onClick={() => { navigator.clipboard.writeText(shareLink); iosToast.success('Copiado') }}
+                onClick={async () => { const { nativeCopy } = await import('@/lib/native'); await nativeCopy(shareLink); iosToast.success('Copiado') }}
                 className="h-[42px] px-4 bg-blue-500 text-white rounded-xl text-[14px] font-bold ios-press shrink-0"
               >
                 Copiar

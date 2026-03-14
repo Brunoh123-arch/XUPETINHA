@@ -132,8 +132,9 @@ export default function PromotionsPage() {
     }
   }
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
+  const copyCode = async (code: string) => {
+    const { nativeCopy } = await import('@/lib/native')
+    await nativeCopy(code)
     haptics.notificationSuccess()
     iosToast.success('Codigo copiado')
   }

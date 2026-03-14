@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { ArrowLeft, MoreVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { triggerHaptic } from '@/lib/utils/ios-haptics'
+import { useRouter } from 'next/navigation'
 
 interface NavigationAction {
   icon?: React.ReactNode
@@ -39,6 +40,7 @@ export function IOSNavigationBar({
   className,
   children
 }: IOSNavigationBarProps) {
+  const router = useRouter()
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -79,7 +81,7 @@ export function IOSNavigationBar({
           {showBackButton && (
             <button
               onClick={() => {
-                handleActionClick(onBack || (() => window.history.back()))
+                handleActionClick(onBack || (() => router.back()))
               }}
               className={cn(
                 'flex items-center gap-1 -ml-2 px-2 py-1 rounded-lg',

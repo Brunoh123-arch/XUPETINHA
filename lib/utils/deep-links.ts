@@ -19,7 +19,7 @@ export interface ShareCouponData {
  * Generate deep link URL for sharing a ride
  */
 export function generateRideDeepLink(data: ShareRideData): string {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://uppi.app'
+  const baseUrl = 'https://uppi.app'
   const params = new URLSearchParams({
     type: 'ride',
     id: data.rideId,
@@ -35,7 +35,7 @@ export function generateRideDeepLink(data: ShareRideData): string {
  * Generate deep link URL for sharing a coupon
  */
 export function generateCouponDeepLink(data: ShareCouponData): string {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://uppi.app'
+  const baseUrl = 'https://uppi.app'
   const params = new URLSearchParams({
     type: 'coupon',
     code: data.code,
@@ -54,30 +54,12 @@ export async function shareRide(data: ShareRideData): Promise<boolean> {
 
   triggerHaptic('impact')
 
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Minha corrida - Uppi',
-        text: shareText,
-        url: link,
-      })
-      return true
-    } catch (error) {
-      // User cancelled share or error occurred
-      return false
-    }
-  } else {
-    // Fallback: copy to clipboard
-    try {
-      await navigator.clipboard.writeText(shareText)
-      iosToast.success('Link copiado')
-      triggerHaptic('success')
-      return true
-    } catch (error) {
-      iosToast.error('Erro ao copiar link')
-      triggerHaptic('error')
-      return false
-    }
+  try {
+    const { nativeShare } = await import('@/lib/native')
+    await nativeShare({ title: 'Minha corrida - Uppi', text: shareText, url: link })
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -90,28 +72,12 @@ export async function shareCoupon(data: ShareCouponData): Promise<boolean> {
 
   triggerHaptic('impact')
 
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Cupom Uppi',
-        text: shareText,
-        url: link,
-      })
-      return true
-    } catch (error) {
-      return false
-    }
-  } else {
-    try {
-      await navigator.clipboard.writeText(shareText)
-      iosToast.success('Link copiado')
-      triggerHaptic('success')
-      return true
-    } catch (error) {
-      iosToast.error('Erro ao copiar link')
-      triggerHaptic('error')
-      return false
-    }
+  try {
+    const { nativeShare } = await import('@/lib/native')
+    await nativeShare({ title: 'Cupom Uppi', text: shareText, url: link })
+    return true
+  } catch {
+    return false
   }
 }
 
@@ -165,7 +131,7 @@ export interface InviteData {
  * Generate deep link URL for driver/passenger invite
  */
 export function generateInviteDeepLink(data: InviteData): string {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://uppi.app'
+  const baseUrl = 'https://uppi.app'
   const path = data.role === 'driver' ? '/driver/invite' : '/invite'
   const params = new URLSearchParams({
     code: data.code,

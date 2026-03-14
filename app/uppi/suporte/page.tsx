@@ -221,8 +221,8 @@ export default function SuportePage() {
           <p className="ios-section-header">Outros canais</p>
           <div className="ios-list-group">
             {[
-              { title: 'E-mail', desc: 'suporte@uppi.com.br', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', action: () => (window.location.href = 'mailto:suporte@uppi.com.br') },
-              { title: 'Telefone', desc: '0800 123 4567', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', action: () => (window.location.href = 'tel:08001234567') },
+              { title: 'E-mail', desc: 'suporte@uppi.com.br', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', action: async () => { const { nativeEmail } = await import('@/lib/native'); await nativeEmail('suporte@uppi.com.br') } },
+              { title: 'Telefone', desc: '0800 123 4567', icon: 'M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z', action: async () => { const { nativeCall } = await import('@/lib/native'); await nativeCall('08001234567') } },
             ].map((ch, i) => (
               <button
                 key={i}

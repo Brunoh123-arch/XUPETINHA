@@ -498,8 +498,8 @@ export default function DriverActiveRidePage() {
         }
 
       } else {
-        // Web/desktop
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank')
+        const { nativeOpenUrl } = await import('@/lib/native')
+        await nativeOpenUrl(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`)
       }
 
     } else if (address) {
@@ -511,7 +511,8 @@ export default function DriverActiveRidePage() {
         const { App } = await import('@capacitor/app')
         await App.openUrl({ url: `maps://?daddr=${dest}&dirflg=d` })
       } else {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`, '_blank')
+        const { nativeOpenUrl } = await import('@/lib/native')
+        await nativeOpenUrl(`https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`)
       }
     }
   }

@@ -148,7 +148,8 @@ function CreateModal({ onClose, onSaved }: { onClose: () => void; onSaved: () =>
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
+    const { nativeCopy } = await import('@/lib/native')
+    await nativeCopy(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

@@ -26,13 +26,12 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
 
     const requestPermission = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        setHasPermission(true)
-        stream.getTracks().forEach(track => track.stop()) // Stop the test stream
-      } catch (error) {
-        console.error('Microphone permission denied:', error)
+        const { Microphone } = await import('@capacitor-community/microphone')
+        const { granted } = await Microphone.requestPermissions()
+        setHasPermission(granted)
+        if (!granted) iosToast.error('Permissão de microfone negada', 'Ative nas configurações')
+      } catch {
         setHasPermission(false)
-        iosToast.error('Permissão de microfone negada', 'Ative nas configurações do navegador')
       }
     }
 
@@ -57,13 +56,11 @@ export function RideAudioRecorder({ rideId, enabled, onRecordingComplete }: Ride
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100,
-        } 
-      })
+      // Usa VoiceRecorder do Capacitor para gravação nativa
+      const { VoiceRecorder } = await import('capacitor-voice-recorder')
+      await VoiceRecorder.startRecording()
+      // Mantem compatibilidade com o fluxo de MediaRecorder via stream nativo
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 } })
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus',

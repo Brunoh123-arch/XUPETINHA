@@ -43,11 +43,11 @@ export function PixModal({ externalId, qrCodeImage, qrCodeText, amountLabel, onC
         if (onPaid) {
           setTimeout(() => onPaid(), 1500)
         } else {
-          const currentParams = new URLSearchParams(window.location.search)
           const redirectBase = data.redirect_url ?? '/obrigado'
-          const redirectUrl = new URL(redirectBase, window.location.origin)
-          currentParams.forEach((value, key) => { redirectUrl.searchParams.set(key, value) })
-          setTimeout(() => { window.location.href = redirectUrl.toString() }, 1500)
+          setTimeout(() => {
+            const { nativePush } = require('@/lib/native')
+            nativePush(redirectBase)
+          }, 1500)
         }
       }
     } catch { }
@@ -60,7 +60,8 @@ export function PixModal({ externalId, qrCodeImage, qrCodeText, amountLabel, onC
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(qrCodeText)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(qrCodeText)
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)
     } catch {

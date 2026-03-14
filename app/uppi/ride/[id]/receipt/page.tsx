@@ -100,11 +100,8 @@ export default function RideReceiptPage() {
         driver ? `Motorista: ${driver.full_name}` : null,
       ].filter(Boolean).join('\n')
 
-      if (navigator.share) {
-        await navigator.share({ title: 'Recibo Uppi', text })
-      } else {
-        await navigator.clipboard.writeText(text)
-      }
+      const { nativeShare } = await import('@/lib/native')
+      await nativeShare({ title: 'Recibo Uppi', text })
     } catch { /* cancelado */ }
     finally { setSharing(false) }
   }

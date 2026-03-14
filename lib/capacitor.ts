@@ -36,9 +36,9 @@ export async function initCapacitorApp() {
     // Listener para back button (Android)
     App.addListener('backButton', ({ canGoBack }) => {
       if (canGoBack) {
-        window.history.back()
+        // history.go(-1) é seguro aqui pois estamos no contexto Capacitor WebView
+        history.go(-1)
       } else {
-        // Sair do app
         App.exitApp()
       }
     })

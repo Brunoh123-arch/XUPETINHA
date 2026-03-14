@@ -48,7 +48,7 @@ export default function ShareRidePage() {
     }
   }
 
-  const shareLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/uppi/ride/${rideId}/tracking`
+  const shareLink = `https://uppi.app/uppi/ride/${rideId}/tracking`
 
   const buildShareText = () => {
     const lines = [
@@ -64,7 +64,8 @@ export default function ShareRidePage() {
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(shareLink)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(shareLink)
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch { /* sem permissão */ }
@@ -73,27 +74,24 @@ export default function ShareRidePage() {
   const handleNativeShare = async () => {
     setSharing(true)
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Minha corrida - Uppi',
-          text: buildShareText(),
-          url: shareLink,
-        })
-      } else {
-        await handleCopyLink()
-      }
+      const { nativeShare } = await import('@/lib/native')
+      await nativeShare({
+        title: 'Minha corrida - Uppi',
+        text: buildShareText(),
+        url: shareLink,
+      })
     } catch { /* cancelado */ }
     finally { setSharing(false) }
   }
 
-  const handleWhatsApp = () => {
-    const text = encodeURIComponent(buildShareText())
-    window.open(`https://wa.me/?text=${text}`, '_blank')
+  const handleWhatsApp = async () => {
+    const { nativeOpenUrl } = await import('@/lib/native')
+    await nativeOpenUrl(`https://wa.me/?text=${encodeURIComponent(buildShareText())}`)
   }
 
-  const handleSMS = () => {
-    const text = encodeURIComponent(buildShareText())
-    window.open(`sms:?body=${text}`, '_blank')
+  const handleSMS = async () => {
+    const { nativeOpenUrl } = await import('@/lib/native')
+    await nativeOpenUrl(`sms:?body=${encodeURIComponent(buildShareText())}`)
   }
 
   if (loading) {

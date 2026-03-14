@@ -67,9 +67,6 @@ async function triggerHaptic(style: HapticStyle = 'light'): Promise<void> {
           await Haptics.selectionEnd()
           break
       }
-    } else if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      // Fallback web — API Vibration
-      navigator.vibrate(WEB_PATTERNS[style])
     }
   } catch {
     // Silently fail — haptics nunca devem quebrar o app

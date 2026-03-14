@@ -241,7 +241,7 @@ export default function RideDetailsPage() {
                   Mensagem
                 </Button>
                 <Button
-                  onClick={() => window.location.href = `tel:${ride.driver.phone}`}
+                  onClick={async () => { const { nativeCall } = await import('@/lib/native'); await nativeCall(ride.driver.phone) }}
                   variant="outline"
                   className="flex-1 text-blue-600 border-blue-600 hover:bg-blue-50"
                 >

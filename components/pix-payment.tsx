@@ -52,7 +52,8 @@ export function PixPayment({ qrCode, qrCodeBase64, amount, expiresAt, transactio
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(qrCode)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(qrCode)
       setCopied(true)
       setTimeout(() => setCopied(false), 3000)
     } catch {

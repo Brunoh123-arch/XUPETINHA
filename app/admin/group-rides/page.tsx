@@ -102,8 +102,9 @@ export default function AdminGroupRidesPage() {
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [fetchGroups])
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
+  const copyCode = async (code: string) => {
+    const { nativeCopy } = await import('@/lib/native')
+    await nativeCopy(code)
     setCopiedCode(code)
     setTimeout(() => setCopiedCode(null), 2000)
   }

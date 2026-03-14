@@ -31,7 +31,7 @@ export const ReferralCard = ({
   const [copied, setCopied] = React.useState(false)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(referralLink).then(() => {
+    import('@/lib/native').then(({ nativeCopy }) => nativeCopy(referralLink)).then(() => {
       setCopied(true)
       
       // Trigger confetti animation

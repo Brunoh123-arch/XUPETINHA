@@ -136,16 +136,6 @@ export function PermissionOnboarding() {
         const camStatus = await Camera.checkPermissions()
         result.camera = camStatus.camera === 'granted'
       } catch { result.camera = false }
-    } else {
-      // Web fallback
-      try {
-        const geo = await navigator.permissions.query({ name: 'geolocation' as PermissionName })
-        result.location = geo.state === 'granted'
-      } catch {}
-      try {
-        result.notification = 'Notification' in window && Notification.permission === 'granted'
-      } catch {}
-      result.camera = false // câmera no web só pede quando usa
     }
 
     return result

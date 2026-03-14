@@ -272,17 +272,17 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
           await loadGoogleMapsScript(apiKey as string)
           if (cancelled) return
 
-          // Check geolocation permission
-          if (navigator.permissions) {
-            try {
-              const result = await navigator.permissions.query({ name: 'geolocation' })
-              if (cancelled) return
-              setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-
-              result.addEventListener('change', () => {
-                setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-              })
-            } catch {
+          // Verifica permissão de geolocalização via Capacitor
+          try {
+            const { Geolocation } = await import('@capacitor/geolocation')
+            const { location } = await Geolocation.checkPermissions()
+            if (cancelled) return
+            setPermissionState(
+              location === 'granted' ? 'granted'
+              : location === 'denied' ? 'denied'
+              : 'prompt'
+            )
+            if (location !== 'granted') {
               setPermissionState('prompt')
             }
           } else {

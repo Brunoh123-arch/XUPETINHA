@@ -225,7 +225,7 @@ export default function AdminWithdrawalsPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { navigator.clipboard.writeText(w.pix_key!); iosToast.success('PIX copiado!') }}
+                    onClick={async () => { const { nativeCopy } = await import('@/lib/native'); await nativeCopy(w.pix_key!); iosToast.success('PIX copiado!') }}
                     className="text-[12px] text-blue-500 font-bold ios-press shrink-0"
                   >
                     Copiar
