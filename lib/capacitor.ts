@@ -48,13 +48,9 @@ export async function initCapacitorApp() {
       console.log('[Capacitor] App state:', isActive ? 'foreground' : 'background')
     })
 
-    // Listener para deep links
+    // Listener para deep links / Universal Links (iOS) / App Links (Android)
     App.addListener('appUrlOpen', ({ url }) => {
-      console.log('[Capacitor] Deep link:', url)
-      const path = new URL(url).pathname
-      if (path) {
-        window.location.href = path
-      }
+      handleCapacitorDeepLink(url)
     })
 
     console.log('[Capacitor] App inicializado com sucesso')
@@ -115,6 +111,34 @@ export async function setStatusBar(options: {
     }
   } catch (err) {
     console.error('[Capacitor] Erro ao configurar status bar:', err)
+  }
+}
+
+/**
+ * Trata deep links recebidos pelo Capacitor (App Links Android + Universal Links iOS).
+ * Usa o router do Next.js via history.pushState para navegação SPA sem reload.
+ *
+ * Rotas suportadas:
+ *  /share?type=ride&id=...          → corrida compartilhada
+ *  /share?type=coupon&code=...      → cupom recebido
+ *  /uppi/ride/:id/*                 → tela de corrida
+ *  /uppi/promotions*                → promoções (com código opcional)
+ *  /invite/:code                    → convite de passageiro
+ *  /driver/invite/:code             → convite de motorista
+ */
+export function handleCapacitorDeepLink(url: string): void {
+  try {
+    const parsed = new URL(url)
+    const path = parsed.pathname + parsed.search + parsed.hash
+
+    // Usa pushState para navegação SPA (evita reload completo)
+    if (window.history && path) {
+      window.history.pushState(null, '', path)
+      // Dispara um evento customizado para que o Next.js App Router detecte a mudança
+      window.dispatchEvent(new PopStateEvent('popstate', { state: null }))
+    }
+  } catch (err) {
+    console.error('[Capacitor] Erro ao processar deep link:', err)
   }
 }
 

@@ -1,16 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { createClient } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/utils'
+import { useBiometric } from '@/hooks/use-biometric'
 
 export default function DriverLoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const biometric = useBiometric()
+
+  useEffect(() => {
+    if (biometric.enrolled && biometric.savedEmail) {
+      setEmail(biometric.savedEmail)
+    }
+  }, [biometric.enrolled, biometric.savedEmail])
+
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true)
+    try {
+      const savedEmail = await biometric.authenticate()
+      if (!savedEmail) return
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push('/uppi/driver')
+      } else {
+        iosToast.error('Sessão expirada. Entre com sua senha.')
+      }
+    } finally {
+      setBiometricLoading(false)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -155,6 +181,39 @@ export default function DriverLoginPage() {
                 Esqueceu a senha?
               </button>
             </div>
+
+            {biometric.available && biometric.enrolled && (
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                disabled={biometricLoading}
+                className="mt-3 w-full rounded-[14px] border border-[#34C759]/30 bg-[#34C759]/10 py-4 text-[17px] font-semibold text-[#34C759] transition-all active:scale-[0.97] disabled:opacity-50 flex items-center justify-center gap-2.5"
+              >
+                {biometricLoading ? (
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                ) : biometric.biometricType === 'face_id' ? (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
+                    <circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+                    <path d="M9 15c.83 1 2.17 1.5 3 1.5s2.17-.5 3-1.5"/>
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 10a2 2 0 00-2 2c0 1.1.9 2 2 2s2-.9 2-2a2 2 0 00-2-2z"/>
+                    <path d="M12 4a8 8 0 00-7.4 5M12 4a8 8 0 017.4 5M4.6 15A8 8 0 0012 20a8 8 0 007.4-5"/>
+                    <path d="M12 7a5 5 0 00-4.6 3M12 7a5 5 0 014.6 3M7.4 17A5 5 0 0012 19a5 5 0 004.6-2"/>
+                  </svg>
+                )}
+                {biometricLoading
+                  ? 'Verificando...'
+                  : biometric.biometricType === 'face_id'
+                    ? 'Entrar com Face ID'
+                    : 'Entrar com Digital'}
+              </button>
+            )}
 
             <button
               type="submit"

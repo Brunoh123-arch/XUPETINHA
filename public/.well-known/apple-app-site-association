@@ -1,0 +1,23 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAM_ID.app.uppi.mobile"],
+        "components": [
+          { "/": "/share*", "comment": "Compartilhamento de corridas e cupons" },
+          { "/": "/uppi/ride/*", "comment": "Detalhes de corrida" },
+          { "/": "/uppi/promotions*", "comment": "Cupons e promoções" },
+          { "/": "/invite/*", "comment": "Convites de motorista/passageiro" },
+          { "/": "/driver/invite/*", "comment": "Convites de motorista" }
+        ]
+      }
+    ]
+  },
+  "activitycontinuation": {
+    "apps": ["TEAM_ID.app.uppi.mobile"]
+  },
+  "webcredentials": {
+    "apps": ["TEAM_ID.app.uppi.mobile"]
+  }
+}
