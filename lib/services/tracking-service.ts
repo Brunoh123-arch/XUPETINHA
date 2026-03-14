@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { Capacitor } from '@capacitor/core'
 
 export interface DriverLocation {
   driver_id: string
@@ -29,6 +30,8 @@ const TRACKING_CONFIGS = {
 class TrackingService {
   private supabase = createClient()
   private watchId: number | null = null
+  /** ID do watcher de background geolocation (@capacitor-community/background-geolocation) */
+  private bgWatcherId: string | null = null
   private updateInterval: NodeJS.Timeout | null = null
   private lastPosition: { lat: number; lng: number } | null = null
   private lastSpeed: number = 0
@@ -47,10 +50,88 @@ class TrackingService {
 
   // Inicia rastreamento GPS do motorista para uma corrida
   startDriverTracking(rideId: string, driverId: string, mode: 'online' | 'active_ride' = 'active_ride') {
-    if (!navigator.geolocation) return
-
     this.currentMode = mode
     const config = TRACKING_CONFIGS[mode]
+
+    if (Capacitor.isNativePlatform()) {
+      // ── NATIVO: @capacitor-community/background-geolocation ──────────────
+      // Continua enviando posição mesmo com o app em background/tela bloqueada.
+      this._startBackgroundTracking(rideId, driverId, mode, config)
+    } else {
+      // ── WEB FALLBACK: navigator.geolocation ──────────────────────────────
+      this._startWebTracking(rideId, driverId, mode, config)
+    }
+  }
+
+  /** Tracking nativo com background geolocation */
+  private async _startBackgroundTracking(
+    rideId: string,
+    driverId: string,
+    mode: 'online' | 'active_ride',
+    config: { interval: number; distanceFilter: number }
+  ) {
+    try {
+      const { BackgroundGeolocation } = await import('@capacitor-community/background-geolocation')
+
+      const watcherId = await BackgroundGeolocation.addWatcher(
+        {
+          // Notificação persistente Android (obrigatória para background)
+          backgroundTitle: 'Uppi — Rastreamento ativo',
+          backgroundMessage: 'Sua posição está sendo registrada para a corrida.',
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: config.distanceFilter,
+        },
+        async (location, error) => {
+          if (error || !location) return
+
+          const { latitude: lat, longitude: lng, speed, accuracy, bearing } = location
+
+          if (this.lastPosition) {
+            const distance = this.calculateDistance(
+              this.lastPosition.lat,
+              this.lastPosition.lng,
+              lat,
+              lng
+            )
+            const minDist =
+              (speed ?? 0) < 0.5
+                ? TRACKING_CONFIGS.stopped.distanceFilter
+                : config.distanceFilter
+            if (distance < minDist) return
+          }
+
+          this.lastPosition = { lat, lng }
+          this.lastSpeed = speed ?? 0
+
+          await this.updateDriverLocation(rideId, {
+            driver_id: driverId,
+            latitude: lat,
+            longitude: lng,
+            heading: bearing ?? 0,
+            speed: speed ?? 0,
+            accuracy: accuracy ?? 0,
+            timestamp: new Date().toISOString(),
+          })
+        }
+      )
+
+      this.bgWatcherId = watcherId
+    } catch {
+      // Plugin não disponível — cai no web fallback
+      const config2 = TRACKING_CONFIGS[mode]
+      this._startWebTracking(rideId, driverId, mode, config2)
+    }
+  }
+
+  /** Tracking web com navigator.geolocation (fallback) */
+  private _startWebTracking(
+    rideId: string,
+    driverId: string,
+    mode: 'online' | 'active_ride',
+    config: { interval: number; distanceFilter: number }
+  ) {
+    if (!navigator.geolocation) return
 
     this.watchId = navigator.geolocation.watchPosition(
       async (position) => {
@@ -58,34 +139,30 @@ class TrackingService {
         const lng = position.coords.longitude
         const speed = position.coords.speed || 0
 
-        // DISTANCE FILTER: ignorar se nao moveu o suficiente
         if (this.lastPosition) {
           const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
           const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
-          if (distance < distanceFilter) {
-            return // Nao moveu o suficiente
-          }
+          if (distance < distanceFilter) return
         }
 
         this.lastPosition = { lat, lng }
         this.lastSpeed = speed
 
-        const location: DriverLocation = {
+        await this.updateDriverLocation(rideId, {
           driver_id: driverId,
           latitude: lat,
           longitude: lng,
           heading: position.coords.heading || 0,
-          speed: speed,
+          speed,
           accuracy: position.coords.accuracy,
           timestamp: new Date().toISOString(),
-        }
-        await this.updateDriverLocation(rideId, location)
+        })
       },
       (_err) => {},
       { enableHighAccuracy: mode === 'active_ride', maximumAge: 5000, timeout: 10000 }
     )
 
-    // Intervalo dinamico baseado em velocidade
+    // Intervalo dinâmico baseado em velocidade
     const startInterval = () => {
       const interval = this.lastSpeed < 0.5 ? TRACKING_CONFIGS.stopped.interval : config.interval
       this.updateInterval = setTimeout(async () => {
@@ -94,29 +171,24 @@ class TrackingService {
           const lng = position.coords.longitude
           const speed = position.coords.speed || 0
 
-          // Distance filter
           if (this.lastPosition) {
             const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
             const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
-            if (distance < distanceFilter) {
-              startInterval()
-              return
-            }
+            if (distance < distanceFilter) { startInterval(); return }
           }
 
           this.lastPosition = { lat, lng }
           this.lastSpeed = speed
 
-          const location: DriverLocation = {
+          await this.updateDriverLocation(rideId, {
             driver_id: driverId,
             latitude: lat,
             longitude: lng,
             heading: position.coords.heading || 0,
-            speed: speed,
+            speed,
             accuracy: position.coords.accuracy,
             timestamp: new Date().toISOString(),
-          }
-          await this.updateDriverLocation(rideId, location)
+          })
           startInterval()
         })
       }, interval)
@@ -125,6 +197,16 @@ class TrackingService {
   }
 
   stopTracking() {
+    // Para background geolocation nativo
+    if (this.bgWatcherId !== null) {
+      const watcherId = this.bgWatcherId
+      this.bgWatcherId = null
+      import('@capacitor-community/background-geolocation').then(({ BackgroundGeolocation }) => {
+        BackgroundGeolocation.removeWatcher({ id: watcherId }).catch(() => {})
+      }).catch(() => {})
+    }
+
+    // Para web fallback
     if (this.watchId !== null) {
       navigator.geolocation.clearWatch(this.watchId)
       this.watchId = null

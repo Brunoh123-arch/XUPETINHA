@@ -10,6 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 import type { NavigationProgress } from '@/plugins/navigation'
+import { LiveActivityPlugin } from '@/plugins/live-activity'
+import { useStatusBar } from '@/hooks/use-status-bar'
+import { useTTS } from '@/hooks/use-tts'
+import { Capacitor } from '@capacitor/core'
 
 
 type RideStatus = Ride['status']
@@ -102,6 +106,8 @@ export default function DriverActiveRidePage() {
   const router = useRouter()
   const supabase = createClient()
   const rideId = params.id as string
+  const { mapMode, normalMode } = useStatusBar()
+  const { speak: speakTTS, stop: stopTTS } = useTTS()
 
   const [ride, setRide] = useState<RideWithPassenger | null>(null)
   const [loading, setLoading] = useState(true)
@@ -119,14 +125,50 @@ export default function DriverActiveRidePage() {
   const navListenerRef = useRef<{ remove: () => void } | null>(null)
 
   useEffect(() => {
+    // Status bar: ícones claros sobre o mapa
+    mapMode()
+
+    // Keep Awake: impede tela apagar durante corrida/navegação
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor-community/keep-awake').then(({ KeepAwake }) => {
+        KeepAwake.keepAwake().catch(() => {})
+      }).catch(() => {})
+    }
+
     loadRide()
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
       trackingService.stopTracking()
-      // Remove listener do Navigation SDK ao desmontar a página
       navListenerRef.current?.remove()
+      normalMode()
+
+      // Libera lock de tela ao sair da corrida
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor-community/keep-awake').then(({ KeepAwake }) => {
+          KeepAwake.allowSleep().catch(() => {})
+        }).catch(() => {})
+      }
     }
   }, [rideId])
+
+  /** Narra em voz + sincroniza Live Activity quando a instrução muda */
+  useEffect(() => {
+    if (navProgress?.nextStepInstruction) {
+      speakTTS(navProgress.nextStepInstruction)
+      // Atualiza Dynamic Island com instrução turn-by-turn e ETA
+      LiveActivityPlugin.updateActivity({
+        navigationInstruction: navProgress.nextStepInstruction,
+        etaMinutes: navProgress.timeToDestinationSeconds
+          ? Math.ceil(navProgress.timeToDestinationSeconds / 60)
+          : undefined,
+      }).catch(() => {})
+    }
+  }, [navProgress?.nextStepInstruction])
+
+  // Para TTS ao encerrar navegação
+  useEffect(() => {
+    if (!navActive) stopTTS()
+  }, [navActive])
 
   /**
    * Quando a navegação in-app é iniciada (navActive=true), registra o listener
@@ -271,6 +313,17 @@ export default function DriverActiveRidePage() {
         router.replace(`/uppi/driver/ride/${rideId}/summary`)
       } else if (data.status === 'cancelled' || data.status === 'failed') {
         router.replace('/uppi/driver')
+      } else {
+        // Inicia Live Activity na Dynamic Island (iOS 16.1+)
+        LiveActivityPlugin.startActivity({
+          rideId: data.id,
+          passengerName: data.passenger?.full_name ?? 'Passageiro',
+          passengerAvatarUrl: data.passenger?.avatar_url ?? undefined,
+          status: data.status as any,
+          originAddress: data.pickup_address ?? '',
+          destinationAddress: data.dropoff_address ?? '',
+          etaMinutes: 0,
+        }).catch(() => {})
       }
     } finally {
       setLoading(false)
@@ -298,7 +351,12 @@ export default function DriverActiveRidePage() {
           updates.completed_at = new Date().toISOString()
           trackingService.stopTracking()
           if (timerRef.current) clearInterval(timerRef.current)
+          // Encerra Live Activity
+          LiveActivityPlugin.endActivity().catch(() => {})
           setTimeout(() => router.replace(`/uppi/driver/ride/${rideId}/summary`), 800)
+        } else {
+          // Atualiza Live Activity com novo status
+          LiveActivityPlugin.updateActivity({ status: cfg.nextStatus as any }).catch(() => {})
         }
         setRide(prev => prev ? { ...prev, ...updates } : null)
       } else {
@@ -328,6 +386,7 @@ export default function DriverActiveRidePage() {
         }).eq('id', rideId)
       }
       trackingService.stopTracking()
+      LiveActivityPlugin.endActivity().catch(() => {})
       router.replace('/uppi/driver')
     } finally {
       setCancelling(false)
