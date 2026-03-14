@@ -1,17 +1,18 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 11/03/2026
-**Versao:** 20.0
+**Ultima Atualizacao:** 14/03/2026
+**Versao:** 21.0
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx
-**Tabelas no schema public:** 100 (migrations 001-049)
+**Tabelas no schema public (banco jpnwxqjrhzaobnugjnyx):** 100 (migrations 001-049 aplicadas)
+**Tabelas definidas nos scripts (total acumulado):** 130 (100 aplicadas + 30 nos scripts 012/050 nao aplicados ainda)
 **Tabelas com RLS ativo:** 86 (exceto spatial_ref_sys — sistema PostGIS)
 **Tabelas com Realtime:** 51
 **RPCs de negocio callable:** 75
 **Politicas RLS:** 162
 **Indices:** 260
 **Triggers customizados:** 34
-**View:** 1 (ride_offers — alias de price_offers)
+**Views:** 3 (ride_offers + geometry_columns + geography_columns)
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
 ---
@@ -20,7 +21,8 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public** | **100** | Dominio da aplicacao UPPI (+ 1 VIEW: ride_offers) |
+| **public (aplicadas)** | **100** | Dominio da aplicacao UPPI — migrations 001-049 aplicadas |
+| **public (scripts pendentes)** | **+30** | Scripts 012 e 050 ainda nao aplicados no banco atual |
 | auth | 21 | Gerenciadas pelo Supabase Auth |
 | storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
@@ -31,7 +33,53 @@
 
 ---
 
-## 1. Tabelas do Schema Public (100 tabelas — migrations 001-049)
+## 0B. 30 Tabelas Extras nos Scripts (nao aplicadas ainda)
+
+### Do script `012-tabelas-rpcs-faltantes.sql`
+| Tabela | Descricao |
+|--------|-----------|
+| `webhooks` | Webhooks (versao alternativa de webhook_endpoints) |
+| `social_likes` | Likes em posts sociais (alias de social_post_likes) |
+| `social_comments` | Comentarios em posts sociais (alias de post_comments) |
+| `intercity_routes` | Rotas predefinidas intercidades |
+| `user_promotions` | Promocoes usadas por usuario |
+| `family_groups` | Grupos familiares |
+| `family_group_members` | Membros dos grupos familiares |
+| `favorite_places` | Lugares favoritos do usuario |
+| `emergency_events` | Eventos de emergencia (sos, panico, desvio de rota) |
+| `achievements` | Catalogo de conquistas (definitions) |
+| `subscription_plans` | Planos de assinatura com precos |
+| `user_payment_methods` | Metodos de pagamento salvos do usuario |
+
+### Do script `050-tabelas-recomendadas.sql`
+| Tabela | Descricao |
+|--------|-----------|
+| `live_activities` | Estado de Live Activities iOS |
+| `driver_trips_summary` | Cache de resumo diario/semanal de corridas por motorista |
+| `ride_eta_log` | Log de ETA estimado vs real para auditoria |
+| `app_review_requests` | Controle de quando pedir avaliacao na loja |
+| `blocked_users` | Bloqueio entre passageiro e motorista |
+| `ride_offers_log` | Historico de motoristas notificados por corrida |
+| `driver_rating_breakdown` | Cache de categorias de avaliacao por motorista |
+| `user_activity_log` | Log de acoes do usuario para analytics e fraude |
+
+### De outros scripts (06, 07, 05)
+| Tabela | Script | Descricao |
+|--------|--------|-----------|
+| `avatars` | `05-missing-tables.sql` | Referencia de upload de avatares |
+| `favorite_addresses` | `SETUP-NOVO-SUPABASE.sql` | Enderecos favoritos (alias de favorites) |
+| `driver_popular_routes` | `07-final-6-tables.sql` | Rotas populares por motorista |
+| `route_history` | `07-final-6-tables.sql` | Historico de rotas de usuario |
+| `driver_route_segments` | `06-complete-72-tables.sql` | Segmentos de rota do motorista |
+| `ride_stops` | `06-complete-72-tables.sql` | Paradas intermediarias de corrida |
+| `location_history` | `06-complete-72-tables.sql` | Historico de localizacao do usuario |
+| `rating_helpful_votes` | `06-complete-72-tables.sql` | Votos de utilidade em avaliacoes |
+| `rating_reports` | `06-complete-72-tables.sql` | Denuncias de avaliacoes |
+| `reports` | `06-complete-72-tables.sql` | Relatorio de usuarios/corridas |
+
+---
+
+## 1. Tabelas do Schema Public (100 tabelas aplicadas — migrations 001-049)
 
 ### 7 Novas Tabelas (migrations 033-034)
 - `fcm_tokens` — tokens Firebase Cloud Messaging por dispositivo
@@ -1092,12 +1140,13 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 ---
 
-## 6. Consolidado Final — VALORES REAIS (10/03/2026)
+## 6. Consolidado Final — VALORES REAIS (14/03/2026)
 
 | Metrica | Valor | Observacao |
 |---------|-------|------------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx | ativo |
-| Tabelas public | **87** | migrations 001-034 |
+| Tabelas public (aplicadas) | **100** | migrations 001-049 |
+| Tabelas nos scripts (total) | **130** | +30 dos scripts 012/050/06/07/05 |
 | Tabelas com RLS | **86** | exceto spatial_ref_sys |
 | Tabelas com Realtime | **51** | via pg_publication_tables |
 | RPCs de negocio | **75** | via information_schema.routines |
@@ -1108,8 +1157,13 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 | Migrations aplicadas | **49** | via supabase_migrations.schema_migrations |
 | Extensoes instaladas | 7 | PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql |
 
+### Detalhamento das 30 tabelas extras (scripts nao aplicados)
+- **12 tabelas** no script `012-tabelas-rpcs-faltantes.sql` (pendente)
+- **8 tabelas** no script `050-tabelas-recomendadas.sql` (pendente)
+- **10 tabelas** espalhadas nos scripts 05, 06, 07 e SETUP-NOVO-SUPABASE.sql
+
 ---
 
-**NOTA:** Estes sao os numeros DEFINITIVOS verificados via consulta SQL direta no Supabase jpnwxqjrhzaobnugjnyx em 10/03/2026. Nao usar numeros de versoes anteriores da documentacao.
+**NOTA:** O banco jpnwxqjrhzaobnugjnyx possui 100 tabelas aplicadas (migrations 001-049). Os scripts 012 e 050 contêm mais 30 tabelas definidas mas ainda nao executadas no banco. O total de tabelas definidas em todo o repositorio e **130**.
 
-**Atualizado em 10/03/2026** — Verificado via SQL direto no Supabase jpnwxqjrhzaobnugjnyx — migrations 001-035 (49 entradas)
+**Atualizado em 14/03/2026** — Verificado via varredura completa de todos os 89 arquivos .sql do repositorio — migrations 001-049 aplicadas (100 tabelas) + 30 tabelas em scripts pendentes = **130 total nos scripts**
