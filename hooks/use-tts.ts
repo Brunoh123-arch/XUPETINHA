@@ -40,16 +40,6 @@ async function speakNative(text: string, opts: Required<TTSOptions>): Promise<vo
   })
 }
 
-function speakWeb(text: string, opts: Required<TTSOptions>): void {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return
-  window.speechSynthesis.cancel()
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = opts.lang
-  utterance.rate = opts.rate
-  utterance.volume = opts.volume
-  window.speechSynthesis.speak(utterance)
-}
-
 export function useTTS(defaultOptions?: TTSOptions) {
   const opts = { ...DEFAULT_OPTS, ...defaultOptions }
 
@@ -59,16 +49,11 @@ export function useTTS(defaultOptions?: TTSOptions) {
   const speak = useCallback(
     async (text: string, overrideOpts?: TTSOptions) => {
       if (!text || text === lastSpoken.current) return
+      if (!Capacitor.isNativePlatform()) return
       lastSpoken.current = text
 
-      const merged = { ...opts, ...overrideOpts }
-
       try {
-        if (Capacitor.isNativePlatform()) {
-          await speakNative(text, merged)
-        } else {
-          speakWeb(text, merged)
-        }
+        await speakNative(text, { ...opts, ...overrideOpts })
       } catch {
         // TTS nunca deve quebrar o app
       }
@@ -79,13 +64,10 @@ export function useTTS(defaultOptions?: TTSOptions) {
 
   const stop = useCallback(async () => {
     lastSpoken.current = ''
+    if (!Capacitor.isNativePlatform()) return
     try {
-      if (Capacitor.isNativePlatform()) {
-        const { TextToSpeech } = await import('@capacitor-community/text-to-speech')
-        await TextToSpeech.stop()
-      } else if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
+      const { TextToSpeech } = await import('@capacitor-community/text-to-speech')
+      await TextToSpeech.stop()
     } catch {
       // Silently fail
     }

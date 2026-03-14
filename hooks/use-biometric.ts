@@ -52,9 +52,11 @@ export function useBiometric() {
         }
       }
 
-      // Verifica se o usuário ativou biometria antes
-      const savedEmail = localStorage.getItem(BIOMETRIC_EMAIL_KEY)
-      const enabled = localStorage.getItem(BIOMETRIC_ENABLED_KEY) === 'true'
+      // Verifica se o usuário ativou biometria antes (nativo — Keychain/Keystore)
+      const { Preferences } = await import('@capacitor/preferences')
+      const { value: savedEmail } = await Preferences.get({ key: BIOMETRIC_EMAIL_KEY })
+      const { value: enabledVal } = await Preferences.get({ key: BIOMETRIC_ENABLED_KEY })
+      const enabled = enabledVal === 'true'
 
       setState({
         available: result.isAvailable,
@@ -112,8 +114,9 @@ export function useBiometric() {
         iosFallbackTitle: 'Cancelar',
       })
 
-      localStorage.setItem(BIOMETRIC_EMAIL_KEY, email)
-      localStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true')
+      const { Preferences } = await import('@capacitor/preferences')
+      await Preferences.set({ key: BIOMETRIC_EMAIL_KEY, value: email })
+      await Preferences.set({ key: BIOMETRIC_ENABLED_KEY, value: 'true' })
 
       setState(prev => ({ ...prev, enrolled: true, savedEmail: email }))
       return true
@@ -126,8 +129,10 @@ export function useBiometric() {
    * Remove o login biométrico salvo.
    */
   const disableBiometric = useCallback(() => {
-    localStorage.removeItem(BIOMETRIC_EMAIL_KEY)
-    localStorage.removeItem(BIOMETRIC_ENABLED_KEY)
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.remove({ key: BIOMETRIC_EMAIL_KEY }).catch(() => {})
+      Preferences.remove({ key: BIOMETRIC_ENABLED_KEY }).catch(() => {})
+    }).catch(() => {})
     setState(prev => ({ ...prev, enrolled: false, savedEmail: null }))
   }, [])
 
