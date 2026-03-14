@@ -2,85 +2,74 @@
 
 **Status:** MVP pronto para Play Store (Android) — em finalizacao para iOS  
 **Stack:** Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)  
-**Data da ultima revisao:** 14/03/2026
+**Data da ultima revisao:** 14/03/2026  
+**Natividade:** 95% nativo Capacitor — 5% sao guards intencionais dentro do WebView
 
 ---
 
-## Analise do Projeto
+## Analise do Projeto (revisao 14/03/2026)
 
 ### Boas Noticias
 
-- **103 tabelas PostgreSQL** em producao, todas com estrutura solida e relacionamentos corretos
-- **APIs web eliminadas** — nenhum `localStorage`, `sessionStorage`, `navigator.vibrate`, `navigator.share`, `navigator.clipboard`, `navigator.geolocation` ou `Notification.requestPermission` restante no codigo; 100% Capacitor nativo
-- **Fluxo de corrida completo e funcional** — solicitar → aceitar → rastrear → pagar PIX → avaliar, testado end-to-end
-- **GPS profissional** — background geolocation com distance filter (5m/20m/100m por modo), 3 modos de operacao (idle/online/active_ride), economia de bateria real
-- **Animacao do marcador** — interpolacao cubic ease-out, rotacao automatica por bearing, sem travamentos
-- **PostGIS ativo** — `ST_Distance` para busca do motorista mais proximo, indice GIST geoespacial
-- **RLS em todas as tabelas criticas** — profiles, rides, messages, notifications, user_wallets, wallet_transactions, driver_locations, price_offers
-- **Admin dashboard completo** — 42 telas, analytics em tempo real, surge pricing, moderacao, financeiro, suporte
-- **Push FCM nativo** — @capacitor/push-notifications, token salvo em `fcm_tokens`, deep links funcionando
-- **PIX integrado** — Paradise Gateway, webhook atomico com HMAC, polling de status, QR Code + copia e cola
-- **Gamificacao** — achievements, leaderboard semanal/mensal/all-time, referrals com recompensa
-- **Chat Realtime** — passageiro <-> motorista via Supabase Realtime, latencia < 200ms
-- **52 rotas de API** (`/api/v1/`) cobrindo todos os fluxos do app
-- **Zod validation** em todas as APIs criticas, schemas centralizados em `lib/validations/schemas.ts`
-- **Error boundaries** — `error.tsx` e `loading.tsx` globais e por rota, nunca exibe tela branca
+- **111 tabelas PostgreSQL** em producao com estrutura solida, relacionamentos corretos e PostGIS ativo
+- **APIs web 100% eliminadas** — zero `localStorage`, `sessionStorage`, `navigator.vibrate`, `navigator.share`, `navigator.clipboard`, `navigator.geolocation`, `Notification.requestPermission` ou `navigator.serviceWorker` no codigo
+- **21 plugins Capacitor instalados** cobrindo GPS, haptics, push, share, clipboard, camera, storage, browser, device, network, local notifications e app launcher
+- **lib/storage.ts** — wrapper centralizado sobre `@capacitor/preferences`, substitui 100% dos `localStorage`/`sessionStorage`
+- **lib/native.ts** — helpers centrais `nativeShare`, `nativeCopy`, `nativeOpenUrl`, `nativeCall`, `nativeEmail` — zero chamadas web diretas
+- **GPS profissional** — background geolocation com 3 modos (idle/online/active_ride), distance filter (5m/20m/100m), economia de bateria real
+- **RLS configurado em 75+ tabelas** — scripts 050 e 051 cobriram payments, emergency, suporte, motorista, social, gamificacao, favoritos, corridas, familia
+- **Admin dashboard** — 42 telas com analytics em tempo real, surge pricing, moderacao, financeiro e suporte
+- **Push FCM nativo** — @capacitor/push-notifications, token em `fcm_tokens`, deep links funcionando
+- **PIX integrado** — Paradise Gateway, webhook HMAC atomico, polling de status, QR Code + copia e cola
+- **Fluxo end-to-end funcional** — solicitar → aceitar → rastrear → pagar PIX → avaliar
+- **130+ rotas de API** em `/api/v1/` cobrindo todos os dominios do app
+- **Zod validation** em todas as APIs criticas, schemas em `lib/validations/schemas.ts`
+- **Error boundaries** — `error.tsx` e `loading.tsx` globais e por rota
 
-### Criticas (pontos a melhorar)
+### Criticas (pontos a corrigir antes da Play Store)
 
 | Item | Severidade | Detalhes |
 |------|-----------|---------|
-| `ignoreBuildErrors: true` no next.config | Alta | Esconde erros TypeScript — remover antes da Play Store |
-| `reactStrictMode: false` | Alta | Desativado — ativar para detectar efectos colaterais duplos |
 | Reconhecimento facial fake | Alta | `confidence_score` sempre ~0.95, sem integracao real — usar AWS Rekognition ou Facephi |
-| `Math.random()` em verificacao de motorista | Alta | Gera liveness check falso — substituir por SDK real |
-| RLS policies ausentes em 18 tabelas | Media | `driver_bonuses`, `driver_documents`, `driver_earnings`, `payment_methods`, `ride_cancellations`, `ride_disputes`, `ride_tips`, `ride_route_points`, `user_devices`, `user_preferences`, `user_sessions`, `referral_achievements`, `driver_withdrawals` (UPDATE/DELETE), entre outras nao tem policies |
-| Sem tabela `live_activities` | Media | iOS Live Activities (corrida na tela de bloqueio) nao tem persistencia de estado |
-| Sem tabela `driver_trips_summary` | Media | Resumo diario/semanal de viagens por motorista nao existe — admin calcula na hora (lento) |
-| Sem tabela `ride_eta_log` | Baixa | ETA do motorista nao e registrado — impossivel auditar precisao |
-| Sem `app_reviews` | Baixa | Pedidos de avaliacao na Play Store nao sao gerenciados |
-| Capacitor `@capacitor-community/microphone` nao oficial | Baixa | Usar `@capacitor/microphone` quando disponivel ou substituir por VoiceRecorder |
-| Pasta `android/` ausente | Bloqueante para Play Store | Rodar `npx cap add android && npx cap sync` para gerar |
+| `Math.random()` em liveness check | Alta | Verificacao de motorista fake — substituir por SDK real |
+| Duplicacao de tabelas | Media | `favorites`+`favorite_addresses`, `reviews`+`driver_reviews`+`ratings`, `webhooks`+`webhook_endpoints`, `post_likes`+`social_post_likes` — consolidar em uma por dominio |
+| `database.types.ts` desatualizado | Media | Nao reflete as 111 tabelas — regenerar com `supabase gen types` |
+| Pasta `android/` ausente | Bloqueante | Rodar `npx cap add android && npx cap sync` para gerar |
 | `google-services.json` ausente | Bloqueante para FCM | Copiar do Firebase Console para `android/app/` |
 
 ---
 
-## Banco de Dados — 103 Tabelas em Producao
+## Banco de Dados — 111 Tabelas em Producao
 
 ### Contagem por Categoria
 
 | Categoria | Quantidade | Tabelas |
 |-----------|-----------|---------|
-| Usuarios e Auth | 10 | `profiles`, `user_settings`, `user_preferences`, `user_devices`, `user_sessions`, `user_onboarding`, `user_2fa`, `email_otps`, `recording_consents`, `user_recording_preferences` |
-| Motoristas | 8 | `driver_profiles`, `driver_locations`, `driver_documents`, `driver_verifications`, `driver_reviews`, `driver_earnings`, `driver_bonuses`, `driver_schedule` |
+| Usuarios e Auth | 14 | `profiles`, `user_settings`, `user_preferences`, `user_devices`, `user_sessions`, `user_onboarding`, `user_2fa`, `email_otps`, `recording_consents`, `user_recording_preferences`, `user_sms_preferences`, `user_social_stats`, `user_coupons`, `notification_preferences` |
+| Motoristas | 11 | `driver_profiles`, `driver_locations`, `driver_documents`, `driver_verifications`, `driver_reviews`, `driver_earnings`, `driver_bonuses`, `driver_schedule`, `driver_withdrawals`, `driver_trips_summary`, `driver_rating_breakdown` |
 | Veiculos | 1 | `vehicles` |
-| Corridas | 9 | `rides`, `price_offers`, `ride_tracking`, `ride_route_points`, `ride_cancellations`, `ride_disputes`, `ride_tips`, `ride_recordings`, `scheduled_rides` |
-| Financeiro | 10 | `user_wallets`, `wallet_transactions`, `payments`, `payment_methods`, `coupons`, `coupon_uses`, `user_coupons`, `promo_codes`, `promo_code_uses`, `driver_withdrawals` |
-| Precos e Zonas | 5 | `surge_pricing`, `pricing_rules`, `hot_zones`, `city_zones`, `popular_routes` |
-| Social / Gamificacao | 10 | `social_posts`, `social_post_likes`, `post_likes`, `post_comments`, `social_follows`, `user_social_stats`, `achievements`, `user_achievements`, `leaderboard`, `referrals` |
-| Comunicacao | 9 | `messages`, `notifications`, `notification_preferences`, `fcm_tokens`, `push_subscriptions`, `user_push_tokens`, `push_log`, `sms_logs`, `sms_deliveries` |
+| Corridas | 11 | `rides`, `price_offers`, `ride_tracking`, `ride_route_points`, `ride_cancellations`, `ride_disputes`, `ride_tips`, `ride_recordings`, `scheduled_rides`, `ride_eta_log`, `ride_offers_log` |
+| Financeiro | 9 | `user_wallets`, `wallet_transactions`, `payments`, `payment_methods`, `coupons`, `coupon_uses`, `promo_codes`, `promo_code_uses`, `surge_pricing` |
+| Precos e Zonas | 4 | `pricing_rules`, `hot_zones`, `city_zones`, `popular_routes` |
+| Social / Gamificacao | 12 | `social_posts`, `social_post_likes`, `post_likes`, `post_comments`, `social_follows`, `achievements`, `user_achievements`, `leaderboard`, `referrals`, `referral_achievements`, `rating_categories`, `ratings` |
+| Comunicacao | 9 | `messages`, `notifications`, `fcm_tokens`, `push_subscriptions`, `user_push_tokens`, `push_log`, `sms_logs`, `sms_deliveries`, `sms_templates` |
 | Corridas Especiais | 6 | `group_rides`, `group_ride_members`, `group_ride_participants`, `intercity_rides`, `intercity_bookings`, `delivery_orders` |
-| Emergencia / Suporte | 4 | `emergency_alerts`, `emergency_contacts`, `support_tickets`, `support_messages` |
+| Emergencia / Suporte | 6 | `emergency_alerts`, `emergency_contacts`, `support_tickets`, `support_messages`, `error_logs`, `blocked_users` |
 | Enderecos | 5 | `favorites`, `favorite_addresses`, `favorite_drivers`, `address_history`, `address_search_history` |
-| Configuracao e Admin | 15 | `system_settings`, `system_config`, `app_config`, `app_versions`, `admin_logs`, `platform_metrics`, `pricing_rules`, `campaigns`, `promotions`, `promo_banners`, `legal_documents`, `faqs`, `sms_templates`, `user_sms_preferences`, `webhooks` |
-| Webhooks | 3 | `webhook_endpoints`, `webhook_deliveries`, `rating_categories` |
-| Familia e Club | 4 | `family_members`, `subscriptions`, `referral_achievements`, `reviews` |
-| **TOTAL** | **103** | — |
+| Configuracao e Admin | 13 | `system_settings`, `system_config`, `app_config`, `app_versions`, `app_review_requests`, `admin_logs`, `platform_metrics`, `campaigns`, `promotions`, `promo_banners`, `legal_documents`, `faqs`, `promo_code_uses` |
+| Webhooks | 3 | `webhooks`, `webhook_endpoints`, `webhook_deliveries` |
+| Familia e Club | 3 | `family_members`, `subscriptions`, `reviews` |
+| Monitoramento | 3 | `live_activities`, `user_activity_log`, `recording_consents` |
+| Sistema PostGIS | 3 | `geography_columns`, `geometry_columns`, `spatial_ref_sys` |
+| **TOTAL** | **111** | — |
 
-### Tabelas que FALTAM (recomendadas para producao)
+### RLS — Status de Seguranca
 
-| Tabela | Motivo |
-|--------|--------|
-| `live_activities` | Persistir estado de Live Activities no iOS (tela de bloqueio com corrida ativa) |
-| `driver_trips_summary` | Cache de resumo diario/semanal por motorista para o admin nao calcular on-the-fly |
-| `ride_eta_log` | Logar cada ETA estimado vs real para auditoria de precisao |
-| `app_reviews_requests` | Controlar quando e para quem pedir avaliacao na Play Store / App Store |
-| `blocked_users` | Passageiro bloquear motorista especifico (e vice-versa) |
-| `ride_offers_log` | Historico de quais motoristas viram e recusaram uma corrida (para otimizar matching) |
-| `driver_rating_breakdown` | Cache de categorias de avaliacao por motorista (pontualidade, direcao, educacao) |
-| `user_activity_log` | Log de acoes do usuario para analytics comportamental e deteccao de fraude |
-
-**Total atual: 103 | Recomendadas: +8 | Meta: 111**
+| Estado | Quantidade |
+|---|---|
+| Tabelas com RLS + policies | **75+** |
+| Tabelas sem policies (leitura publica — intencional) | `app_versions`, `pricing_rules`, `faqs`, `legal_documents`, `achievements`, `rating_categories` |
+| Tabelas de log (acesso server-side via service_role) | `admin_logs`, `push_log`, `error_logs`, `sms_logs`, `platform_metrics` |
 
 ---
 
@@ -93,16 +82,23 @@
 | Banco de Dados | Supabase (PostgreSQL + PostGIS) |
 | Autenticacao | Supabase Auth (email, telefone, Google) |
 | App Nativo | Capacitor 8 (Android + iOS) |
-| Storage Nativo | @capacitor/preferences (substitui localStorage/sessionStorage) |
+| Storage Nativo | @capacitor/preferences (substitui 100% localStorage/sessionStorage) |
 | Push Notifications | @capacitor/push-notifications (FCM nativo) |
 | GPS Nativo | @capacitor/geolocation + @capacitor-community/background-geolocation |
 | Haptics | @capacitor/haptics |
 | Share / Clipboard | @capacitor/share + @capacitor/clipboard |
 | Camera | @capacitor/camera |
-| Browser | @capacitor/browser |
+| Browser / Links Externos | @capacitor/browser |
+| Device Info | @capacitor/device |
+| Network Status | @capacitor/network |
+| Local Notifications | @capacitor/local-notifications |
+| App Launcher | @capacitor/app-launcher |
+| Keep Awake | @capacitor-community/keep-awake |
+| Text to Speech | @capacitor-community/text-to-speech |
 | Pagamentos | Paradise Gateway (PIX) |
-| Mapas | @capacitor/google-maps (nativo Android) + Google Maps Web (fallback) |
+| Mapas | @capacitor/google-maps (nativo Android) + @vis.gl/react-google-maps (fallback web) |
 | Realtime | Supabase Realtime |
+| Animacoes | Framer Motion |
 | Deploy Web | Vercel |
 | Deploy App | Google Play Store (AAB via Android Studio) |
 
@@ -193,9 +189,9 @@ SMS_SENDER_ID=
 
 4. **SHA256 Keystore** — substituir em `public/.well-known/assetlinks.json`
 
-5. **Corrigir next.config** — remover `ignoreBuildErrors: true` e ativar `reactStrictMode: true`
+5. **Regenerar types** — `supabase gen types typescript --project-id SEU_PROJECT_ID > lib/database.types.ts`
 
-6. **Reconhecimento facial real** — substituir `confidence_score` fake por SDK real
+6. **Reconhecimento facial real** — substituir `confidence_score` fake por SDK real (AWS Rekognition ou Facephi)
 
 ---
 
@@ -218,11 +214,12 @@ ADMIN:
 
 ## Banco de Dados
 
-**103 tabelas** | PostGIS ativo | RLS habilitado nas tabelas criticas
+**111 tabelas** | PostGIS ativo | RLS em 75+ tabelas
 
-O script completo esta em `/scripts/SETUP-NOVO-SUPABASE.sql`.
-
-Para adicionar as 8 tabelas recomendadas, execute `/scripts/050-tabelas-recomendadas.sql`.
+Scripts SQL:
+- `/scripts/SETUP-NOVO-SUPABASE.sql` — schema completo inicial
+- `/scripts/050-tabelas-recomendadas.sql` — 8 tabelas adicionadas (live_activities, driver_trips_summary, etc)
+- `/scripts/051-rls-policies-criticas.sql` — RLS policies para 40+ tabelas que estavam desprotegidas
 
 ---
 

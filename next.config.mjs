@@ -16,12 +16,13 @@ const nextConfig = {
   },
   serverExternalPackages: ['resend', 'web-push'],
   typescript: {
-    ignoreBuildErrors: true,
+    // Removido ignoreBuildErrors — erros de tipo devem ser corrigidos antes do deploy
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   images: {
     // Necessario para static export — imagens nao podem usar o Image Optimizer
     unoptimized: true,
