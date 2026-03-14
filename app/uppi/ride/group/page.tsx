@@ -34,9 +34,9 @@ export default function GroupRidePage() {
     setLoading(true)
     triggerHaptic('impact')
     
-    try {
-      // Get route data from session
-      const routeData = sessionStorage.getItem('selectedRide')
+  try {
+    const { Storage } = await import('@/lib/storage')
+    const routeData = await Storage.get('selectedRide')
       if (!routeData) {
         iosToast.error('Selecione uma rota primeiro')
         router.push('/uppi/ride/route-input')
@@ -87,9 +87,9 @@ export default function GroupRidePage() {
     setLoading(true)
     triggerHaptic('impact')
     
-    try {
-      // Get pickup/dropoff from session or prompt user
-      const routeData = sessionStorage.getItem('selectedRide')
+  try {
+    const { Storage } = await import('@/lib/storage')
+    const routeData = await Storage.get('selectedRide')
       if (!routeData) {
         iosToast.error('Configure sua localização primeiro')
         router.push('/uppi/ride/route-input')
@@ -130,9 +130,10 @@ export default function GroupRidePage() {
     }
   }
 
-  const copyInviteCode = () => {
+  const copyInviteCode = async () => {
     if (createdGroup?.invite_code) {
-      navigator.clipboard.writeText(createdGroup.invite_code)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(createdGroup.invite_code)
       setCopiedCode(true)
       triggerHaptic('success')
       iosToast.success('Código copiado!')

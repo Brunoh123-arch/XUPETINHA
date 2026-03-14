@@ -28,7 +28,7 @@ export async function logError(
       user_id: extra?.user_id,
       metadata: {
         ...(extra?.metadata ?? {}),
-        url: typeof window !== 'undefined' ? window.location.href : undefined,
+        // Em Capacitor, window.location nao reflete a URL real da tela — omitido
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       },
     }

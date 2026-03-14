@@ -118,20 +118,16 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
     }, [])
 
     const centerOnUser = useCallback(() => {
-      if (!navigator.geolocation) return
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          updateUserPosition(latitude, longitude)
-          onLocationFoundRef.current?.(latitude, longitude)
-          setPermissionState('granted')
-        },
-        () => {
-          setPermissionState('denied')
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      )
+      import('@capacitor/geolocation').then(({ Geolocation }) => {
+        Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+          .then((position) => {
+            const { latitude, longitude } = position.coords
+            updateUserPosition(latitude, longitude)
+            onLocationFoundRef.current?.(latitude, longitude)
+            setPermissionState('granted')
+          })
+          .catch(() => setPermissionState('denied'))
+      }).catch(() => setPermissionState('denied'))
     }, [updateUserPosition])
 
   const drawOptimizedRoute = useCallback(async (
@@ -276,42 +272,36 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
           await loadGoogleMapsScript(apiKey as string)
           if (cancelled) return
 
-          // Check geolocation permission
-          if (navigator.permissions) {
-            try {
-              const result = await navigator.permissions.query({ name: 'geolocation' })
-              if (cancelled) return
-              setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-
-              result.addEventListener('change', () => {
-                setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-              })
-            } catch {
+          // Verifica permissão de geolocalização via Capacitor
+          try {
+            const { Geolocation } = await import('@capacitor/geolocation')
+            const { location } = await Geolocation.checkPermissions()
+            if (cancelled) return
+            setPermissionState(
+              location === 'granted' ? 'granted'
+              : location === 'denied' ? 'denied'
+              : 'prompt'
+            )
+            if (location !== 'granted') {
               setPermissionState('prompt')
             }
           } else {
             setPermissionState('prompt')
           }
 
-          // Request user location
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                if (cancelled) return
-                const { latitude, longitude } = position.coords
-                initMap({ lat: latitude, lng: longitude })
-                onLocationFoundRef.current?.(latitude, longitude)
-                setPermissionState('granted')
-              },
-              () => {
-                if (cancelled) return
-                initMap(DEFAULT_CENTER)
-                setPermissionState('denied')
-              },
-              { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-            )
-          } else {
+          // Request user location via Capacitor (nativo)
+          try {
+            const { Geolocation } = await import('@capacitor/geolocation')
+            const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+            if (cancelled) return
+            const { latitude, longitude } = position.coords
+            initMap({ lat: latitude, lng: longitude })
+            onLocationFoundRef.current?.(latitude, longitude)
+            setPermissionState('granted')
+          } catch {
+            if (cancelled) return
             initMap(DEFAULT_CENTER)
+            setPermissionState('denied')
           }
           } catch (error) {
             console.error('Error loading Google Maps:', error)
@@ -325,13 +315,12 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
               } else {
                 console.error('Google Maps failed after retries, showing fallback')
                 setMapError(true)
-                // Still try to get user location via GPS
-                if (navigator.geolocation) {
-                  navigator.geolocation.getCurrentPosition(
-                    (pos) => { onLocationFoundRef.current?.(pos.coords.latitude, pos.coords.longitude) },
-                    () => {}
-                  )
-                }
+                // Tenta obter localização mesmo sem o mapa
+                import('@capacitor/geolocation').then(({ Geolocation }) => {
+                  Geolocation.getCurrentPosition({ enableHighAccuracy: false }).then((pos) => {
+                    onLocationFoundRef.current?.(pos.coords.latitude, pos.coords.longitude)
+                  }).catch(() => {})
+                }).catch(() => {})
               }
             }
           }

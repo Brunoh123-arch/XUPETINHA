@@ -7,6 +7,11 @@
  * Uso:
  *   import { NavigationPlugin } from '@/plugins/navigation'
  *   await NavigationPlugin.startNavigation({ lat: -3.7, lng: -38.5, label: 'Destino' })
+ *
+ *   // Ouvir progresso turn-by-turn
+ *   NavigationPlugin.addListener('navigationProgress', (e) => {
+ *     console.log(e.nextStepInstruction, e.distanceToNextStepMeters)
+ *   })
  */
 
 import { registerPlugin } from '@capacitor/core'
@@ -29,6 +34,47 @@ export interface NavigationStatus {
   error?: string
 }
 
+/**
+ * Dados enviados pelo Navigation SDK a cada atualização de rota.
+ * Emitido pelo evento "navigationProgress".
+ */
+export interface NavigationProgress {
+  /** Instrução da próxima manobra (ex: "Vire à direita na Rua X") */
+  nextStepInstruction: string
+  /** Distância até a próxima manobra, em metros */
+  distanceToNextStepMeters: number
+  /** Tempo estimado até o destino final, em segundos */
+  timeToDestinationSeconds: number
+  /** Distância total restante até o destino, em metros */
+  distanceToDestinationMeters: number
+  /** Nome da via atual */
+  currentRoadName?: string
+  /**
+   * Tipo de manobra para renderizar o ícone correto na UI.
+   * Valores possíveis: 'turn_left' | 'turn_right' | 'turn_slight_left' |
+   * 'turn_slight_right' | 'turn_sharp_left' | 'turn_sharp_right' |
+   * 'uturn' | 'roundabout' | 'straight' | 'destination' | 'unknown'
+   */
+  maneuverType:
+    | 'turn_left'
+    | 'turn_right'
+    | 'turn_slight_left'
+    | 'turn_slight_right'
+    | 'turn_sharp_left'
+    | 'turn_sharp_right'
+    | 'uturn'
+    | 'roundabout'
+    | 'straight'
+    | 'destination'
+    | 'unknown'
+  /** Latitude atual do dispositivo (reportada pelo SDK) */
+  currentLat?: number
+  /** Longitude atual do dispositivo (reportada pelo SDK) */
+  currentLng?: number
+  /** Heading atual em graus (0 = norte) */
+  currentHeading?: number
+}
+
 export interface NavigationPluginInterface {
   /**
    * Verifica se o Navigation SDK está disponível no dispositivo.
@@ -41,6 +87,9 @@ export interface NavigationPluginInterface {
    * Inicia a tela de navegação turn-by-turn in-app.
    * No Android abre um NavigationActivity por cima do WebView.
    * No iOS apresenta um UIViewController com GMSNavigationMapView.
+   *
+   * Após chamar este método, ouça o evento "navigationProgress" para
+   * receber atualizações de instrução e distância em tempo real.
    */
   startNavigation(destination: NavigationDestination): Promise<NavigationStatus>
 
@@ -48,6 +97,29 @@ export interface NavigationPluginInterface {
    * Encerra a navegação e volta para a tela do app.
    */
   stopNavigation(): Promise<void>
+
+  /**
+   * Registra um listener para um evento do plugin.
+   *
+   * Eventos disponíveis:
+   * - "navigationProgress"  → NavigationProgress (a cada update do SDK)
+   * - "arrivedAtDestination" → void (quando o SDK detecta chegada)
+   * - "navigationStopped"   → void (quando o usuário fecha a tela nativa)
+   */
+  addListener(
+    event: 'navigationProgress',
+    handler: (data: NavigationProgress) => void
+  ): Promise<{ remove: () => void }>
+
+  addListener(
+    event: 'arrivedAtDestination' | 'navigationStopped',
+    handler: () => void
+  ): Promise<{ remove: () => void }>
+
+  /**
+   * Remove todos os listeners registrados.
+   */
+  removeAllListeners(): Promise<void>
 }
 
 // ─── Registro do plugin ───────────────────────────────────────────────────────

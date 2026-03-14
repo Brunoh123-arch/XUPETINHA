@@ -69,17 +69,19 @@ function RequestRideContent() {
   const initRouteAndPricing = useCallback(async () => {
     setLoadingRoute(true)
     try {
-      // Coords do sessionStorage (já salvas pelo route-input)
-      const routeData = sessionStorage.getItem('rideRoute')
-      const parsedRoute = routeData ? JSON.parse(routeData) : null
+      // Coords do Storage nativo (já salvas pelo route-input)
+      const { Storage } = await import('@/lib/storage')
+      const parsedRoute = await Storage.getJSON<{
+        pickupCoords?: { lat: number; lng: number }
+        destinationCoords?: { lat: number; lng: number }
+      }>('rideRoute')
 
       let pickupCoords = parsedRoute?.pickupCoords ?? null
       let dropoffCoords = parsedRoute?.destinationCoords ?? null
 
-      // Fallback: tenta geolocalizacao atual
       if (!pickupCoords) {
-        const cached = sessionStorage.getItem('userLocation')
-        pickupCoords = cached ? JSON.parse(cached) : { lat: -23.5505, lng: -46.6333 }
+        const cached = await Storage.getJSON<{ lat: number; lng: number }>('userLocation')
+        pickupCoords = cached ?? { lat: -23.5505, lng: -46.6333 }
       }
 
       // Fallback: tenta geocodificar dropoff via place_id
@@ -176,30 +178,20 @@ function RequestRideContent() {
         return
       }
 
-      // Get coordinates from sessionStorage or use geolocation
-      const pickupCoordsData = sessionStorage.getItem('userLocation')
+      // Lê localização do cache nativo (Preferences) ou pede via Capacitor
+      const { Preferences } = await import('@capacitor/preferences')
+      const { value: pickupCoordsData } = await Preferences.get({ key: 'userLocation' })
       let pickupCoords = pickupCoordsData ? JSON.parse(pickupCoordsData) : null
-      
-      // If no cached location, get current position
+
       if (!pickupCoords) {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error('Geolocation not supported'))
-            return
-          }
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-          })
-        }).catch(() => null)
-        
-        if (position) {
+        try {
+          const { Geolocation } = await import('@capacitor/geolocation')
+          const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 })
           pickupCoords = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           }
-        } else {
-          // Fallback to São Paulo center
+        } catch {
           pickupCoords = { lat: -23.5505, lng: -46.6333 }
         }
       }

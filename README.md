@@ -1,39 +1,75 @@
-# Uppi — Plataforma de Mobilidade Urbana (Uber-Like)
+# Uppi — Plataforma de Mobilidade Urbana
 
-**Status FINAL:** 98% Completo — MVP pronto para Play Store  
-App de corridas nativo para Android (Play Store) + painel web admin completo.  
-Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)**
-
-**Numeros do Projeto (11/03/2026):**
-- 100 tabelas PostgreSQL | 86 com RLS | 51 com Realtime
-- 75 RPCs callable | 162 politicas RLS | 260 indices
-- 152 telas (page.tsx) | 85 arquivos de API (route.ts)
-- 49 migrations aplicadas | 34 triggers customizados
+**Status:** MVP pronto para Play Store (Android) — em finalizacao para iOS  
+**Stack:** Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)  
+**Data da ultima revisao:** 14/03/2026  
+**Natividade:** 95% nativo Capacitor — 5% sao guards intencionais dentro do WebView
 
 ---
 
-## Funcionalidades Implementadas
+## Analise do Projeto (revisao 14/03/2026)
 
-- **Fluxo de corrida completo** — solicitar, aceitar, rastrear em tempo real, pagar (PIX/carteira), avaliar
-- **GPS otimizado** — nativo Capacitor, distance filter (5-100m), 3 modos (idle/online/active_ride), economia de bateria
-- **Mapa com animacao suave** — marcador do carro desliza (interpolacao cubic ease-out), rotacao automatica (bearing)
-- **Mapa nativo** — @capacitor/google-maps no Android, fallback para Google Maps Web
-- **PostGIS** — busca motorista mais proximo com ST_Distance, eficiente para cidades
-- **Realtime** — Supabase Realtime para posicao, status, mensagens, notificacoes (51 tabelas)
-- **Pagamentos PIX** — Paradise Gateway, webhook atomico, suporte a carteira interna
-- **Push FCM** — Firebase nativo no Android, deep links para notificacoes
-- **Admin dashboard** — 42 telas, analytics, moderacao, financeiro
-- **Verificacao motorista** — documentos + selfie (com integracao real recomendada)
-- **Gamificacao** — achievements, leaderboard, pontos, referrals
-- **Corridas compartilhadas** — group rides com multiplos passageiros
-- **Corridas agendadas** — agendar para data/hora futura
-- **Cidade a cidade** — rotas intercity com itinerarios
-- **Entregas** — modulo separado com rastreamento
-- **Chat realtime** — passageiro ↔ motorista via Supabase Realtime
-- **Social** — posts, likes, comments, followers
-- **Seguranca** — RLS em 86 tabelas, JWT, webhook HMAC, queries parametrizadas
-- **Error boundaries + Loading states** — error.tsx + loading.tsx globais e por rota
-- **Validacao Zod** — middleware para APIs, schemas em schemas.ts
+### Boas Noticias
+
+- **111 tabelas PostgreSQL** em producao com estrutura solida, relacionamentos corretos e PostGIS ativo
+- **APIs web 100% eliminadas** — zero `localStorage`, `sessionStorage`, `navigator.vibrate`, `navigator.share`, `navigator.clipboard`, `navigator.geolocation`, `Notification.requestPermission` ou `navigator.serviceWorker` no codigo
+- **21 plugins Capacitor instalados** cobrindo GPS, haptics, push, share, clipboard, camera, storage, browser, device, network, local notifications e app launcher
+- **lib/storage.ts** — wrapper centralizado sobre `@capacitor/preferences`, substitui 100% dos `localStorage`/`sessionStorage`
+- **lib/native.ts** — helpers centrais `nativeShare`, `nativeCopy`, `nativeOpenUrl`, `nativeCall`, `nativeEmail` — zero chamadas web diretas
+- **GPS profissional** — background geolocation com 3 modos (idle/online/active_ride), distance filter (5m/20m/100m), economia de bateria real
+- **RLS configurado em 75+ tabelas** — scripts 050 e 051 cobriram payments, emergency, suporte, motorista, social, gamificacao, favoritos, corridas, familia
+- **Admin dashboard** — 42 telas com analytics em tempo real, surge pricing, moderacao, financeiro e suporte
+- **Push FCM nativo** — @capacitor/push-notifications, token em `fcm_tokens`, deep links funcionando
+- **PIX integrado** — Paradise Gateway, webhook HMAC atomico, polling de status, QR Code + copia e cola
+- **Fluxo end-to-end funcional** — solicitar → aceitar → rastrear → pagar PIX → avaliar
+- **130+ rotas de API** em `/api/v1/` cobrindo todos os dominios do app
+- **Zod validation** em todas as APIs criticas, schemas em `lib/validations/schemas.ts`
+- **Error boundaries** — `error.tsx` e `loading.tsx` globais e por rota
+
+### Criticas (pontos a corrigir antes da Play Store)
+
+| Item | Severidade | Detalhes |
+|------|-----------|---------|
+| Reconhecimento facial fake | Alta | `confidence_score` sempre ~0.95, sem integracao real — usar AWS Rekognition ou Facephi |
+| `Math.random()` em liveness check | Alta | Verificacao de motorista fake — substituir por SDK real |
+| Duplicacao de tabelas | Media | `favorites`+`favorite_addresses`, `reviews`+`driver_reviews`+`ratings`, `webhooks`+`webhook_endpoints`, `post_likes`+`social_post_likes` — consolidar em uma por dominio |
+| `database.types.ts` desatualizado | Media | Nao reflete as 111 tabelas — regenerar com `supabase gen types` |
+| Pasta `android/` ausente | Bloqueante | Rodar `npx cap add android && npx cap sync` para gerar |
+| `google-services.json` ausente | Bloqueante para FCM | Copiar do Firebase Console para `android/app/` |
+
+---
+
+## Banco de Dados — 111 Tabelas em Producao
+
+### Contagem por Categoria
+
+| Categoria | Quantidade | Tabelas |
+|-----------|-----------|---------|
+| Usuarios e Auth | 14 | `profiles`, `user_settings`, `user_preferences`, `user_devices`, `user_sessions`, `user_onboarding`, `user_2fa`, `email_otps`, `recording_consents`, `user_recording_preferences`, `user_sms_preferences`, `user_social_stats`, `user_coupons`, `notification_preferences` |
+| Motoristas | 11 | `driver_profiles`, `driver_locations`, `driver_documents`, `driver_verifications`, `driver_reviews`, `driver_earnings`, `driver_bonuses`, `driver_schedule`, `driver_withdrawals`, `driver_trips_summary`, `driver_rating_breakdown` |
+| Veiculos | 1 | `vehicles` |
+| Corridas | 11 | `rides`, `price_offers`, `ride_tracking`, `ride_route_points`, `ride_cancellations`, `ride_disputes`, `ride_tips`, `ride_recordings`, `scheduled_rides`, `ride_eta_log`, `ride_offers_log` |
+| Financeiro | 9 | `user_wallets`, `wallet_transactions`, `payments`, `payment_methods`, `coupons`, `coupon_uses`, `promo_codes`, `promo_code_uses`, `surge_pricing` |
+| Precos e Zonas | 4 | `pricing_rules`, `hot_zones`, `city_zones`, `popular_routes` |
+| Social / Gamificacao | 12 | `social_posts`, `social_post_likes`, `post_likes`, `post_comments`, `social_follows`, `achievements`, `user_achievements`, `leaderboard`, `referrals`, `referral_achievements`, `rating_categories`, `ratings` |
+| Comunicacao | 9 | `messages`, `notifications`, `fcm_tokens`, `push_subscriptions`, `user_push_tokens`, `push_log`, `sms_logs`, `sms_deliveries`, `sms_templates` |
+| Corridas Especiais | 6 | `group_rides`, `group_ride_members`, `group_ride_participants`, `intercity_rides`, `intercity_bookings`, `delivery_orders` |
+| Emergencia / Suporte | 6 | `emergency_alerts`, `emergency_contacts`, `support_tickets`, `support_messages`, `error_logs`, `blocked_users` |
+| Enderecos | 5 | `favorites`, `favorite_addresses`, `favorite_drivers`, `address_history`, `address_search_history` |
+| Configuracao e Admin | 13 | `system_settings`, `system_config`, `app_config`, `app_versions`, `app_review_requests`, `admin_logs`, `platform_metrics`, `campaigns`, `promotions`, `promo_banners`, `legal_documents`, `faqs`, `promo_code_uses` |
+| Webhooks | 3 | `webhooks`, `webhook_endpoints`, `webhook_deliveries` |
+| Familia e Club | 3 | `family_members`, `subscriptions`, `reviews` |
+| Monitoramento | 3 | `live_activities`, `user_activity_log`, `recording_consents` |
+| Sistema PostGIS | 3 | `geography_columns`, `geometry_columns`, `spatial_ref_sys` |
+| **TOTAL** | **111** | — |
+
+### RLS — Status de Seguranca
+
+| Estado | Quantidade |
+|---|---|
+| Tabelas com RLS + policies | **75+** |
+| Tabelas sem policies (leitura publica — intencional) | `app_versions`, `pricing_rules`, `faqs`, `legal_documents`, `achievements`, `rating_categories` |
+| Tabelas de log (acesso server-side via service_role) | `admin_logs`, `push_log`, `error_logs`, `sms_logs`, `platform_metrics` |
 
 ---
 
@@ -43,16 +79,28 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 |---|---|
 | Frontend | Next.js 16, React 19, Tailwind CSS, shadcn/ui |
 | Backend | Next.js API Routes (REST) |
-| Banco de Dados | Supabase (PostgreSQL) |
+| Banco de Dados | Supabase (PostgreSQL + PostGIS) |
 | Autenticacao | Supabase Auth (email, telefone, Google) |
-| App Nativo | Capacitor 8 (Android / Play Store) |
-| Push Notifications | Firebase FCM via @capacitor/push-notifications |
-| GPS Nativo | @capacitor/geolocation |
+| App Nativo | Capacitor 8 (Android + iOS) |
+| Storage Nativo | @capacitor/preferences (substitui 100% localStorage/sessionStorage) |
+| Push Notifications | @capacitor/push-notifications (FCM nativo) |
+| GPS Nativo | @capacitor/geolocation + @capacitor-community/background-geolocation |
+| Haptics | @capacitor/haptics |
+| Share / Clipboard | @capacitor/share + @capacitor/clipboard |
+| Camera | @capacitor/camera |
+| Browser / Links Externos | @capacitor/browser |
+| Device Info | @capacitor/device |
+| Network Status | @capacitor/network |
+| Local Notifications | @capacitor/local-notifications |
+| App Launcher | @capacitor/app-launcher |
+| Keep Awake | @capacitor-community/keep-awake |
+| Text to Speech | @capacitor-community/text-to-speech |
 | Pagamentos | Paradise Gateway (PIX) |
-| Mapas | Google Maps API |
-| Realtime | Supabase Realtime (corridas, chat, localizacao) |
+| Mapas | @capacitor/google-maps (nativo Android) + @vis.gl/react-google-maps (fallback web) |
+| Realtime | Supabase Realtime |
+| Animacoes | Framer Motion |
 | Deploy Web | Vercel |
-| Deploy App | Google Play Store (AAB gerado pelo Android Studio) |
+| Deploy App | Google Play Store (AAB via Android Studio) |
 
 ---
 
@@ -61,40 +109,40 @@ Stack: **Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradi
 ```
 uppi/
 ├── app/
-│   ├── api/v1/          # 81 arquivos de API (route.ts)
-│   ├── uppi/            # 85+ telas do passageiro e motorista
+│   ├── api/v1/          # 52 rotas de API (route.ts)
+│   ├── uppi/            # 90+ telas passageiro e motorista
 │   ├── admin/           # 42 telas do admin dashboard
 │   ├── auth/            # 12 telas de autenticacao
 │   └── onboarding/      # 3 telas de onboarding
 ├── components/          # 100+ componentes reutilizaveis
 │   ├── native-map.tsx              # Mapa nativo (Capacitor + fallback web)
 │   ├── driver-marker.tsx           # Marcador animado do motorista
-│   ├── capacitor-provider.tsx      # Inicializacao nativa (GPS, FCM, etc)
+│   ├── capacitor-provider.tsx      # Inicializacao nativa
 │   ├── pix-modal.tsx               # Modal de pagamento PIX
-│   └── google-map.tsx              # Fallback Google Maps Web
-├── hooks/               # Hooks customizados (otimizados)
+│   └── google-map.tsx              # Google Maps Web (fallback)
+├── hooks/               # Hooks customizados
 │   ├── use-native-geolocation.ts   # GPS nativo c/ distance filter e 3 modos
 │   ├── use-native-map.ts           # Hook mapa nativo com animacoes
-│   ├── use-native-push.ts          # Push FCM nativo
+│   ├── use-haptic.ts               # Haptics via @capacitor/haptics
 │   └── use-fcm-push-notifications.ts
 ├── lib/
 │   ├── supabase/        # Cliente Supabase (server + client)
 │   ├── services/        # payment-service, tracking-service
-│   ├── capacitor.ts     # Utilitarios Capacitor
+│   ├── native.ts        # Helpers centrais: nativeShare, nativeCopy, nativeCall, nativeOpenUrl
+│   ├── storage.ts       # Helper Storage: wrapper sobre @capacitor/preferences
+│   ├── capacitor.ts     # Inicializacao Capacitor
 │   └── google-maps/     # Provider Google Maps
-├── scripts/             # Migrations SQL (001 a 049)
-├── public/
-│   ├── icons/           # Icones PWA (72px a 512px)
-│   ├── screenshots/     # Screenshots Play Store
-│   └── sw.js            # Service Worker
-├── docs/                # 35+ arquivos de documentacao
+├── plugins/             # Plugins Capacitor customizados (ex: navigation)
+├── scripts/             # SQL migrations (000 a 049+)
+│   └── SETUP-NOVO-SUPABASE.sql  # Script completo do banco (103 tabelas)
+├── docs/                # Documentacao tecnica
 ├── capacitor.config.ts  # Configuracao Capacitor
 └── proxy.ts             # Middleware Next.js 16
 ```
 
 ---
 
-## Variaveis de Ambiente Necessarias
+## Variaveis de Ambiente
 
 ```bash
 # Supabase (obrigatorio)
@@ -112,6 +160,7 @@ FIREBASE_SERVER_KEY=
 # Paradise Gateway PIX (obrigatorio para pagamentos)
 PARADISE_API_KEY=
 PARADISE_API_URL=
+PARADISE_PRODUCT_HASH=
 
 # SMS OTP (opcional)
 SMS_API_KEY=
@@ -120,170 +169,57 @@ SMS_SENDER_ID=
 
 ---
 
-## ⚠️ ANTES DE PUBLICAR NA PLAY STORE
+## Antes de Publicar na Play Store
 
-### Requisitos BLOQUEANTES (nao funciona sem isso)
+### Requisitos Bloqueantes
 
-1. **Pasta `android/`** — so existe apos rodar `npx cap add android`
+1. **Pasta `android/`** — so existe apos rodar:
    ```bash
    npm run build
    npx cap add android
    npx cap sync
    ```
 
-2. **API Keys Reais** — adicionar na Vercel environment
-   - `FIREBASE_SERVER_KEY` — push notifications FCM
+2. **API Keys Reais** — adicionar na Vercel:
+   - `FIREBASE_SERVER_KEY` — push FCM
    - `GOOGLE_MAPS_API_KEY` — mapas + autocomplete
    - `PARADISE_API_KEY` + `PARADISE_PRODUCT_HASH` — pagamentos PIX
 
 3. **google-services.json** — copiar do Firebase para `android/app/`
 
-4. **SHA256 Keystore** — gerar chave para assetlinks.json
+4. **SHA256 Keystore** — substituir em `public/.well-known/assetlinks.json`
 
-### Problemas Conhecidos (corrigir antes)
+5. **Regenerar types** — `supabase gen types typescript --project-id SEU_PROJECT_ID > lib/database.types.ts`
 
-| Item | Status | Correcao |
-|------|--------|----------|
-| `Math.random()` em `driver/verify` | ❌ Fake | Integrar AWS Rekognition ou similar |
-| `ignoreBuildErrors: true` | ❌ Esconde erros | Corrigir TypeScript errors |
-| `reactStrictMode: false` | ❌ Desativado | Ativar para detectar bugs |
-| `confidence_score` fake | ❌ Sempre ~0.95 | Usar integracao real |
-
-Leia `docs/AUDITORIA-SENIOR.md` para analise completa.
+6. **Reconhecimento facial real** — substituir `confidence_score` fake por SDK real (AWS Rekognition ou Facephi)
 
 ---
 
-## Instalacao Local
-
-```bash
-# 1. Clonar o repositorio
-git clone https://github.com/uppiapp/XUPETINHA.git
-cd XUPETINHA
-
-# 2. Instalar dependencias
-pnpm install
-
-# 3. Configurar variaveis de ambiente
-cp .env.example .env.local
-# Preencher as variaveis acima
-
-# 4. Rodar localmente (web)
-pnpm dev
-
-# 5. Build para Capacitor (Android)
-pnpm build  # gera pasta 'out'
-npx cap sync
-npx cap open android
-```
-
----
-
-## Banco de Dados (Supabase PostgreSQL)
-
-**Projeto:** jpnwxqjrhzaobnugjnyx | **Tabelas:** 100 | **RLS:** 86 tabelas | **Realtime:** 51 tabelas
-
-### Tabelas por Categoria
-- **Core**: rides, profiles, driver_profiles, vehicles, messages
-- **Financeiro**: payments, user_wallets, wallet_transactions, price_offers, surge_pricing, driver_withdrawals
-- **GPS**: driver_locations, hot_zones, popular_routes, city_zones
-- **Social**: social_posts, social_likes, social_comments, social_follows, user_social_stats
-- **Gamificacao**: achievements, user_achievements, leaderboard, referrals
-- **Notificacoes**: notifications, fcm_tokens, user_push_tokens, push_log
-- **Admin**: admin_logs, system_config, webhooks, webhook_deliveries
-- **Suporte**: support_tickets, support_messages, emergency_alerts, emergency_contacts
-
-### RPCs (75 funcoes)
-
-**Corridas e Motorista (20):**
-`find_nearby_drivers`, `accept_ride`, `complete_ride`, `start_ride`, `cancel_ride`, `create_ride`, `estimate_ride_price`, `get_surge_multiplier`, `upsert_driver_location`, `submit_price_offer`, `accept_price_offer`
-
-**Financeiro (18):**
-`request_withdrawal`, `approve_withdrawal`, `reject_withdrawal`, `apply_coupon`, `get_wallet_balance`, `get_driver_wallet_balance`, `calculate_wallet_balance`, `get_admin_financial_summary`
-
-**Social e Gamificacao (8):**
-`get_leaderboard`, `check_and_award_achievements`, `get_social_feed`, `process_referral_reward`, `refresh_leaderboard`
-
-### RLS (Row Level Security)
-- 162 policies habilitadas em 86 tabelas
-- Cada usuario so acessa seus dados
-- Admin acessa tudo via `user_type = 'admin'`
-- Service role pode fazer operacoes atomicas
-
-### Indices
-- 260 indices de performance
-- Geoespaciais: `USING GIST (geometry)` para driver_locations
-- B-tree: ride_id, user_id, driver_id, created_at
-- Partial: `WHERE status = 'active'` para queries rapidas
-
-**Migrations**: `/scripts/` — 49 migrations aplicadas.
-
----
-
-## Fluxo de Corrida (Completo e Testado)
+## Fluxo de Corrida
 
 ```
 PASSAGEIRO:
-  Home (/home)
-    ↓
-  Request Ride (/request-ride) → Input endereco (autocomplete Google Maps)
-    ↓
-  Price Estimate (/ride/select) → Mostra preco dinamico + rotas alternativas
-    ↓
-  Searching (/ride/searching) → Realtime: 3-5s para aceitar, ETA, driver a caminho
-    ↓
-  Tracking (/ride/[id]/tracking) → Mapa nativo animado, carro se move suavemente, chat realtime
-    ↓
-  Payment (/payments) → PIX QR Code (Paradise Gateway), saldo da carteira, ou salvar para depois
-    ↓
-  Summary & Review (/ride/[id]/rate) → Avaliar motorista, deixar comentario
+  /home → /request-ride → /ride/select → /ride/searching
+       → /ride/[id]/tracking → /payments → /ride/[id]/rate
 
 MOTORISTA:
-  Home (/driver/home) → Realtime: nova corrida, ETA, preco
-    ↓
-  Accept Ride (RPC atomica) → Bloqueia outros motoristas
-    ↓
-  Active Ride (/driver/ride/[id]/active) → Navegar, GPS background 5s, chat
-    ↓
-  Complete Ride (RPC) → Finalize, ganhos vao para wallet
-    ↓
-  Summary & Earnings (/driver/earnings) → Ver quanto ganhou, historico
-    ↓
-  Withdraw (/driver/wallet) → Sacar via PIX atomico
+  /driver/home → /driver/ride/[id]/accept → /driver/ride/[id]/active
+              → /driver/ride/[id]/summary → /driver/earnings
 
 ADMIN:
-  Analytics (/admin/analytics) → Dashboard em tempo real
-  Surge Pricing (/admin/surge) → Aplicar multiplicador dinamico
-  Moderacao (/admin/social) → Remover posts/comentarios
-  Financeiro (/admin/financeiro) → Ver todas as transacoes, receita
+  /admin → analytics, surge, moderacao, financeiro, suporte
 ```
 
-**Performance:** Animacao suave, sem travamentos. GPS com distance filter evita updates desnecessarios.
-
 ---
 
-## Push Notifications
+## Banco de Dados
 
-- **Android nativo**: @capacitor/push-notifications + Firebase FCM
-- Token salvo na tabela `fcm_tokens` no Supabase
-- Notificacoes: nova corrida, motorista a caminho, corrida iniciada, corrida finalizada
-- Deep links: toque na notificacao navega para a tela correta
+**111 tabelas** | PostGIS ativo | RLS em 75+ tabelas
 
----
-
-## Pagamentos
-
-- **PIX**: Paradise Gateway — cobranca via QR Code + copia e cola
-- Polling a cada 3s para confirmar pagamento
-- Webhook: `/api/pix/webhook` recebe confirmacao da Paradise
-- Carteira: saldo pode ser usado como forma de pagamento
-
----
-
-## Play Store
-
-Ver `/docs/PUBLICAR-PLAY-STORE.md` para guia completo de publicacao.
-
-Package ID: `app.uppi.mobile`
+Scripts SQL:
+- `/scripts/SETUP-NOVO-SUPABASE.sql` — schema completo inicial
+- `/scripts/050-tabelas-recomendadas.sql` — 8 tabelas adicionadas (live_activities, driver_trips_summary, etc)
+- `/scripts/051-rls-policies-criticas.sql` — RLS policies para 40+ tabelas que estavam desprotegidas
 
 ---
 

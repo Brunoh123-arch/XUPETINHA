@@ -51,12 +51,17 @@ export function FacialVerification({ onVerified, onCancel, driverName }: FacialV
 
   const startCamera = useCallback(async () => {
     try {
+      // Solicita permissão de câmera nativamente via @capacitor/camera
+      const { Camera, CameraPermissionType } = await import('@capacitor/camera')
+      const { camera } = await Camera.requestPermissions({ permissions: [CameraPermissionType.Camera] })
+      if (camera !== 'granted') {
+        iosToast.error('Câmera negada', 'Ative nas configurações')
+        setStatus('error')
+        return
+      }
+      // Stream de preview via getUserMedia (dentro do WebView é aceito após permissão nativa)
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
       })
 
       streamRef.current = stream

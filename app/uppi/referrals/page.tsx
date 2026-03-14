@@ -58,9 +58,10 @@ export default function ReferralsPage() {
     }
   }
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!stats?.referral_code) return
-    navigator.clipboard.writeText(stats.referral_code)
+    const { nativeCopy } = await import('@/lib/native')
+    await nativeCopy(stats.referral_code)
     haptics.notification('success')
     iosToast.success('Código copiado!')
   }
@@ -69,7 +70,8 @@ export default function ReferralsPage() {
     if (!stats?.referral_code) return
     haptics.impactMedium()
     try {
-      await navigator.share({
+      const { nativeShare } = await import('@/lib/native')
+      await nativeShare({
         title: 'Uppi — Compartilhe e ganhe',
         text: `Use meu código ${stats.referral_code} para se cadastrar no Uppi e ganhar desconto na primeira corrida!`,
         url: `https://uppi.app/invite/${stats.referral_code}`,

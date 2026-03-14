@@ -217,8 +217,11 @@ export function useFcmPushNotifications(): UseFcmPushNotificationsReturn {
           || (type && typeMap[type])
           || '/uppi/home'
 
-        // Navega para a rota correta
-        window.location.href = route
+        // Navega via history API — evita reload completo no WebView do Capacitor
+        if (window.history) {
+          window.history.pushState(null, '', route)
+          window.dispatchEvent(new PopStateEvent('popstate', { state: null }))
+        }
       })
 
       // 3. Registra no FCM

@@ -211,22 +211,19 @@ class OfflineQueue {
   }
 
   private saveToStorage(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('offline_queue', JSON.stringify(this.queue))
-    }
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.set({ key: 'offline_queue', value: JSON.stringify(this.queue) }).catch(() => {})
+    }).catch(() => {})
   }
 
   private loadFromStorage(): void {
-    if (typeof localStorage !== 'undefined') {
-      const stored = localStorage.getItem('offline_queue')
-      if (stored) {
-        try {
-          this.queue = JSON.parse(stored)
-        } catch (error) {
-          console.error('Error loading offline queue:', error)
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.get({ key: 'offline_queue' }).then(({ value: stored }) => {
+        if (stored) {
+          try { this.queue = JSON.parse(stored) } catch {}
         }
-      }
-    }
+      }).catch(() => {})
+    }).catch(() => {})
   }
 
   init(): void {

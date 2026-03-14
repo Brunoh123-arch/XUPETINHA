@@ -141,11 +141,12 @@ export function SidebarMenu({ isOpen, onClose, profile }: SidebarMenuProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    // Limpar todos os dados persistidos
+    // Limpar todos os dados persistidos nativamente
     document.cookie = 'onboarding_done=; path=/; max-age=0'
-    sessionStorage.clear()
-    localStorage.removeItem('uppi_credentials')
-    localStorage.removeItem('uppi_profile')
+    try {
+      const { Preferences } = await import('@capacitor/preferences')
+      await Preferences.clear()
+    } catch { /* web fallback silencioso */ }
     onClose()
     router.push('/onboarding/splash')
     router.refresh()

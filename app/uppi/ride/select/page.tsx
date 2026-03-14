@@ -26,6 +26,7 @@ import { createClient } from '@/lib/supabase/client'
 import { paymentService } from '@/lib/services/payment-service'
 import { PixModal } from '@/components/pix-modal'
 import { iosToast } from '@/lib/utils/ios-toast'
+import { Storage } from '@/lib/storage'
 
 // Price per km for each vehicle type (R$)
 const PRICE_PER_KM: Record<VehicleType, number> = {
@@ -105,24 +106,21 @@ export default function RideSelectPage() {
   const recenterMapRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('rideRoute')
-    if (saved) {
-      const parsed = JSON.parse(saved) as RouteData
-      setRoute(parsed)
-
-      // Calculate distance if we have both coordinates
-      if (parsed.pickupCoords && parsed.destinationCoords) {
-        fetchDistance(parsed.pickupCoords, parsed.destinationCoords)
+    Storage.getJSON<RouteData>('rideRoute').then((parsed) => {
+      if (parsed) {
+        setRoute(parsed)
+        if (parsed.pickupCoords && parsed.destinationCoords) {
+          fetchDistance(parsed.pickupCoords, parsed.destinationCoords)
+        } else {
+          setLoadingDistance(false)
+          setDistanceKm(5)
+        }
       } else {
         setLoadingDistance(false)
-        // Fallback: estimate 5km if no coords
         setDistanceKm(5)
       }
-    } else {
-      setLoadingDistance(false)
-      setDistanceKm(5)
-    }
-  }, [])
+    }).catch(() => { setLoadingDistance(false); setDistanceKm(5) })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drag handlers
   const handleDragStart = (clientY: number) => {
@@ -231,8 +229,7 @@ export default function RideSelectPage() {
         setWalletBalance(currentBalance)
 
         if (currentBalance >= selectedPrice) {
-          // Saldo suficiente — prosseguir normalmente
-          sessionStorage.setItem('selectedRide', JSON.stringify(sessionData))
+          await Storage.setJSON('selectedRide', sessionData)
           router.push('/uppi/ride/searching')
           return
         }
@@ -255,8 +252,7 @@ export default function RideSelectPage() {
         })
 
         if (result.success && result.qr_code_text) {
-          // Salvar dados da corrida para prosseguir após pagamento
-          sessionStorage.setItem('selectedRide', JSON.stringify(sessionData))
+          await Storage.setJSON('selectedRide', sessionData)
           setPixTopupModal({
             externalId: result.payment_id!,
             qrCodeText: result.qr_code_text,
@@ -274,7 +270,7 @@ export default function RideSelectPage() {
       return
     }
 
-    sessionStorage.setItem('selectedRide', JSON.stringify(sessionData))
+    await Storage.setJSON('selectedRide', sessionData)
     router.push('/uppi/ride/searching')
   }
 
@@ -471,7 +467,7 @@ export default function RideSelectPage() {
             <button
               type="button"
               onClick={() => {
-                sessionStorage.removeItem('rideRoute')
+                Storage.remove('rideRoute').catch(() => {})
                 router.push('/uppi/ride/route-input')
               }}
               className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
@@ -634,20 +630,15 @@ export default function RideSelectPage() {
             <button
               type="button"
               onClick={() => {
-                // Store current selection for schedule page
-                sessionStorage.setItem(
-                  'selectedRide',
-                  JSON.stringify({
-                    ...selectedRide,
-                    price: selectedPrice,
-                    distanceKm,
-                    durationText,
-                    vehicleType: selected,
-                    paymentMethod: paymentMethod || 'cash',
-                    stops: route.stops || [],
-                  })
-                )
-                router.push('/uppi/ride/schedule')
+                Storage.setJSON('selectedRide', {
+                  ...selectedRide,
+                  price: selectedPrice,
+                  distanceKm,
+                  durationText,
+                  vehicleType: selected,
+                  paymentMethod: paymentMethod || 'cash',
+                  stops: route.stops || [],
+                }).then(() => router.push('/uppi/ride/schedule')).catch(() => {})
               }}
               className="w-[52px] h-[52px] rounded-[18px] border border-border flex items-center justify-center flex-shrink-0 bg-secondary/50 active:scale-95 transition-transform"
             >
@@ -657,21 +648,17 @@ export default function RideSelectPage() {
               type="button"
               disabled={loadingDistance}
               onClick={() => {
-                sessionStorage.setItem(
-                  'selectedRide',
-                  JSON.stringify({
-                    ...selectedRide,
-                    price: selectedPrice,
-                    distanceKm,
-                    durationText,
-                    vehicleType: selected,
-                    paymentMethod: paymentMethod || 'cash',
-                    stops: route.stops || [],
-                    couponCode: appliedCouponCode || null,
-                    couponDiscount: couponDiscount || 0,
-                  })
-                )
-                router.push('/uppi/ride/searching')
+                Storage.setJSON('selectedRide', {
+                  ...selectedRide,
+                  price: selectedPrice,
+                  distanceKm,
+                  durationText,
+                  vehicleType: selected,
+                  paymentMethod: paymentMethod || 'cash',
+                  stops: route.stops || [],
+                  couponCode: appliedCouponCode || null,
+                  couponDiscount: couponDiscount || 0,
+                }).then(() => router.push('/uppi/ride/searching')).catch(() => {})
               }}
               className="flex-1 h-[52px] rounded-[18px] bg-blue-600 text-white font-semibold text-[17px] tracking-tight transition-all disabled:opacity-50 active:scale-[0.98]"
             >

@@ -199,19 +199,18 @@ export default function RouteAlternativesPage() {
     haptic.success()
     const selected = alternatives[selectedRoute]
 
-    // Store selected route and go to vehicle selection
-    sessionStorage.setItem(
-      'selectedRoute',
-      JSON.stringify({
-        ...selected,
-        originLat,
-        originLng,
-        destLat,
-        destLng,
-      })
-    )
-
-    router.push(`/uppi/ride/select?distanceKm=${selected.distance.toFixed(2)}&durationMin=${Math.round(selected.duration)}`)
+  // Store selected route and go to vehicle selection
+  import('@/lib/storage').then(({ Storage }) => {
+    Storage.setJSON('selectedRoute', {
+      ...selected,
+      originLat,
+      originLng,
+      destLat,
+      destLng,
+    }).then(() => {
+      router.push(`/uppi/ride/select?distanceKm=${selected.distance.toFixed(2)}&durationMin=${Math.round(selected.duration)}`)
+    }).catch(() => {})
+  }).catch(() => {})
   }
 
   const cheapestRoute = alternatives[0]

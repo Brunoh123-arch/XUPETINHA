@@ -58,11 +58,11 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
       setIsLoading(true)
       try {
-        if ('Notification' in window) {
-          const perm = await Notification.requestPermission()
-          setPermission(perm as PermissionState)
-          if (perm !== 'granted') return false
-        }
+        // Permissão nativa via @capacitor/push-notifications
+        const { PushNotifications } = await import('@capacitor/push-notifications')
+        const permStatus = await PushNotifications.requestPermissions()
+        setPermission(permStatus.receive === 'granted' ? 'granted' : 'denied')
+        if (permStatus.receive !== 'granted') return false
 
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return false

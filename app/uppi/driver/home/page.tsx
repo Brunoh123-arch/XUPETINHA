@@ -257,8 +257,12 @@ export default function DriverHomePage() {
 
   // Atualizar localização do motorista periodicamente
   const updateLocation = useCallback(async (userId: string) => {
-    if (!navigator.geolocation) return
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { Geolocation } = await import('@capacitor/geolocation')
+    let pos: Awaited<ReturnType<typeof Geolocation.getCurrentPosition>>
+    try {
+      pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+    } catch { return }
+    ;(async () => {
       const { latitude, longitude, heading, speed } = pos.coords
       await supabase.rpc('upsert_driver_location', {
         p_driver_id: userId,
@@ -273,7 +277,7 @@ export default function DriverHomePage() {
       await supabase.from('driver_profiles')
         .update({ current_lat: latitude, current_lng: longitude })
         .eq('id', userId)
-    }, () => {}, { enableHighAccuracy: true, timeout: 5000 })
+    })()
   }, [supabase, isOnline, activeRide])
 
   useEffect(() => {

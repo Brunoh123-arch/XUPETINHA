@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { UppiLogo } from "@/components/revolut-logo"
@@ -8,6 +8,7 @@ import { Eye, EyeOff, ArrowLeft, Phone } from "lucide-react"
 import { AppBackground } from "@/components/app-background"
 import { createClient } from "@/lib/supabase/client"
 import { getSiteUrl } from "@/lib/utils"
+import { useBiometric } from "@/hooks/use-biometric"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,8 +17,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const biometric = useBiometric()
 
   const canSubmit = email.includes("@") && password.length >= 6
+
+  // Preenche o email salvo quando biometria está disponível
+  useEffect(() => {
+    if (biometric.enrolled && biometric.savedEmail) {
+      setEmail(biometric.savedEmail)
+    }
+  }, [biometric.enrolled, biometric.savedEmail])
 
   async function handleLogin() {
     if (!canSubmit) return
@@ -53,6 +63,37 @@ export default function LoginPage() {
       router.push('/uppi/home')
     }
     router.refresh()
+  }
+
+  async function handleBiometricLogin() {
+    setBiometricLoading(true)
+    setError("")
+    try {
+      const savedEmail = await biometric.authenticate()
+      if (!savedEmail) {
+        setError("Autenticação biométrica cancelada.")
+        return
+      }
+      // Login sem senha — usa o token de sessão já salvo no dispositivo
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single()
+        if (profile?.user_type === 'driver') {
+          router.push('/uppi/driver')
+        } else {
+          router.push('/uppi/home')
+        }
+      } else {
+        setError("Sessão expirada. Entre com sua senha.")
+      }
+    } finally {
+      setBiometricLoading(false)
+    }
   }
 
   async function handleGoogleLogin() {
@@ -199,6 +240,41 @@ export default function LoginPage() {
 
       {/* Bottom CTA */}
       <div className="relative z-10 px-5 pb-10 pt-6 flex flex-col gap-3">
+        {/* Botao biometrico — exibido apenas se disponivel e ativado */}
+        {biometric.available && biometric.enrolled && (
+          <button
+            type="button"
+            onClick={handleBiometricLogin}
+            disabled={biometricLoading}
+            className="w-full py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-all duration-100 flex items-center justify-center gap-2.5 text-white disabled:opacity-50"
+            style={{ backgroundColor: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
+            {biometricLoading ? (
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            ) : biometric.biometricType === 'face_id' ? (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7V5a2 2 0 012-2h2M17 3h2a2 2 0 012 2v2M21 17v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2"/>
+                <circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>
+                <path d="M9 15c.83 1 2.17 1.5 3 1.5s2.17-.5 3-1.5"/>
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 10a2 2 0 00-2 2c0 1.1.9 2 2 2s2-.9 2-2a2 2 0 00-2-2z"/>
+                <path d="M12 4a8 8 0 00-7.4 5M12 4a8 8 0 017.4 5M4.6 15A8 8 0 0012 20a8 8 0 007.4-5"/>
+                <path d="M12 7a5 5 0 00-4.6 3M12 7a5 5 0 014.6 3M7.4 17A5 5 0 0012 19a5 5 0 004.6-2"/>
+              </svg>
+            )}
+            {biometricLoading
+              ? "Verificando..."
+              : biometric.biometricType === 'face_id'
+                ? "Entrar com Face ID"
+                : "Entrar com Digital"}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleLogin}

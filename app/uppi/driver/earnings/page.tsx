@@ -116,9 +116,8 @@ export default function DriverEarningsPage() {
         let userLat: number | null = null
         let userLng: number | null = null
         try {
-          const pos = await new Promise<GeolocationPosition>((res, rej) =>
-            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 })
-          )
+          const { Geolocation } = await import('@capacitor/geolocation')
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 3000 })
           userLat = pos.coords.latitude
           userLng = pos.coords.longitude
         } catch { /* sem GPS, ok */ }

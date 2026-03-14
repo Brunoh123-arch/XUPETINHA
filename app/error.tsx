@@ -59,7 +59,7 @@ export default function Error({
           </Button>
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/'}
+            onClick={async () => { const { nativePush } = await import('@/lib/native'); nativePush('/') }}
             className="w-full"
           >
             Voltar ao início

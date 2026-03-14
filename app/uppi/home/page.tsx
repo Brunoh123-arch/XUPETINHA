@@ -35,7 +35,9 @@ export default function HomePage() {
   ]
 
   const handleLocationFound = useCallback((lat: number, lng: number) => {
-    sessionStorage.setItem('userLocation', JSON.stringify({ lat, lng }))
+    import('@/lib/storage').then(({ Storage }) => {
+      Storage.setJSON('userLocation', { lat, lng }).catch(() => {})
+    }).catch(() => {})
     setUserLocation({ lat, lng })
   }, [])
 

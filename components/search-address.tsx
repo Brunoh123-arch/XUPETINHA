@@ -64,28 +64,21 @@ export function SearchAddress({ onSelect, placeholder = 'Digite o endereço...',
   }
 
   const handleUseCurrentLocation = async () => {
-    if ('geolocation' in navigator) {
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject)
-        })
-
-        const { latitude, longitude } = position.coords
-        
-        // Reverse geocode to get address using our API
-        const response = await fetch('/api/v1/geocode', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ latitude, longitude })
-        })
-        const data = await response.json()
-        
-        setQuery(data.address)
-        onSelect(data.address, { lat: latitude, lng: longitude })
-      } catch (error) {
-        console.error('Geolocation error:', error)
-        alert('Não foi possível acessar sua localização')
-      }
+    try {
+      const { Geolocation } = await import('@capacitor/geolocation')
+      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+      const { latitude, longitude } = pos.coords
+      const response = await fetch('/api/v1/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude, longitude }),
+      })
+      const data = await response.json()
+      setQuery(data.address)
+      onSelect(data.address, { lat: latitude, lng: longitude })
+    } catch (error) {
+      console.error('Geolocation error:', error)
+      alert('Não foi possível acessar sua localização')
     }
   }
 

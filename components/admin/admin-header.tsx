@@ -14,18 +14,17 @@ interface Profile {
 const CACHE_KEY = 'admin_profile_cache'
 const CACHE_TTL = 10 * 60 * 1000
 
+// Cache em memória para o admin-header (runtime apenas — sem persistência entre sessões)
+let _adminProfileCache: { data: Profile; ts: number } | null = null
+
 function getCachedProfile(): Profile | null {
-  try {
-    const raw = sessionStorage.getItem(CACHE_KEY)
-    if (!raw) return null
-    const { data, ts } = JSON.parse(raw)
-    if (Date.now() - ts > CACHE_TTL) return null
-    return data
-  } catch { return null }
+  if (!_adminProfileCache) return null
+  if (Date.now() - _adminProfileCache.ts > CACHE_TTL) return null
+  return _adminProfileCache.data
 }
 
 function setCachedProfile(profile: Profile) {
-  try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: profile, ts: Date.now() })) } catch {}
+  _adminProfileCache = { data: profile, ts: Date.now() }
 }
 
 export function AdminHeader({

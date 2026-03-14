@@ -4,7 +4,7 @@
 
 function Bone({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-neutral-200/80 dark:bg-neutral-700/60 rounded-lg ios-skeleton-pulse ${className}`} />
+    <div className={`rounded-lg ios-skeleton-shimmer ${className}`} />
   )
 }
 

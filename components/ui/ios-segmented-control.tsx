@@ -29,10 +29,9 @@ export function IOSSegmentedControl<T = string>({
   const selectedIndex = options.findIndex(opt => opt.value === value)
 
   const handleSelect = (option: SegmentOption<T>, index: number) => {
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate(10)
-    }
+    import('@capacitor/haptics').then(({ Haptics, ImpactStyle }) => {
+      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {})
+    }).catch(() => {})
     onChange(option.value)
   }
 

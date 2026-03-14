@@ -28,7 +28,9 @@ export function VoiceAssistantButton() {
 
     if (command.type === 'ride_request' && command.destination) {
       // Store destination and navigate to route input
-      sessionStorage.setItem('voiceDestination', command.destination)
+      import('@/lib/storage').then(({ Storage }) => {
+        Storage.set('voiceDestination', command.destination).catch(() => {})
+      }).catch(() => {})
       iosToast.success(`Solicitando corrida para ${command.destination}`, {
         action: {
           label: 'Ver',

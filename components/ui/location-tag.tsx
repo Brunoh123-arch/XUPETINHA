@@ -61,30 +61,26 @@ export function LocationTag({ className }: LocationTagProps) {
   }, [])
 
   useEffect(() => {
-    // Try to get location from sessionStorage first
-    const stored = sessionStorage.getItem("userLocation")
-    if (stored) {
-      const { lat, lng } = JSON.parse(stored)
-      fetchCity(lat, lng)
-      return
+    async function loadLocation() {
+      try {
+        // Tenta localização em cache (Preferences nativo)
+        const { Preferences } = await import('@capacitor/preferences')
+        const { value: stored } = await Preferences.get({ key: 'userLocation' })
+        if (stored) {
+          const { lat, lng } = JSON.parse(stored)
+          fetchCity(lat, lng)
+          return
+        }
+        // Pede localização via Capacitor
+        const { Geolocation } = await import('@capacitor/geolocation')
+        const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 5000 })
+        fetchCity(pos.coords.latitude, pos.coords.longitude)
+      } catch {
+        setCity(null)
+        setLoading(false)
+      }
     }
-
-    // Otherwise request geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          fetchCity(position.coords.latitude, position.coords.longitude)
-        },
-        () => {
-          setCity(null)
-          setLoading(false)
-        },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
-      )
-    } else {
-      setCity(null)
-      setLoading(false)
-    }
+    loadLocation()
   }, [fetchCity])
 
   // Update time every second when showing time

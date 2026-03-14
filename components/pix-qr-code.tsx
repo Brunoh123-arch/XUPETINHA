@@ -53,7 +53,8 @@ export function PixQrCode({
 
   const handleCopyCode = async () => {
     try {
-      await navigator.clipboard.writeText(qrCodeText)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(qrCodeText)
       setCopied(true)
       iosToast.success('Código PIX copiado!')
       triggerHaptic('light')

@@ -391,14 +391,11 @@ function TrackingContent() {
                   onClick={async () => {
                     setShowSafetyMenu(false)
                     try {
-                      const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej))
+                      const { Geolocation } = await import('@capacitor/geolocation')
+                      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false })
                       const link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`
-                      if (navigator.share) {
-                        await navigator.share({ title: 'Minha localizacao - Uppi', url: link })
-                      } else {
-                        await navigator.clipboard.writeText(link)
-                        iosToast.success('Link copiado')
-                      }
+                      const { Share } = await import('@capacitor/share')
+                      await Share.share({ title: 'Minha localizacao - Uppi', url: link })
                     } catch {}
                   }}
                   className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3 shadow-xl"

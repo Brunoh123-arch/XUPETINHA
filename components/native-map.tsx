@@ -12,6 +12,16 @@ export interface NativeMapHandle {
   clearRoute: () => Promise<void>
   panTo: (lat: number, lng: number) => void
   setZoom: (zoom: number) => void
+  /**
+   * Ativa o modo "seguir motorista": câmera acompanha a posição + bearing.
+   * Chame com heading=true quando a navegação estiver ativa para experiência
+   * idêntica ao Uber (mapa vira na direção do movimento).
+   */
+  setFollowMode: (active: boolean) => void
+  /**
+   * Atualiza posição e heading da câmera ao mesmo tempo (usado pelo turn-by-turn).
+   */
+  updateCamera: (lat: number, lng: number, heading: number) => Promise<void>
 }
 
 interface LatLng {
@@ -34,6 +44,11 @@ interface NativeMapProps {
   showRoute?: boolean
   origin?: LatLng
   destination?: LatLng
+  /**
+   * Quando true, a câmera nativa usa bearing + tilt (modo estrada) a cada
+   * atualização de localização — igual ao modo "seguir" do Uber/99.
+   */
+  followMode?: boolean
   onLocationFound?: (lat: number, lng: number) => void
   onMapReady?: (mapInstance: any) => void
   onMarkerClick?: (markerId: string) => void
@@ -54,6 +69,7 @@ export const NativeMap = forwardRef<NativeMapHandle, NativeMapProps>(
       showRoute = false,
       origin,
       destination,
+      followMode = false,
       onLocationFound,
       onMapReady,
       onMarkerClick,
@@ -67,6 +83,10 @@ export const NativeMap = forwardRef<NativeMapHandle, NativeMapProps>(
     const markersMapRef = useRef<Map<string, string>>(new Map())
     const [mapReady, setMapReady] = useState(false)
     const [userLocation, setUserLocation] = useState<LatLng | null>(null)
+    /** Heading atual em graus — atualizado pelo watchPosition ou pelo Navigation SDK */
+    const headingRef = useRef<number>(0)
+    /** Se followMode está ativo e a câmera deve acompanhar bearing */
+    const followActiveRef = useRef<boolean>(followMode)
 
     // Initialize native map (Android/iOS)
     useEffect(() => {
@@ -121,17 +141,26 @@ export const NativeMap = forwardRef<NativeMapHandle, NativeMapProps>(
             onMarkerClick?.(event.markerId)
           })
 
-          // Get current location
+              // Get current location
           if (showUserLocation) {
             try {
               const { Geolocation } = await import('@capacitor/geolocation')
               const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
               const loc = { lat: position.coords.latitude, lng: position.coords.longitude }
+              const bearing = position.coords.heading ?? 0
+              headingRef.current = bearing
               setUserLocation(loc)
               onLocationFound?.(loc.lat, loc.lng)
-              
-              // Center on user
-              await map.setCamera({ coordinate: loc, zoom, animate: true })
+
+              // Centro na posição do usuário — se followMode usa bearing + tilt
+              await map.setCamera({
+                coordinate: loc,
+                zoom,
+                animate: true,
+                ...(followActiveRef.current && bearing > 0
+                  ? { bearing, tilt: 45 }
+                  : {}),
+              })
             } catch (err) {
               console.warn('[NativeMap] Could not get location:', err)
             }
@@ -273,6 +302,20 @@ export const NativeMap = forwardRef<NativeMapHandle, NativeMapProps>(
       setZoom: async (z) => {
         if (isNative && nativeMapRef.current) {
           await nativeMapRef.current.setCamera({ zoom: z, animate: true })
+        }
+      },
+      setFollowMode: (active: boolean) => {
+        followActiveRef.current = active
+      },
+      updateCamera: async (lat: number, lng: number, heading: number) => {
+        headingRef.current = heading
+        if (isNative && nativeMapRef.current) {
+          await nativeMapRef.current.setCamera({
+            coordinate: { lat, lng },
+            zoom,
+            animate: true,
+            ...(followActiveRef.current ? { bearing: heading, tilt: 45 } : {}),
+          })
         }
       },
     }), [isNative, userLocation, zoom])

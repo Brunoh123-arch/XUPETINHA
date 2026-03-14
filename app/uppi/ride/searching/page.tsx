@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PixModal } from '@/components/pix-modal'
 import { paymentService } from '@/lib/services/payment-service'
 import { iosToast } from '@/lib/utils/ios-toast'
+import { Storage } from '@/lib/storage'
 
 interface RouteData {
   pickup: string
@@ -106,21 +107,25 @@ export default function SearchingDriverPage() {
   } | null>(null)
 
   useEffect(() => {
-    const s = sessionStorage.getItem('rideRoute')
-    if (s) setRoute(JSON.parse(s))
-    const r = sessionStorage.getItem('selectedRide')
-    if (r) setSelectedRide(JSON.parse(r))
-
-    // Verificar se há corrida ativa em andamento (usuário voltou à tela)
-    const savedRideId = sessionStorage.getItem('activeRideId')
-    if (savedRideId) {
-      setRideId(savedRideId)
-      setStatus('searching')
-      sub(savedRideId)
-    }
+    Promise.all([
+      Storage.getJSON('rideRoute'),
+      Storage.getJSON('selectedRide'),
+      Storage.get('activeRideId'),
+    ]).then(([s, r, savedRideId]) => {
+      if (s) setRoute(s as RouteData)
+      if (r) setSelectedRide(r as SelectedRide)
+      if (savedRideId) {
+        setRideId(savedRideId)
+        setStatus('searching')
+        sub(savedRideId)
+      }
+    }).catch(() => {})
+    startSearch()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { if (route.pickupCoords && selectedRide) createRide() }, [route.pickupCoords, selectedRide])
+  const startSearch = () => { /* coordena a criação após carregar estado */ }
+  useEffect(() => { if (route.pickupCoords && selectedRide) createRide() }, [route.pickupCoords, selectedRide]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { timerRef.current = setInterval(() => setSearchTime(p => p + 1), 1000); return () => { if (timerRef.current) clearInterval(timerRef.current) } }, [])
 
   const createRide = async () => {
@@ -152,7 +157,7 @@ export default function SearchingDriverPage() {
         return
       }
       setRideId(d.ride.id)
-      sessionStorage.setItem('activeRideId', d.ride.id)
+      Storage.set('activeRideId', d.ride.id).catch(() => {})
       setStatus('searching')
       sub(d.ride.id)
     } catch (err) {
@@ -224,8 +229,7 @@ export default function SearchingDriverPage() {
         })
 
         if (result.success && result.qr_code_text) {
-          // Salvar payment_id no sessionStorage para recuperação no tracking
-          sessionStorage.setItem('activePaymentId', result.payment_id || '')
+          Storage.set('activePaymentId', result.payment_id || '').catch(() => {})
           setPixModal({
             externalId: result.payment_id!,
             qrCodeText: result.qr_code_text,
@@ -234,12 +238,11 @@ export default function SearchingDriverPage() {
             rideId,
           })
         } else {
-          // Fallback: ir para tracking mesmo sem PIX gerado
-          sessionStorage.removeItem('activeRideId')
+          Storage.remove('activeRideId').catch(() => {})
           router.push(`/uppi/ride/${rideId}/tracking`)
         }
       } else {
-        sessionStorage.removeItem('activeRideId')
+        Storage.remove('activeRideId').catch(() => {})
         router.push(`/uppi/ride/${rideId}/tracking`)
       }
     } catch { iosToast.error('Erro ao aceitar oferta. Tente novamente.') }
@@ -278,7 +281,7 @@ export default function SearchingDriverPage() {
           .eq('id', rideId)
       }
     }
-    sessionStorage.removeItem('activeRideId')
+    Storage.remove('activeRideId').catch(() => {})
     router.push('/uppi/home')
   }
 

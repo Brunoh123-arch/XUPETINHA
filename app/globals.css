@@ -332,6 +332,33 @@ body {
   animation: ios-skeleton-pulse 1.5s ease-in-out infinite;
 }
 
+/* iOS Skeleton shimmer (wave left→right — mais nativo que o pulse) */
+@keyframes ios-skeleton-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.ios-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--skeleton-base)) 25%,
+    rgb(var(--skeleton-highlight)) 50%,
+    rgb(var(--skeleton-base)) 75%
+  );
+  background-size: 200% 100%;
+  animation: ios-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+:root {
+  --skeleton-base: 229 229 229;
+  --skeleton-highlight: 245 245 245;
+}
+
+.dark {
+  --skeleton-base: 55 55 58;
+  --skeleton-highlight: 72 72 76;
+}
+
 /* iOS Badge bounce */
 @keyframes ios-badge-bounce {
   0% { transform: scale(0); opacity: 0; }

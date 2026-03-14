@@ -226,9 +226,10 @@ export function ReferralClient({
           <button
             type="button"
             className="h-[52px] rounded-[14px] bg-[#25D366] text-white font-semibold text-[15px] ios-press flex items-center justify-center gap-2"
-            onClick={() => {
-              const text = `Use o código ${referralCode} no app Uppi e ganhe R$ 10 na primeira corrida! 🚗`
-              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+            onClick={async () => {
+              const text = `Use o código ${referralCode} no app Uppi e ganhe R$ 10 na primeira corrida!`
+              const { nativeOpenUrl } = await import('@/lib/native')
+              await nativeOpenUrl(`https://wa.me/?text=${encodeURIComponent(text)}`)
             }}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -240,18 +241,13 @@ export function ReferralClient({
           <button
             type="button"
             className="h-[52px] rounded-[14px] bg-secondary text-foreground font-semibold text-[15px] ios-press flex items-center justify-center gap-2 border border-border"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: 'Indique Uppi',
-                  text: `Use o código ${referralCode} no app Uppi e ganhe R$ 10 na primeira corrida! 🚗`,
-                  url: referralLink
-                })
-              } else {
-                // Fallback: copy to clipboard
-                navigator.clipboard.writeText(`Use o código ${referralCode} no app Uppi e ganhe R$ 10 na primeira corrida! 🚗 ${referralLink}`)
-                alert('Link copiado!')
-              }
+            onClick={async () => {
+              const { nativeShare } = await import('@/lib/native')
+              await nativeShare({
+                title: 'Indique Uppi',
+                text: `Use o código ${referralCode} no app Uppi e ganhe R$ 10 na primeira corrida!`,
+                url: referralLink,
+              })
             }}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

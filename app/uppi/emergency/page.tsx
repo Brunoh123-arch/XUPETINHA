@@ -65,9 +65,8 @@ export default function EmergencyPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject)
-      })
+      const { Geolocation } = await import('@capacitor/geolocation')
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
 
       await supabase.from('emergency_alerts').insert({
         user_id: user.id,
@@ -92,22 +91,17 @@ export default function EmergencyPage() {
   const handleShareLocation = async () => {
     setSharingLocation(true)
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true })
-      })
+      const { Geolocation } = await import('@capacitor/geolocation')
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
       const link = `https://maps.google.com/?q=${position.coords.latitude},${position.coords.longitude}`
       setShareLink(link)
 
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Minha localizacao - Uppi',
-          text: 'Estou compartilhando minha localizacao em tempo real',
-          url: link,
-        })
-      } else {
-        await navigator.clipboard.writeText(link)
-        iosToast.success('Link copiado')
-      }
+      const { Share } = await import('@capacitor/share')
+      await Share.share({
+        title: 'Minha localizacao - Uppi',
+        text: 'Estou compartilhando minha localizacao em tempo real',
+        url: link,
+      })
     } catch (error) {
       console.error('Error sharing location:', error)
     } finally {
@@ -356,7 +350,7 @@ export default function EmergencyPage() {
               />
               <button
                 type="button"
-                onClick={() => { navigator.clipboard.writeText(shareLink); iosToast.success('Copiado') }}
+                onClick={async () => { const { nativeCopy } = await import('@/lib/native'); await nativeCopy(shareLink); iosToast.success('Copiado') }}
                 className="h-[42px] px-4 bg-blue-500 text-white rounded-xl text-[14px] font-bold ios-press shrink-0"
               >
                 Copiar

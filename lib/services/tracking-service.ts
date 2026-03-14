@@ -28,7 +28,8 @@ const TRACKING_CONFIGS = {
 
 class TrackingService {
   private supabase = createClient()
-  private watchId: number | null = null
+  /** ID do watcher de background geolocation (@capacitor-community/background-geolocation) */
+  private bgWatcherId: string | null = null
   private updateInterval: NodeJS.Timeout | null = null
   private lastPosition: { lat: number; lng: number } | null = null
   private lastSpeed: number = 0
@@ -47,87 +48,79 @@ class TrackingService {
 
   // Inicia rastreamento GPS do motorista para uma corrida
   startDriverTracking(rideId: string, driverId: string, mode: 'online' | 'active_ride' = 'active_ride') {
-    if (!navigator.geolocation) return
-
     this.currentMode = mode
     const config = TRACKING_CONFIGS[mode]
 
-    this.watchId = navigator.geolocation.watchPosition(
-      async (position) => {
-        const lat = position.coords.latitude
-        const lng = position.coords.longitude
-        const speed = position.coords.speed || 0
+    // Sempre usa background geolocation nativo — sem fallback web
+    this._startBackgroundTracking(rideId, driverId, mode, config)
+  }
 
-        // DISTANCE FILTER: ignorar se nao moveu o suficiente
-        if (this.lastPosition) {
-          const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
-          const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
-          if (distance < distanceFilter) {
-            return // Nao moveu o suficiente
-          }
-        }
+  /** Tracking nativo com background geolocation */
+  private async _startBackgroundTracking(
+    rideId: string,
+    driverId: string,
+    mode: 'online' | 'active_ride',
+    config: { interval: number; distanceFilter: number }
+  ) {
+    try {
+      const { BackgroundGeolocation } = await import('@capacitor-community/background-geolocation')
 
-        this.lastPosition = { lat, lng }
-        this.lastSpeed = speed
+      const watcherId = await BackgroundGeolocation.addWatcher(
+        {
+          // Notificação persistente Android (obrigatória para background)
+          backgroundTitle: 'Uppi — Rastreamento ativo',
+          backgroundMessage: 'Sua posição está sendo registrada para a corrida.',
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: config.distanceFilter,
+        },
+        async (location, error) => {
+          if (error || !location) return
 
-        const location: DriverLocation = {
-          driver_id: driverId,
-          latitude: lat,
-          longitude: lng,
-          heading: position.coords.heading || 0,
-          speed: speed,
-          accuracy: position.coords.accuracy,
-          timestamp: new Date().toISOString(),
-        }
-        await this.updateDriverLocation(rideId, location)
-      },
-      (_err) => {},
-      { enableHighAccuracy: mode === 'active_ride', maximumAge: 5000, timeout: 10000 }
-    )
+          const { latitude: lat, longitude: lng, speed, accuracy, bearing } = location
 
-    // Intervalo dinamico baseado em velocidade
-    const startInterval = () => {
-      const interval = this.lastSpeed < 0.5 ? TRACKING_CONFIGS.stopped.interval : config.interval
-      this.updateInterval = setTimeout(async () => {
-        navigator.geolocation.getCurrentPosition(async (position) => {
-          const lat = position.coords.latitude
-          const lng = position.coords.longitude
-          const speed = position.coords.speed || 0
-
-          // Distance filter
           if (this.lastPosition) {
-            const distance = this.calculateDistance(this.lastPosition.lat, this.lastPosition.lng, lat, lng)
-            const distanceFilter = speed < 0.5 ? TRACKING_CONFIGS.stopped.distanceFilter : config.distanceFilter
-            if (distance < distanceFilter) {
-              startInterval()
-              return
-            }
+            const distance = this.calculateDistance(
+              this.lastPosition.lat,
+              this.lastPosition.lng,
+              lat,
+              lng
+            )
+            const minDist =
+              (speed ?? 0) < 0.5
+                ? TRACKING_CONFIGS.stopped.distanceFilter
+                : config.distanceFilter
+            if (distance < minDist) return
           }
 
           this.lastPosition = { lat, lng }
-          this.lastSpeed = speed
+          this.lastSpeed = speed ?? 0
 
-          const location: DriverLocation = {
+          await this.updateDriverLocation(rideId, {
             driver_id: driverId,
             latitude: lat,
             longitude: lng,
-            heading: position.coords.heading || 0,
-            speed: speed,
-            accuracy: position.coords.accuracy,
+            heading: bearing ?? 0,
+            speed: speed ?? 0,
+            accuracy: accuracy ?? 0,
             timestamp: new Date().toISOString(),
-          }
-          await this.updateDriverLocation(rideId, location)
-          startInterval()
-        })
-      }, interval)
+          })
+        }
+      )
+
+      this.bgWatcherId = watcherId
+    } catch {
+      // Plugin não disponível — tracking silenciosamente desativado
     }
-    startInterval()
   }
 
   stopTracking() {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId)
-      this.watchId = null
+    if (this.bgWatcherId !== null) {
+      const watcherId = this.bgWatcherId
+      this.bgWatcherId = null
+      import('@capacitor-community/background-geolocation').then(({ BackgroundGeolocation }) => {
+        BackgroundGeolocation.removeWatcher({ id: watcherId }).catch(() => {})
+      }).catch(() => {})
     }
     if (this.updateInterval) {
       clearTimeout(this.updateInterval)

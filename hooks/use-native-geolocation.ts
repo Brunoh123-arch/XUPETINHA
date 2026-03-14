@@ -161,22 +161,12 @@ export function useNativeGeolocation(options: UseNativeGeolocationOptions = {}) 
     setState(prev => ({ ...prev, loading: true, error: null }))
 
     try {
-      if (isNative) {
-        // Capacitor nativo
-        const position = await Geolocation.getCurrentPosition({
-          enableHighAccuracy,
-          timeout,
-          maximumAge,
-        })
-        updatePosition(position)
-      } else {
-        // Web fallback
-        navigator.geolocation.getCurrentPosition(
-          updatePosition,
-          handleError,
-          { enableHighAccuracy, timeout, maximumAge }
-        )
-      }
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy,
+        timeout,
+        maximumAge,
+      })
+      updatePosition(position)
     } catch (err) {
       handleError(err as Error)
     }
@@ -187,26 +177,17 @@ export function useNativeGeolocation(options: UseNativeGeolocationOptions = {}) 
     if (watchId) return // Ja esta assistindo
 
     try {
-      if (isNative) {
-        const id = await Geolocation.watchPosition(
-          { enableHighAccuracy, timeout, maximumAge },
-          (position, err) => {
-            if (err) {
-              handleError(new Error(err.message))
-            } else if (position) {
-              updatePosition(position)
-            }
+      const id = await Geolocation.watchPosition(
+        { enableHighAccuracy, timeout, maximumAge },
+        (position, err) => {
+          if (err) {
+            handleError(new Error(err.message))
+          } else if (position) {
+            updatePosition(position)
           }
-        )
-        setWatchId(id)
-      } else {
-        const id = navigator.geolocation.watchPosition(
-          updatePosition,
-          handleError,
-          { enableHighAccuracy, timeout, maximumAge }
-        )
-        setWatchId(String(id))
-      }
+        }
+      )
+      setWatchId(id)
     } catch (err) {
       handleError(err as Error)
     }
@@ -217,11 +198,7 @@ export function useNativeGeolocation(options: UseNativeGeolocationOptions = {}) 
     if (!watchId) return
 
     try {
-      if (isNative) {
-        await Geolocation.clearWatch({ id: watchId })
-      } else {
-        navigator.geolocation.clearWatch(Number(watchId))
-      }
+      await Geolocation.clearWatch({ id: watchId })
       setWatchId(null)
     } catch (err) {
       console.error('[Geolocation] Erro ao parar watch:', err)

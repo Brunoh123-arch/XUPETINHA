@@ -67,30 +67,17 @@ export function formatDuration(minutes: number): string {
 }
 
 /**
- * Get current user location
+ * Get current user location via @capacitor/geolocation (nativo).
  */
-export function getCurrentLocation(): Promise<Location> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation not supported'))
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
-      },
-      (error) => {
-        reject(error)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000,
-      }
-    )
+export async function getCurrentLocation(): Promise<Location> {
+  const { Geolocation } = await import('@capacitor/geolocation')
+  const position = await Geolocation.getCurrentPosition({
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 60000,
   })
+  return {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+  }
 }

@@ -94,23 +94,11 @@ export default function SocialFeedPage() {
     
     const shareText = `${post.title}\n\nCompartilhado via Uppi`
     
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: post.title,
-          text: shareText,
-        })
-      } catch (error) {
-        // User cancelled share
-      }
-    } else {
-      // Fallback: copy to clipboard
-      try {
-        await navigator.clipboard.writeText(shareText)
-        iosToast.success('Link copiado!')
-      } catch (error) {
-        iosToast.error('Erro ao copiar')
-      }
+    try {
+      const { nativeShare } = await import('@/lib/native')
+      await nativeShare({ title: post.title, text: shareText })
+    } catch {
+      // Usuário cancelou ou plugin indisponível
     }
   }
 

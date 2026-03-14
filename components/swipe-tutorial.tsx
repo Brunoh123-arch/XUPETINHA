@@ -7,15 +7,18 @@ export function SwipeTutorial() {
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('hasSeenSwipeTutorial')
-    if (!hasSeenTutorial) {
-      setTimeout(() => setShow(true), 1000)
-    }
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.get({ key: 'hasSeenSwipeTutorial' }).then(({ value }) => {
+        if (!value) setTimeout(() => setShow(true), 1000)
+      }).catch(() => {})
+    }).catch(() => {})
   }, [])
 
   const handleDismiss = () => {
     setShow(false)
-    localStorage.setItem('hasSeenSwipeTutorial', 'true')
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.set({ key: 'hasSeenSwipeTutorial', value: 'true' }).catch(() => {})
+    }).catch(() => {})
   }
 
   return (

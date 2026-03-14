@@ -6,7 +6,11 @@
  */
 
 import { WebPlugin } from '@capacitor/core'
-import type { NavigationDestination, NavigationPluginInterface, NavigationStatus } from './index'
+import type {
+  NavigationDestination,
+  NavigationPluginInterface,
+  NavigationStatus,
+} from './index'
 
 export class NavigationPluginWeb extends WebPlugin implements NavigationPluginInterface {
   async isAvailable(): Promise<{ available: boolean }> {
@@ -17,12 +21,15 @@ export class NavigationPluginWeb extends WebPlugin implements NavigationPluginIn
   async startNavigation(destination: NavigationDestination): Promise<NavigationStatus> {
     const { lat, lng, label } = destination
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
-    window.open(url, '_blank')
-    console.warn('[NavigationPlugin] Web fallback: abrindo Google Maps no browser.', label)
+    const { nativeOpenUrl } = await import('@/lib/native')
+    await nativeOpenUrl(url)
+    console.warn('[NavigationPlugin] Abrindo Google Maps via Capacitor Browser.', label)
     return { initialized: true }
   }
 
   async stopNavigation(): Promise<void> {
     // Não há nada a encerrar no fallback web
   }
+
+  // addListener e removeAllListeners são herdados de WebPlugin (no-op no web)
 }

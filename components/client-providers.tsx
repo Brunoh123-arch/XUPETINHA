@@ -49,18 +49,16 @@ function LazyProviders({ children }: { children: ReactNode }) {
 // These providers return null and only run effects on the client
 function ClientOnlyProviders() {
   useEffect(() => {
-    // Auto theme
-    const hour = new Date().getHours()
-    const userPref = localStorage.getItem('uppi-theme-preference')
-    if (userPref !== 'manual') {
-      const shouldBeDark = hour >= 18 || hour < 6
-      document.documentElement.classList.toggle('dark', shouldBeDark)
-    }
-
-    // Service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {})
-    }
+    // Auto theme via Capacitor Preferences (nativo)
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.get({ key: 'uppi-theme-preference' }).then(({ value: userPref }) => {
+        if (userPref !== 'manual') {
+          const hour = new Date().getHours()
+          const shouldBeDark = hour >= 18 || hour < 6
+          document.documentElement.classList.toggle('dark', shouldBeDark)
+        }
+      }).catch(() => {})
+    }).catch(() => {})
 
     // Block browser install prompt (TWA only)
     const handler = (e: Event) => e.preventDefault()
