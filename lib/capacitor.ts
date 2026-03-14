@@ -49,8 +49,13 @@ export async function initCapacitorApp() {
     })
 
     // Listener para deep links / Universal Links (iOS) / App Links (Android)
+    // Usa handleDeepLink do deep-links.ts para navegacao SPA real via Next.js router
     App.addListener('appUrlOpen', ({ url }) => {
-      handleCapacitorDeepLink(url)
+      import('next/navigation').then(({ useRouter: _unused }) => {}).catch(() => {})
+      // Dispara evento para que o componente DeepLinkHandler (no layout) processe
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('capacitor:deeplink', { detail: { url } }))
+      }
     })
 
     console.log('[Capacitor] App inicializado com sucesso')
@@ -115,30 +120,34 @@ export async function setStatusBar(options: {
 }
 
 /**
- * Trata deep links recebidos pelo Capacitor (App Links Android + Universal Links iOS).
- * Usa o router do Next.js via history.pushState para navegação SPA sem reload.
+ * Hook React para processar deep links recebidos pelo Capacitor.
+ * Deve ser montado no layout raiz (app/uppi/layout.tsx ou app/layout.tsx).
+ * Escuta o evento 'capacitor:deeplink' despachado pelo initCapacitorApp()
+ * e navega via router do Next.js sem reload.
  *
  * Rotas suportadas:
- *  /share?type=ride&id=...          → corrida compartilhada
- *  /share?type=coupon&code=...      → cupom recebido
- *  /uppi/ride/:id/*                 → tela de corrida
- *  /uppi/promotions*                → promoções (com código opcional)
- *  /invite/:code                    → convite de passageiro
- *  /driver/invite/:code             → convite de motorista
+ *  /share?type=ride&id=...      → corrida compartilhada
+ *  /share?type=coupon&code=...  → cupom recebido
+ *  /uppi/ride/:id/*             → tela de corrida
+ *  /uppi/driver/ride/:id/accept → aceitar corrida (motorista)
+ *  /invite/:code                → convite de passageiro
+ *  /driver/invite/:code         → convite de motorista
  */
-export function handleCapacitorDeepLink(url: string): void {
-  try {
-    const parsed = new URL(url)
-    const path = parsed.pathname + parsed.search + parsed.hash
+export function useDeepLinkListener() {
+  // Importado inline para evitar import circular (este arquivo nao pode importar React no topo)
+  // O componente que usa este hook deve importar de 'react'
+  if (typeof window === 'undefined') return
 
-    // Usa pushState para navegação SPA (evita reload completo)
-    if (window.history && path) {
-      window.history.pushState(null, '', path)
-      // Dispara um evento customizado para que o Next.js App Router detecte a mudança
-      window.dispatchEvent(new PopStateEvent('popstate', { state: null }))
+  return (router: Parameters<typeof import('@/lib/utils/deep-links')['handleDeepLink']>[1]) => {
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url
+      if (!url) return
+      import('@/lib/utils/deep-links').then(({ handleDeepLink }) => {
+        handleDeepLink(url, router)
+      }).catch(() => {})
     }
-  } catch (err) {
-    console.error('[Capacitor] Erro ao processar deep link:', err)
+    window.addEventListener('capacitor:deeplink', handler)
+    return () => window.removeEventListener('capacitor:deeplink', handler)
   }
 }
 

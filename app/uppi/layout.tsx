@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { initOfflineHandling } from '@/lib/utils/offline-handler'
 import { Capacitor } from '@capacitor/core'
+import { handleDeepLink } from '@/lib/utils/deep-links'
 
 /**
  * Variantes de transição iOS Stack Navigation.
@@ -30,11 +31,23 @@ export default function UppiLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const isNative = Capacitor.isNativePlatform()
 
   useEffect(() => {
     initOfflineHandling()
   }, [])
+
+  // Escuta deep links despachados pelo initCapacitorApp() e navega via router
+  useEffect(() => {
+    if (!isNative) return
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url
+      if (url) handleDeepLink(url, router)
+    }
+    window.addEventListener('capacitor:deeplink', handler)
+    return () => window.removeEventListener('capacitor:deeplink', handler)
+  }, [isNative, router])
 
   // Aplica transições de slide apenas no nativo — no web usa render direto
   // para não interferir com o comportamento esperado em browser

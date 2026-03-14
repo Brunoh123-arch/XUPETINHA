@@ -5,7 +5,7 @@
       "namespace": "android_app",
       "package_name": "app.uppi.mobile",
       "sha256_cert_fingerprints": [
-        "SUBSTITUIR_PELO_SHA256_DO_KEYSTORE_DE_RELEASE"
+        "SUBSTITUIR_PELO_SHA256_DO_KEYSTORE_DE_PRODUCAO"
       ]
     }
   }
