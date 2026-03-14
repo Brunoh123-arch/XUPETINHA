@@ -1,6 +1,6 @@
 # UPPI - Sistema de Emails Personalizados
 
-**Data:** 11/03/2026
+**Data:** 14/03/2026
 
 ## Opcao 1: Sistema via Resend (RECOMENDADO)
 
@@ -495,4 +495,4 @@ Em **Project Settings** > **Authentication**:
 
 ---
 
-**Atualizado em:** 11/03/2026
+**Atualizado em:** 14/03/2026
