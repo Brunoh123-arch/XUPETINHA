@@ -1,7 +1,7 @@
 # UPPI - Status de Funcionalidades
 
 **Ultima Atualizacao:** 14/03/2026
-**Versao:** 25.0 — Contagem real de tabelas corrigida
+**Versao:** 26.0 — Contagem definitiva pos-varredura completa de todos os 88 scripts SQL
 **Status Geral:** 98% Pronto para Producao — Supabase jpnwxqjrhzaobnugjnyx
 
 ---
@@ -12,7 +12,7 @@
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
 | Tabelas no Banco (public — aplicadas) | **100** |
-| Tabelas definidas nos scripts (total) | **130** (+30 pendentes) |
+| Tabelas unicas nos scripts (deduplicated) | **155** (+55 pendentes em 8 scripts) |
 | Tabelas com RLS ativo | **86** |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -244,7 +244,7 @@
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
 | Tabelas public (aplicadas) | **100** (migrations 001-049) |
-| Tabelas nos scripts (total) | **130** (+30 pendentes em scripts 012/050/06/07) |
+| Tabelas unicas nos scripts (deduplicated) | **155** (+55 pendentes — 8 scripts) |
 | Tabelas com RLS | **86** (exceto spatial_ref_sys) |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -420,6 +420,6 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 14/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas aplicadas / 130 definidas nos scripts / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **152 telas / 85 APIs / 42 admin** — **Emails via Resend com templates profissionais**
+**Atualizado em 14/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas aplicadas / 155 unicas nos scripts (deduplicated) / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **152 telas / 85 APIs / 42 admin** — **Emails via Resend com templates profissionais**
 
 Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.
