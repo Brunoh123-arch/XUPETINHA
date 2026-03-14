@@ -21,8 +21,9 @@ export class NavigationPluginWeb extends WebPlugin implements NavigationPluginIn
   async startNavigation(destination: NavigationDestination): Promise<NavigationStatus> {
     const { lat, lng, label } = destination
     const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`
-    window.open(url, '_blank')
-    console.warn('[NavigationPlugin] Web fallback: abrindo Google Maps no browser.', label)
+    const { nativeOpenUrl } = await import('@/lib/native')
+    await nativeOpenUrl(url)
+    console.warn('[NavigationPlugin] Abrindo Google Maps via Capacitor Browser.', label)
     return { initialized: true }
   }
 

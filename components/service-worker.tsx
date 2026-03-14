@@ -11,14 +11,8 @@ import { usePathname } from 'next/navigation'
 export function ServiceWorkerRegistration() {
   const pathname = usePathname()
 
-  // Register service worker (required for TWA)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
-
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Silent fail - SW is not critical for functionality
-    })
-  }, [])
+  // Service Worker nao se aplica em app Capacitor nativo (WKWebView/WebView)
+  // Registro removido intencionalmente
 
   // BLOCK browser install prompt - users should only install from Play Store
   useEffect(() => {

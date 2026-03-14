@@ -10,14 +10,13 @@ function SharePageContent() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    // Get full URL with params
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    
-    // Handle the deep link
+    // Monta a URL a partir dos searchParams (funciona em Capacitor sem window.location)
+    const params = searchParams.toString()
+    const url = params ? `https://uppi.app/share?${params}` : ''
+
     if (url) {
       handleDeepLink(url, router)
     } else {
-      // Fallback to home if no params
       setTimeout(() => router.push('/uppi/home'), 1000)
     }
   }, [router, searchParams])

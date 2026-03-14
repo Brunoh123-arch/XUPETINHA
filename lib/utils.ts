@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
  * Prioridade:
  * 1. NEXT_PUBLIC_SITE_URL (configuracao manual para dominio customizado)
  * 2. NEXT_PUBLIC_VERCEL_URL (automatico da Vercel em qualquer deploy)
- * 3. window.location.origin (fallback para desenvolvimento local)
+ * 3. https://uppi.app (fallback fixo — app nativo nao expoe window.location)
  */
 export function getSiteUrl(): string {
   // Dominio customizado configurado manualmente
@@ -23,11 +23,6 @@ export function getSiteUrl(): string {
     return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
   }
   
-  // Fallback para desenvolvimento local
-  if (typeof window !== 'undefined') {
-    return window.location.origin
-  }
-  
-  // Fallback final para SSR
-  return 'http://localhost:3000'
+  // Fallback — app nativo usa sempre o dominio de producao
+  return 'https://uppi.app'
 }

@@ -130,9 +130,10 @@ export default function GroupRidePage() {
     }
   }
 
-  const copyInviteCode = () => {
+  const copyInviteCode = async () => {
     if (createdGroup?.invite_code) {
-      navigator.clipboard.writeText(createdGroup.invite_code)
+      const { nativeCopy } = await import('@/lib/native')
+      await nativeCopy(createdGroup.invite_code)
       setCopiedCode(true)
       triggerHaptic('success')
       iosToast.success('Código copiado!')

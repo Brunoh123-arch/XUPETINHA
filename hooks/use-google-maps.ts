@@ -20,8 +20,7 @@ export function useGoogleMaps() {
       setUserLocation(location)
       setPermissionState('granted')
       
-      // Save to session storage
-      sessionStorage.setItem('userLocation', JSON.stringify(location))
+      import('@/lib/storage').then(({ Storage }) => Storage.setJSON('userLocation', location)).catch(() => {})
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to get location')
       setPermissionState('denied')
@@ -31,33 +30,28 @@ export function useGoogleMaps() {
   }, [])
 
   useEffect(() => {
-    // Check for cached location first
-    const cached = sessionStorage.getItem('userLocation')
-    if (cached) {
-      try {
-        const location = JSON.parse(cached)
-        setUserLocation(location)
-        setLoading(false)
-        return
-      } catch {
-        // Invalid cache, continue with fresh request
-      }
+    // Verifica cache de localizacao nativo
+    import('@/lib/storage').then(({ Storage }) => {
+      Storage.getJSON<{ lat: number; lng: number }>('userLocation').then((location) => {
+        if (location) {
+          setUserLocation(location)
+          setLoading(false)
+          return
+        }
+        requestLocation()
+      }).catch(() => requestLocation())
+    }).catch(() => requestLocation())
     }
 
-    // Check permission status
-    if (navigator.permissions) {
-      navigator.permissions
-        .query({ name: 'geolocation' })
-        .then((result) => {
-          setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-
-          result.addEventListener('change', () => {
-            setPermissionState(result.state as 'prompt' | 'granted' | 'denied')
-          })
-        })
-        .catch(() => {
-          setPermissionState('prompt')
-        })
+    // Verifica permissao de geolocalizacao via Capacitor
+    import('@capacitor/geolocation').then(({ Geolocation }) => {
+      Geolocation.checkPermissions().then(({ location }) => {
+        setPermissionState(
+          location === 'granted' ? 'granted'
+          : location === 'denied' ? 'denied'
+          : 'prompt'
+        )
+      }).catch(() => setPermissionState('prompt'))
     }
 
     // Request location on mount

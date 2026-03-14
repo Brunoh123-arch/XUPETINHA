@@ -216,8 +216,9 @@ const steps = [
 function CodeLine({ value, note }: { value: string; note?: string }) {
   const [copied, setCopied] = useState(false)
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(value)
+  const handleCopy = async () => {
+    const { nativeCopy } = await import('@/lib/native')
+    await nativeCopy(value)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
