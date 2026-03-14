@@ -59,20 +59,31 @@ export async function nativeEmail(email: string): Promise<void> {
 // ─── Navegação / Histórico ────────────────────────────────────────────────────
 
 export async function nativeBack(): Promise<void> {
-  const { App } = await import('@capacitor/app')
-  // Tenta pop nativo; se não tiver histórico, minimiza o app (Android)
+  if (typeof window === 'undefined') return
+
+  // Se existe histórico de navegação, vai para a tela anterior
+  if (window.history && window.history.length > 1) {
+    window.history.back()
+    return
+  }
+
+  // Sem histórico no Android: minimiza o app (comportamento esperado pelo usuário)
+  // No iOS o app nunca sai — apenas não faz nada se não houver histórico
   try {
-    App.exitApp()
+    const { Capacitor } = await import('@capacitor/core')
+    if (Capacitor.getPlatform() === 'android') {
+      const { App } = await import('@capacitor/app')
+      await App.minimizeApp()
+    }
   } catch {
-    // iOS — não sai do app, apenas não faz nada
+    // Fallback seguro
   }
 }
 
 export function nativePush(path: string): void {
-  // Navegação SPA sem reload — usa history API que o Capacitor WebView entende
-  if (typeof window !== 'undefined' && window.history) {
-    window.history.pushState(null, '', path)
-    window.dispatchEvent(new PopStateEvent('popstate', { state: null }))
+  // Delega ao event bus que o layout.tsx escuta — aciona router.push() real do Next.js
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('capacitor:navigate', { detail: { path } }))
   }
 }
 
