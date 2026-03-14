@@ -10,6 +10,7 @@ import { trackingService, type DriverLocation } from '@/lib/services/tracking-se
 import { NativeMap, type NativeMapHandle } from '@/components/native-map'
 import { triggerHaptic } from '@/lib/utils/haptics'
 import { cn } from '@/lib/utils'
+import { useKeepAwake } from '@/hooks/use-keep-awake'
 
 type RideStatus = Ride['status']
 
@@ -43,6 +44,9 @@ export default function RideTrackingPage() {
   const [driverProfile, setDriverProfile] = useState<DriverProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [role, setRole] = useState<'passenger' | 'driver' | null>(null)
+
+  // Mantém tela acesa durante corrida para passageiro acompanhar o motorista
+  useKeepAwake(ride?.status === 'accepted' || ride?.status === 'driver_arrived' || ride?.status === 'in_progress')
   const roleRef = useRef<'passenger' | 'driver' | null>(null)
   const [driverLocation, setDriverLocation] = useState<DriverLocation | null>(null)
   const [eta, setEta] = useState<number | null>(null)

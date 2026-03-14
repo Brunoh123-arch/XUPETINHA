@@ -13,6 +13,7 @@ import type { NavigationProgress } from '@/plugins/navigation'
 import { LiveActivityPlugin } from '@/plugins/live-activity'
 import { useStatusBar } from '@/hooks/use-status-bar'
 import { useTTS } from '@/hooks/use-tts'
+import { useKeepAwake } from '@/hooks/use-keep-awake'
 import { Capacitor } from '@capacitor/core'
 
 
@@ -116,6 +117,9 @@ export default function DriverActiveRidePage() {
   const [showCancel, setShowCancel] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+
+  // Mantém tela acesa durante toda a corrida ativa (motorista não pode apagar)
+  useKeepAwake(ride?.status !== 'completed' && ride?.status !== 'cancelled')
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const mapRef = useRef<NativeMapHandle>(null)
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
