@@ -281,7 +281,7 @@ export default function SearchingDriverPage() {
           .eq('id', rideId)
       }
     }
-    sessionStorage.removeItem('activeRideId')
+    Storage.remove('activeRideId').catch(() => {})
     router.push('/uppi/home')
   }
 

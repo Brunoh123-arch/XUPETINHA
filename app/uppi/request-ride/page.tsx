@@ -69,17 +69,19 @@ function RequestRideContent() {
   const initRouteAndPricing = useCallback(async () => {
     setLoadingRoute(true)
     try {
-      // Coords do sessionStorage (já salvas pelo route-input)
-      const routeData = sessionStorage.getItem('rideRoute')
-      const parsedRoute = routeData ? JSON.parse(routeData) : null
+      // Coords do Storage nativo (já salvas pelo route-input)
+      const { Storage } = await import('@/lib/storage')
+      const parsedRoute = await Storage.getJSON<{
+        pickupCoords?: { lat: number; lng: number }
+        destinationCoords?: { lat: number; lng: number }
+      }>('rideRoute')
 
       let pickupCoords = parsedRoute?.pickupCoords ?? null
       let dropoffCoords = parsedRoute?.destinationCoords ?? null
 
-      // Fallback: tenta geolocalizacao atual
       if (!pickupCoords) {
-        const cached = sessionStorage.getItem('userLocation')
-        pickupCoords = cached ? JSON.parse(cached) : { lat: -23.5505, lng: -46.6333 }
+        const cached = await Storage.getJSON<{ lat: number; lng: number }>('userLocation')
+        pickupCoords = cached ?? { lat: -23.5505, lng: -46.6333 }
       }
 
       // Fallback: tenta geocodificar dropoff via place_id

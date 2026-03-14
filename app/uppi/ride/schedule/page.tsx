@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { triggerHaptic } from '@/hooks/use-haptic'
 import { iosToast } from '@/lib/utils/ios-toast'
 import { scheduledRideSchema, validateForm } from '@/lib/validations/schemas'
+import { Storage } from '@/lib/storage'
 
 interface RouteData {
   pickup: string
@@ -91,10 +92,13 @@ export default function ScheduleRidePage() {
   }, [availableSlots, selectedTime])
 
   useEffect(() => {
-    const savedRoute = sessionStorage.getItem('rideRoute')
-    const savedRide = sessionStorage.getItem('selectedRide')
-    if (savedRoute) setRoute(JSON.parse(savedRoute))
-    if (savedRide) setRide(JSON.parse(savedRide))
+    Promise.all([
+      Storage.getJSON('rideRoute'),
+      Storage.getJSON('selectedRide'),
+    ]).then(([savedRoute, savedRide]) => {
+      if (savedRoute) setRoute(savedRoute as RouteData)
+      if (savedRide) setRide(savedRide as ScheduledRideData)
+    }).catch(() => {})
   }, [])
 
   const handleConfirm = async () => {
@@ -155,7 +159,7 @@ export default function ScheduleRidePage() {
         reminder,
         rideId: data.ride?.id,
       }
-      sessionStorage.setItem('scheduledRide', JSON.stringify(scheduleData))
+      Storage.setJSON('scheduledRide', scheduleData).catch(() => {})
 
       setShowSuccess(true)
 

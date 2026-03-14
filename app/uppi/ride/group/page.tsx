@@ -34,9 +34,9 @@ export default function GroupRidePage() {
     setLoading(true)
     triggerHaptic('impact')
     
-    try {
-      // Get route data from session
-      const routeData = sessionStorage.getItem('selectedRide')
+  try {
+    const { Storage } = await import('@/lib/storage')
+    const routeData = await Storage.get('selectedRide')
       if (!routeData) {
         iosToast.error('Selecione uma rota primeiro')
         router.push('/uppi/ride/route-input')
@@ -87,9 +87,9 @@ export default function GroupRidePage() {
     setLoading(true)
     triggerHaptic('impact')
     
-    try {
-      // Get pickup/dropoff from session or prompt user
-      const routeData = sessionStorage.getItem('selectedRide')
+  try {
+    const { Storage } = await import('@/lib/storage')
+    const routeData = await Storage.get('selectedRide')
       if (!routeData) {
         iosToast.error('Configure sua localização primeiro')
         router.push('/uppi/ride/route-input')

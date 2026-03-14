@@ -15,9 +15,10 @@ export function AutoTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme()
 
   useEffect(() => {
-    // Only auto-switch if user hasn't manually chosen a theme
-    const userPreference = localStorage.getItem('uppi-theme-preference')
-    if (userPreference === 'manual') return
+    let cancelled = false
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.get({ key: 'uppi-theme-preference' }).then(({ value: userPreference }) => {
+        if (cancelled || userPreference === 'manual') return
 
     function applyTimeBasedTheme() {
       const hour = new Date().getHours()
@@ -29,11 +30,16 @@ export function AutoTheme() {
       }
     }
 
-    applyTimeBasedTheme()
-
-    // Check every 5 minutes for transition
-    const interval = setInterval(applyTimeBasedTheme, 5 * 60 * 1000)
-    return () => clearInterval(interval)
+        applyTimeBasedTheme()
+        const interval = setInterval(applyTimeBasedTheme, 5 * 60 * 1000)
+        // cleanup via ref trick — return não funciona dentro de .then()
+        ;(window as any).__autoThemeInterval = interval
+      }).catch(() => {})
+    }).catch(() => {})
+    return () => {
+      cancelled = true
+      clearInterval((window as any).__autoThemeInterval)
+    }
   }, [resolvedTheme, setTheme, theme])
 
   return null
@@ -42,13 +48,15 @@ export function AutoTheme() {
 /**
  * Call this when user manually toggles theme to stop auto-switching.
  */
-export function setManualThemePreference() {
-  localStorage.setItem('uppi-theme-preference', 'manual')
+export async function setManualThemePreference() {
+  const { Preferences } = await import('@capacitor/preferences')
+  await Preferences.set({ key: 'uppi-theme-preference', value: 'manual' })
 }
 
 /**
  * Call this to re-enable auto theme switching.
  */
-export function clearManualThemePreference() {
-  localStorage.removeItem('uppi-theme-preference')
+export async function clearManualThemePreference() {
+  const { Preferences } = await import('@capacitor/preferences')
+  await Preferences.remove({ key: 'uppi-theme-preference' })
 }

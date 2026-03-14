@@ -250,22 +250,21 @@ export default function RouteInputPage() {
       })
     }
 
-    // Salvar também nos favoritos locais (localStorage)
-    const savedFavorites = localStorage.getItem('uppi_favorite_addresses')
-    const favorites: string[] = savedFavorites ? JSON.parse(savedFavorites) : []
-    
-    // Adicionar no início e remover duplicatas
-    const updatedFavorites = [
-      prediction.description,
-      ...favorites.filter(addr => addr !== prediction.description)
-    ].slice(0, 10) // Manter apenas os últimos 10
-    
-    localStorage.setItem('uppi_favorite_addresses', JSON.stringify(updatedFavorites))
+    // Salvar favoritos nativamente via @capacitor/preferences
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.get({ key: 'uppi_favorite_addresses' }).then(({ value: savedFavorites }) => {
+        const favorites: string[] = savedFavorites ? JSON.parse(savedFavorites) : []
+        const updatedFavorites = [
+          prediction.description,
+          ...favorites.filter(addr => addr !== prediction.description),
+        ].slice(0, 10)
+        Preferences.set({ key: 'uppi_favorite_addresses', value: JSON.stringify(updatedFavorites) }).catch(() => {})
+      }).catch(() => {})
+    }).catch(() => {})
 
     if (activeField === 'destination') {
       setDestination(prediction.description)
 
-      // If no stops, navigate directly
       if (stops.length === 0) {
         const route = {
           pickup: currentAddress,
@@ -274,12 +273,12 @@ export default function RouteInputPage() {
           destinationCoords: coords,
           stops: [],
         }
-        sessionStorage.setItem('rideRoute', JSON.stringify(route))
+        const { Storage } = await import('@/lib/storage')
+        await Storage.setJSON('rideRoute', route)
         router.push('/uppi/ride/select')
         return
       }
 
-      // If we have stops, store destination and check if all stops are complete
       const allStopsComplete = stops.every(s => s.address)
       if (allStopsComplete) {
         const route = {
@@ -289,7 +288,8 @@ export default function RouteInputPage() {
           destinationCoords: coords,
           stops,
         }
-        sessionStorage.setItem('rideRoute', JSON.stringify(route))
+        const { Storage } = await import('@/lib/storage')
+        await Storage.setJSON('rideRoute', route)
         router.push('/uppi/ride/select')
       }
     } else {
