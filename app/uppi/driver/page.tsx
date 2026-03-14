@@ -78,15 +78,15 @@ export default function DriverPage() {
       })
       .subscribe()
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
+    import('@capacitor/geolocation').then(({ Geolocation }) => {
+      Geolocation.getCurrentPosition({ enableHighAccuracy: true }).then((pos) => {
         fetch('/api/v1/driver/location', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, is_available: true }),
         })
-      })
-    }
+      }).catch(() => {})
+    }).catch(() => {})
 
     return () => { supabase.removeChannel(channel) }
   }, [isOnline, driverVehicleType, userId, supabase])
@@ -184,16 +184,16 @@ export default function DriverPage() {
       setIsOnline(newOnline)
 
       if (newOnline) {
-        // Atualiza localização ao ficar online
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((pos) => {
+        // Atualiza localização ao ficar online via Capacitor
+        import('@capacitor/geolocation').then(({ Geolocation }) => {
+          Geolocation.getCurrentPosition({ enableHighAccuracy: true }).then((pos) => {
             fetch('/api/v1/driver/location', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, is_available: true }),
             })
-          })
-        }
+          }).catch(() => {})
+        }).catch(() => {})
         loadAvailableRides()
       }
     } finally {

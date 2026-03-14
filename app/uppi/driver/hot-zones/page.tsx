@@ -46,12 +46,12 @@ export default function DriverHotZonesPage() {
   }, [])
 
   const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
+    import('@capacitor/geolocation').then(({ Geolocation }) => {
+      Geolocation.getCurrentPosition({ enableHighAccuracy: false }).then((pos) => {
         setUserLat(pos.coords.latitude)
         setUserLng(pos.coords.longitude)
-      })
-    }
+      }).catch(() => {})
+    }).catch(() => {})
   }
 
   const loadData = async () => {
@@ -62,11 +62,10 @@ export default function DriverHotZonesPage() {
       // Obtém localização do usuário de forma assíncrona para o fallback
       let geoLat: number | null = userLat
       let geoLng: number | null = userLng
-      if (geoLat === null && navigator.geolocation) {
+      if (geoLat === null) {
         try {
-          const pos = await new Promise<GeolocationPosition>((res, rej) =>
-            navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000 })
-          )
+          const { Geolocation } = await import('@capacitor/geolocation')
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 4000 })
           geoLat = pos.coords.latitude
           geoLng = pos.coords.longitude
           setUserLat(geoLat)

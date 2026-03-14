@@ -348,9 +348,8 @@ export default function RideTrackingPage() {
     setSosSending(true)
     setShowSafetyMenu(false)
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 5000 })
-      ).catch(() => null)
+      const { Geolocation } = await import('@capacitor/geolocation')
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 5000 }).catch(() => null)
 
       await fetch('/api/v1/emergency', {
         method: 'POST',
@@ -376,20 +375,15 @@ export default function RideTrackingPage() {
   const handleShareLocation = async () => {
     setSharingLocation(true)
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true })
-      )
+      const { Geolocation } = await import('@capacitor/geolocation')
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
       const link = `https://maps.google.com/?q=${position.coords.latitude},${position.coords.longitude}`
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Minha localização — Uppi',
-          text: `Estou numa corrida: ${ride?.pickup_address} → ${ride?.dropoff_address}`,
-          url: link,
-        })
-      } else {
-        await navigator.clipboard.writeText(link)
-        iosToast.success('Link copiado!')
-      }
+      const { Share } = await import('@capacitor/share')
+      await Share.share({
+        title: 'Minha localização — Uppi',
+        text: `Estou numa corrida: ${ride?.pickup_address} → ${ride?.dropoff_address}`,
+        url: link,
+      })
     } catch { /* user cancelled */ }
     finally { setSharingLocation(false) }
   }

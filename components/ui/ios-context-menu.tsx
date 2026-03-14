@@ -29,20 +29,20 @@ export function IOSContextMenu({ children, options, className }: IOSContextMenuP
     const touch = e.touches[0]
     setPosition({ x: touch.clientX, y: touch.clientY })
     
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate(50)
-    }
+    // Haptic feedback nativo
+    import('@capacitor/haptics').then(({ Haptics, ImpactStyle }) => {
+      Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {})
+    }).catch(() => {})
 
     // Scale down animation
     setScale(0.95)
 
     longPressTimer.current = setTimeout(() => {
       setIsOpen(true)
-      // Stronger haptic for menu open
-      if ('vibrate' in navigator) {
-        navigator.vibrate([10, 20, 10])
-      }
+      // Haptic mais forte ao abrir o menu
+      import('@capacitor/haptics').then(({ Haptics, ImpactStyle }) => {
+        Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
+      }).catch(() => {})
     }, 500)
   }
 

@@ -82,10 +82,11 @@ export function PermissionOnboarding() {
   }, [])
 
   async function checkAndShow() {
-    // Evita re-exibir se já foi feito onboarding
+    // Evita re-exibir se já foi feito onboarding (nativo — Keychain/Keystore)
     try {
-      const flag = localStorage.getItem('permissions_onboarded_v2')
-      if (flag === 'true') return
+      const { Preferences } = await import('@capacitor/preferences')
+      const { value } = await Preferences.get({ key: 'permissions_onboarded_v2' })
+      if (value === 'true') return
     } catch {}
 
     // Espera 1.5s para não aparecer imediatamente ao abrir o app
@@ -97,7 +98,10 @@ export function PermissionOnboarding() {
     const firstPending = STEPS.findIndex(s => !results[s.id])
     if (firstPending === -1) {
       // Tudo concedido — não exibe
-      try { localStorage.setItem('permissions_onboarded_v2', 'true') } catch {}
+      try {
+        const { Preferences } = await import('@capacitor/preferences')
+        await Preferences.set({ key: 'permissions_onboarded_v2', value: 'true' })
+      } catch {}
       return
     }
 
@@ -211,40 +215,6 @@ export function PermissionOnboarding() {
     }
   }
 
-  async function requestWeb(id: PermissionStep) {
-    if (id === 'location') {
-      try {
-        await new Promise<void>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(() => resolve(), reject, { enableHighAccuracy: true })
-        )
-        triggerHaptic('success')
-        iosToast.success('Localização permitida')
-        markGranted(id)
-      } catch {
-        iosToast.error('Localização negada')
-        advanceStep()
-      }
-    }
-
-    if (id === 'notification') {
-      try {
-        const perm = await Notification.requestPermission()
-        if (perm === 'granted') {
-          triggerHaptic('success')
-          iosToast.success('Notificações permitidas')
-          markGranted(id)
-        } else {
-          advanceStep()
-        }
-      } catch { advanceStep() }
-    }
-
-    if (id === 'camera') {
-      // Web: câmera só pede quando usa, avança direto
-      advanceStep()
-    }
-  }
-
   function markGranted(id: PermissionStep) {
     setGranted(prev => ({ ...prev, [id]: true }))
     setTimeout(() => advanceStep(), 600)
@@ -261,13 +231,17 @@ export function PermissionOnboarding() {
 
   function finishOnboarding() {
     setDone(true)
-    try { localStorage.setItem('permissions_onboarded_v2', 'true') } catch {}
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.set({ key: 'permissions_onboarded_v2', value: 'true' }).catch(() => {})
+    }).catch(() => {})
     setTimeout(() => setShow(false), 1800)
   }
 
   function skip() {
     triggerHaptic('light')
-    try { localStorage.setItem('permissions_onboarded_v2', 'true') } catch {}
+    import('@capacitor/preferences').then(({ Preferences }) => {
+      Preferences.set({ key: 'permissions_onboarded_v2', value: 'true' }).catch(() => {})
+    }).catch(() => {})
     setShow(false)
   }
 

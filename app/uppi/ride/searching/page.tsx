@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { PixModal } from '@/components/pix-modal'
 import { paymentService } from '@/lib/services/payment-service'
 import { iosToast } from '@/lib/utils/ios-toast'
+import { Storage } from '@/lib/storage'
 
 interface RouteData {
   pickup: string
@@ -106,16 +107,16 @@ export default function SearchingDriverPage() {
   } | null>(null)
 
   useEffect(() => {
-    const s = sessionStorage.getItem('rideRoute')
-    if (s) setRoute(JSON.parse(s))
-    const r = sessionStorage.getItem('selectedRide')
-    if (r) setSelectedRide(JSON.parse(r))
-
-    // Verificar se há corrida ativa em andamento (usuário voltou à tela)
-    const savedRideId = sessionStorage.getItem('activeRideId')
-    if (savedRideId) {
-      setRideId(savedRideId)
-      setStatus('searching')
+    Promise.all([
+      Storage.getJSON('rideRoute'),
+      Storage.getJSON('selectedRide'),
+      Storage.get('activeRideId'),
+    ]).then(([s, r, savedRideId]) => {
+      if (s) setRoute(s as RouteData)
+      if (r) setSelectedRide(r as SelectedRide)
+      if (savedRideId) {
+        setRideId(savedRideId)
+        setStatus('searching')
       sub(savedRideId)
     }
   }, [])

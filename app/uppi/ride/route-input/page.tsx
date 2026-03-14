@@ -42,33 +42,31 @@ export default function RouteInputPage() {
   const MAX_STOPS = 3
 
   useEffect(() => {
-    const cached = sessionStorage.getItem('userLocation')
-    if (cached) {
-      const coords = JSON.parse(cached)
-      setCurrentCoords(coords)
-      reverseGeocode(coords.lat, coords.lng)
-    }
+    async function initLocation() {
+      // Cache nativo primeiro
+      const { Preferences } = await import('@capacitor/preferences')
+      const { value: cached } = await Preferences.get({ key: 'userLocation' })
+      if (cached) {
+        const coords = JSON.parse(cached)
+        setCurrentCoords(coords)
+        reverseGeocode(coords.lat, coords.lng)
+      }
 
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords
-          setCurrentCoords({ lat: latitude, lng: longitude })
-          sessionStorage.setItem('userLocation', JSON.stringify({ lat: latitude, lng: longitude }))
-          reverseGeocode(latitude, longitude)
-        },
-        () => {
-          if (!cached) {
-            setCurrentAddress('Localizacao nao disponivel')
-            setLoadingLocation(false)
-          }
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      )
-    } else if (!cached) {
-      setCurrentAddress('Localizacao nao disponivel')
-      setLoadingLocation(false)
+      try {
+        const { Geolocation } = await import('@capacitor/geolocation')
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+        const { latitude, longitude } = position.coords
+        setCurrentCoords({ lat: latitude, lng: longitude })
+        await Preferences.set({ key: 'userLocation', value: JSON.stringify({ lat: latitude, lng: longitude }) })
+        reverseGeocode(latitude, longitude)
+      } catch {
+        if (!cached) {
+          setCurrentAddress('Localizacao nao disponivel')
+          setLoadingLocation(false)
+        }
+      }
     }
+    initLocation()
   }, [])
 
   useEffect(() => {
