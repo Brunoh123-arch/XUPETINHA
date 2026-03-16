@@ -1,31 +1,34 @@
 # UPPI - Documentacao Completa
 
-**Ultima Atualizacao:** 16/03/2026
+> Atualizado em: 16/03/2026
 
 ---
 
-## Documentos Disponiveis
+## Indice dos Documentos (11 arquivos)
 
-| Documento | Descricao |
-|-----------|-----------|
-| [STATUS.md](./STATUS.md) | Status atual do projeto, auditoria completa |
-| [GUIA-PUBLICACAO-PLAY-STORE.md](./GUIA-PUBLICACAO-PLAY-STORE.md) | Passo a passo para publicar na Play Store |
-| [SETUP-SUPABASE.md](./SETUP-SUPABASE.md) | Como configurar novo projeto Supabase |
-| [SCHEMA-BANCO.md](./SCHEMA-BANCO.md) | Documentacao completa do banco de dados |
-| [EMAIL-TEMPLATES.md](./EMAIL-TEMPLATES.md) | Templates de email personalizados |
-| [DEEP_LINKS_SETUP.md](./DEEP_LINKS_SETUP.md) | Configuracao de deep links Android/iOS |
-| [SPLASH_ICON_SETUP.md](./SPLASH_ICON_SETUP.md) | Icones e splash screen |
+| # | Documento | Descricao | Linhas |
+|---|-----------|-----------|--------|
+| 1 | [STATUS.md](./STATUS.md) | Auditoria completa do projeto | 327 |
+| 2 | [SCHEMA-BANCO.md](./SCHEMA-BANCO.md) | Todas as 164 tabelas do banco | 534 |
+| 3 | [API-REFERENCE.md](./API-REFERENCE.md) | Documentacao das 99 APIs | 800 |
+| 4 | [GUIA-PUBLICACAO-PLAY-STORE.md](./GUIA-PUBLICACAO-PLAY-STORE.md) | Passo a passo Play Store | 661 |
+| 5 | [VARIAVEIS-AMBIENTE.md](./VARIAVEIS-AMBIENTE.md) | Todas as variaveis de ambiente | 136 |
+| 6 | [CAPACITOR-ANDROID.md](./CAPACITOR-ANDROID.md) | Configuracao Android/Capacitor | 230 |
+| 7 | [SETUP-SUPABASE.md](./SETUP-SUPABASE.md) | Configuracao do Supabase | 86 |
+| 8 | [DEEP_LINKS_SETUP.md](./DEEP_LINKS_SETUP.md) | Deep links Android/iOS | 180 |
+| 9 | [EMAIL-TEMPLATES.md](./EMAIL-TEMPLATES.md) | Templates de email HTML | 450 |
+| 10 | [SPLASH_ICON_SETUP.md](./SPLASH_ICON_SETUP.md) | Icones e splash screen | 140 |
+| 11 | [SUPABASE-EXEMPLOS.tsx](./SUPABASE-EXEMPLOS.tsx) | Exemplos de codigo Supabase | - |
 
 ---
 
 ## Resumo do Projeto
 
-### Numeros
+### Numeros Finais
 
-| Item | Quantidade | Status |
-|------|------------|--------|
+| Categoria | Quantidade | Status |
+|-----------|------------|--------|
 | Tabelas | 164 | OK |
-| RLS Ativo | 163/164 | OK (99.4%) |
 | Politicas RLS | 280 | OK |
 | Indices | 483 | OK |
 | CHECK Constraints | 579 | OK |
@@ -35,140 +38,123 @@
 | Realtime | 22 tabelas | OK |
 | Storage Buckets | 5 | OK |
 | APIs | 99 rotas | OK |
-| Componentes | 215 | OK |
 | Paginas | 162 | OK |
+| Componentes | 215 | OK |
 
-### Backend - 100% Completo
-
-- Todas as 164 tabelas criadas e configuradas
-- RLS habilitado em 163 tabelas (apenas spatial_ref_sys do PostGIS sem)
-- 22 tabelas com Realtime para atualizacoes em tempo real
-- 5 Storage Buckets com RLS configurado
-- 99 APIs cobrindo todas as funcionalidades
-
-### Frontend - 100% Completo
-
-- 162 paginas criadas
-- 215 componentes reutilizaveis
-- Design responsivo mobile-first
-- Suporte a tema claro/escuro
-
-### Mobile - Configurado
-
-- Capacitor 8 inicializado
-- Projeto Android pronto
-- Aguardando configuracoes externas (Firebase, Google Maps)
-
----
-
-## Stack Tecnologica
+### Stack Tecnologica
 
 | Camada | Tecnologia |
 |--------|------------|
-| Frontend | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui |
+| Frontend | Next.js 16, React 19, Tailwind CSS, shadcn/ui |
 | Backend | Supabase (PostgreSQL 15, Auth, Realtime, Storage) |
-| Mobile | Capacitor 8 (Android), Firebase FCM |
-| Mapas | Google Maps SDK, Navigation SDK |
-| Pagamentos | PIX via Paradise Gateway |
-| Geocoding | Google Maps Geocoding API |
+| Mobile | Capacitor 6 (Android) |
+| Mapas | Google Maps API |
+| Pagamentos | PIX (Paradise/EfiPay) |
+| Push | Firebase Cloud Messaging |
 
 ---
 
-## Estrutura de Pastas
+## Por Onde Comecar
+
+### 1. Entender o Projeto
+- Leia [STATUS.md](./STATUS.md) - visao geral e auditoria
+- Veja [SCHEMA-BANCO.md](./SCHEMA-BANCO.md) - estrutura do banco
+
+### 2. Configurar Ambiente
+- Configure variaveis: [VARIAVEIS-AMBIENTE.md](./VARIAVEIS-AMBIENTE.md)
+- Setup Supabase: [SETUP-SUPABASE.md](./SETUP-SUPABASE.md)
+
+### 3. Entender as APIs
+- Documentacao completa: [API-REFERENCE.md](./API-REFERENCE.md)
+
+### 4. Preparar Android
+- Capacitor: [CAPACITOR-ANDROID.md](./CAPACITOR-ANDROID.md)
+- Deep links: [DEEP_LINKS_SETUP.md](./DEEP_LINKS_SETUP.md)
+- Icones: [SPLASH_ICON_SETUP.md](./SPLASH_ICON_SETUP.md)
+
+### 5. Publicar na Play Store
+- Guia completo: [GUIA-PUBLICACAO-PLAY-STORE.md](./GUIA-PUBLICACAO-PLAY-STORE.md)
+
+---
+
+## Checklist de Lancamento
+
+### Codigo (100% Completo)
+- [x] 164 tabelas criadas
+- [x] 280 politicas RLS configuradas
+- [x] 99 APIs funcionando
+- [x] 162 paginas criadas
+- [x] 215 componentes
+- [x] Capacitor Android configurado
+- [x] Deep links configurados
+- [x] Push notifications preparado
+
+### Configuracoes Externas (Pendente)
+- [ ] ENCRYPTION_KEY definida no Vercel
+- [ ] Google Maps API Key configurada
+- [ ] Firebase projeto criado
+- [ ] Conta Play Store ($25 USD)
+- [ ] Keystore de assinatura gerado
+- [ ] Politica de privacidade criada
+- [ ] Screenshots para Play Store
+
+---
+
+## Estrutura do Projeto
 
 ```
 /
-├── app/                    # Paginas Next.js (App Router)
-│   ├── api/               # APIs (99 rotas)
-│   ├── (auth)/            # Paginas de autenticacao
-│   ├── (app)/             # Paginas do app principal
-│   └── admin/             # Painel administrativo
+├── app/                    # Paginas Next.js (162)
+│   ├── api/v1/            # APIs REST (99 rotas)
+│   ├── (auth)/            # Autenticacao
+│   ├── (app)/             # App principal
+│   └── admin/             # Painel admin
 ├── components/            # Componentes React (215)
-├── lib/                   # Utilitarios e configuracoes
+├── lib/                   # Utilitarios
 ├── hooks/                 # Custom hooks
-├── docs/                  # Documentacao
-├── scripts/               # Scripts SQL
-└── android/               # Projeto Android (Capacitor)
+├── docs/                  # Documentacao (11 arquivos)
+├── scripts/               # Scripts SQL (3 arquivos)
+└── android/               # Projeto Android
 ```
 
 ---
 
 ## Scripts SQL
 
-```
-scripts/
-├── database-master.sql    # Resumo do banco (referencia)
-├── create-first-admin.sql # Criar primeiro admin
-├── promote-admin.sql      # Promover usuario a admin
-└── README.md              # Documentacao dos scripts
-```
+| Script | Uso |
+|--------|-----|
+| `database-master.sql` | Referencia do schema |
+| `create-first-admin.sql` | Criar primeiro admin |
+| `promote-admin.sql` | Promover usuario a admin |
 
-**IMPORTANTE:** O banco ja esta configurado no Supabase. Esses scripts sao apenas para referencia ou novos projetos.
-
----
-
-## Configuracoes Necessarias
-
-### Ja Configurado (Backend)
-
-- [x] Supabase conectado
-- [x] 164 tabelas criadas
-- [x] RLS em todas as tabelas
-- [x] Realtime habilitado
-- [x] Storage Buckets criados
-- [x] Funcoes e Triggers
-- [x] Indices otimizados
-
-### Pendente (Configuracoes Externas)
-
-- [ ] Firebase (google-services.json)
-- [ ] Google Maps API Key
-- [ ] ENCRYPTION_KEY no Vercel
-- [ ] Conta Google Play Developer ($25)
-- [ ] Keystore de assinatura Android
-- [ ] Politica de Privacidade (URL)
-- [ ] Icones do app (512x512)
-- [ ] Screenshots para Play Store
+**Nota:** O banco ja esta configurado no Supabase. Scripts sao apenas para referencia.
 
 ---
 
 ## Variaveis de Ambiente
 
-### Obrigatorias (Ja configuradas no Vercel)
-
+### Configuradas (Supabase)
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://ullmjdgppucworavoiia.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### Pendentes (Voce precisa configurar)
-
+### Pendentes
 ```env
-ENCRYPTION_KEY=sua-chave-de-32-caracteres
-GOOGLE_MAPS_API_KEY=sua-api-key
-PARADISE_PIX_TOKEN=token-do-gateway
-CRON_SECRET=secret-para-cron-jobs
+ENCRYPTION_KEY          # Obrigatorio para producao
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY  # Obrigatorio para mapas
+FIREBASE_SERVER_KEY     # Push notifications
+RESEND_API_KEY          # Emails
+PARADISE_API_KEY        # Pagamentos PIX
 ```
+
+Detalhes em [VARIAVEIS-AMBIENTE.md](./VARIAVEIS-AMBIENTE.md)
 
 ---
 
-## Como Publicar na Play Store
+## Suporte
 
-Veja o guia completo em [GUIA-PUBLICACAO-PLAY-STORE.md](./GUIA-PUBLICACAO-PLAY-STORE.md)
-
-Resumo:
-1. Configurar Firebase e Google Maps
-2. Gerar keystore de assinatura
-3. Build do projeto: `npm run build:android`
-4. Gerar AAB no Android Studio
-5. Upload na Play Console
-6. Preencher informacoes do app
-7. Enviar para revisao
-
----
-
-## Contato
-
-App ID: `app.uppi.mobile`
-Nome: Uppi
+1. Consulte a documentacao relevante
+2. Verifique STATUS.md para status atual
+3. Consulte API-REFERENCE.md para APIs
