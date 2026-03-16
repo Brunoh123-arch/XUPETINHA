@@ -47,6 +47,12 @@ import {
   Zap,
   Map,
   Banknote,
+  RotateCcw,
+  Swords,
+  Gift,
+  ToggleRight,
+  Percent,
+  BadgeCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -66,6 +72,7 @@ const navGroups = [
     items: [
       { href: '/admin/users', icon: Users, label: 'Passageiros' },
       { href: '/admin/drivers', icon: UserCog, label: 'Motoristas' },
+      { href: '/admin/verifications', icon: BadgeCheck, label: 'Verificacao Motoristas' },
       { href: '/admin/drivers/earnings', icon: TrendingUp, label: 'Ganhos Motoristas' },
       { href: '/admin/reviews', icon: Star, label: 'Avaliacoes' },
       { href: '/admin/achievements', icon: Award, label: 'Conquistas' },
@@ -93,6 +100,10 @@ const navGroups = [
       { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
       { href: '/admin/withdrawals', icon: Banknote, label: 'Saques' },
       { href: '/admin/payments', icon: CreditCard, label: 'Pagamentos' },
+      { href: '/admin/refunds', icon: RotateCcw, label: 'Reembolsos' },
+      { href: '/admin/disputes', icon: Swords, label: 'Disputas' },
+      { href: '/admin/incentives', icon: Gift, label: 'Incentivos' },
+      { href: '/admin/cashback', icon: Percent, label: 'Cashback' },
       { href: '/admin/cupons', icon: Ticket, label: 'Cupons' },
       { href: '/admin/promotions', icon: Megaphone, label: 'Campanhas' },
       { href: '/admin/messages', icon: MessageSquare, label: 'Mensagens' },
@@ -108,6 +119,7 @@ const navGroups = [
     items: [
       { href: '/admin/surge', icon: Zap, label: 'Tarifa Dinamica' },
       { href: '/admin/zones', icon: Map, label: 'Zonas da Cidade' },
+      { href: '/admin/feature-flags', icon: ToggleRight, label: 'Feature Flags' },
       { href: '/admin/webhooks', icon: Webhook, label: 'Webhooks' },
       { href: '/admin/recordings', icon: Mic, label: 'Gravacoes' },
       { href: '/admin/logs', icon: AlertTriangle, label: 'Logs de Erro' },
