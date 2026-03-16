@@ -1,17 +1,18 @@
 # UPPI - Status de Funcionalidades
 
-**Ultima Atualizacao:** 11/03/2026
-**Versao:** 24.0 — Documentacao atualizada
+**Ultima Atualizacao:** 16/03/2026
+**Versao:** 26.0 — Contagem definitiva pos-varredura completa de todos os 88 scripts SQL
 **Status Geral:** 98% Pronto para Producao — Supabase jpnwxqjrhzaobnugjnyx
 
 ---
 
-## Resumo Geral (11/03/2026)
+## Resumo Geral (16/03/2026)
 
 | Categoria | Valor |
 |-----------|-------|
 | Projeto Supabase | jpnwxqjrhzaobnugjnyx |
-| Tabelas no Banco (public) | **100** |
+| Tabelas no Banco (public — aplicadas) | **100** |
+| Tabelas unicas nos scripts (deduplicated) | **155** (+55 pendentes em 8 scripts) |
 | Tabelas com RLS ativo | **86** |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -237,12 +238,13 @@
 
 ---
 
-## 3. Banco de Dados (11/03/2026 — jpnwxqjrhzaobnugjnyx)
+## 3. Banco de Dados (16/03/2026 — jpnwxqjrhzaobnugjnyx)
 
 | Item | Status |
 |------|--------|
 | Projeto ativo | jpnwxqjrhzaobnugjnyx |
-| Tabelas public | **100** (migrations 001-049) |
+| Tabelas public (aplicadas) | **100** (migrations 001-049) |
+| Tabelas unicas nos scripts (deduplicated) | **155** (+55 pendentes — 8 scripts) |
 | Tabelas com RLS | **86** (exceto spatial_ref_sys) |
 | Tabelas com Realtime | **51** |
 | RPCs callable | **75** |
@@ -253,12 +255,12 @@
 | Migrations aplicadas | **49** |
 | Extensoes | 7 (PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql) |
 
-### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 11/03/2026)
+### Tabelas com Realtime ativo (51 — verificadas via pg_publication_tables em 16/03/2026)
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
 ---
 
-## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 11/03/2026)
+## 4. RPCs de Negocio (75 funcoes — verificadas via SQL em 16/03/2026)
 
 ### Corridas e Motorista (20)
 - [x] accept_price_offer
@@ -377,7 +379,7 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-## 6. Pontos de Atencao (auditoria 11/03/2026)
+## 6. Pontos de Atencao (auditoria 16/03/2026)
 
 ### Inconsistencias codigo vs banco
 
@@ -418,6 +420,6 @@ city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, 
 
 ---
 
-**Atualizado em 11/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **152 telas / 85 APIs / 42 admin** — **Emails via Resend com templates profissionais**
+**Atualizado em 16/03/2026** — Supabase jpnwxqjrhzaobnugjnyx — **100 tabelas aplicadas / 155 unicas nos scripts (deduplicated) / 86 RLS / 51 Realtime / 75 RPCs / 162 politicas / 260 indices / 34 triggers / 49 migrations** — **152 telas / 85 APIs / 42 admin** — **Emails via Resend com templates profissionais**
 
 Ver tambem: `docs/AUDITORIA-SENIOR.md` para analise tecnica completa.

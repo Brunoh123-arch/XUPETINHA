@@ -1,6 +1,6 @@
 -- =====================================================
 -- UPPI - Verificacao de Integridade do Banco
--- Atualizado em: 10/03/2026
+-- Atualizado em: 16/03/2026
 -- Executa no Supabase SQL Editor para auditoria
 -- =====================================================
 

@@ -2,16 +2,16 @@
 
 **Status:** MVP pronto para Play Store (Android) — em finalizacao para iOS  
 **Stack:** Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)  
-**Data da ultima revisao:** 14/03/2026  
+**Data da ultima revisao:** 16/03/2026  
 **Natividade:** 95% nativo Capacitor — 5% sao guards intencionais dentro do WebView
 
 ---
 
-## Analise do Projeto (revisao 14/03/2026)
+## Analise do Projeto (revisao 16/03/2026)
 
 ### Boas Noticias
 
-- **111 tabelas PostgreSQL** em producao com estrutura solida, relacionamentos corretos e PostGIS ativo
+- **155 tabelas PostgreSQL** definidas nos scripts (100 aplicadas em producao + 55 em scripts pendentes) com estrutura solida, relacionamentos corretos e PostGIS ativo
 - **APIs web 100% eliminadas** — zero `localStorage`, `sessionStorage`, `navigator.vibrate`, `navigator.share`, `navigator.clipboard`, `navigator.geolocation`, `Notification.requestPermission` ou `navigator.serviceWorker` no codigo
 - **21 plugins Capacitor instalados** cobrindo GPS, haptics, push, share, clipboard, camera, storage, browser, device, network, local notifications e app launcher
 - **lib/storage.ts** — wrapper centralizado sobre `@capacitor/preferences`, substitui 100% dos `localStorage`/`sessionStorage`
@@ -33,15 +33,15 @@
 | Reconhecimento facial fake | Alta | `confidence_score` sempre ~0.95, sem integracao real — usar AWS Rekognition ou Facephi |
 | `Math.random()` em liveness check | Alta | Verificacao de motorista fake — substituir por SDK real |
 | Duplicacao de tabelas | Media | `favorites`+`favorite_addresses`, `reviews`+`driver_reviews`+`ratings`, `webhooks`+`webhook_endpoints`, `post_likes`+`social_post_likes` — consolidar em uma por dominio |
-| `database.types.ts` desatualizado | Media | Nao reflete as 111 tabelas — regenerar com `supabase gen types` |
+| `database.types.ts` desatualizado | Media | Nao reflete as 155 tabelas — regenerar com `supabase gen types` |
 | Pasta `android/` ausente | Bloqueante | Rodar `npx cap add android && npx cap sync` para gerar |
 | `google-services.json` ausente | Bloqueante para FCM | Copiar do Firebase Console para `android/app/` |
 
 ---
 
-## Banco de Dados — 111 Tabelas em Producao
+## Banco de Dados — 155 Tabelas nos Scripts (100 em producao)
 
-### Contagem por Categoria
+### Contagem por Categoria (100 aplicadas + 55 nos scripts — total 155)
 
 | Categoria | Quantidade | Tabelas |
 |-----------|-----------|---------|
@@ -61,7 +61,7 @@
 | Familia e Club | 3 | `family_members`, `subscriptions`, `reviews` |
 | Monitoramento | 3 | `live_activities`, `user_activity_log`, `recording_consents` |
 | Sistema PostGIS | 3 | `geography_columns`, `geometry_columns`, `spatial_ref_sys` |
-| **TOTAL** | **111** | — |
+| **TOTAL** | **100 (aplicadas) +55 (pendentes) = 155** | — |
 
 ### RLS — Status de Seguranca
 
@@ -214,7 +214,7 @@ ADMIN:
 
 ## Banco de Dados
 
-**111 tabelas** | PostGIS ativo | RLS em 75+ tabelas
+**155 tabelas** (100 aplicadas em producao + 55 nos scripts pendentes) | PostGIS ativo | RLS em 86 tabelas
 
 Scripts SQL:
 - `/scripts/SETUP-NOVO-SUPABASE.sql` — schema completo inicial

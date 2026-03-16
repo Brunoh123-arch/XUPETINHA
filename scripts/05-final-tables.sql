@@ -1,6 +1,6 @@
 -- =====================================================
 -- SCRIPT 05: TABELAS FINAIS FALTANTES
--- Data: 23/02/2026
+-- Data: 16/03/2026
 -- Descrição: Cria apenas as tabelas que ainda não existem
 -- =====================================================
 

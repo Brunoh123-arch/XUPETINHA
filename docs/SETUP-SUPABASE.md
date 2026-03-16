@@ -1,7 +1,7 @@
 # Guia de Setup - Novo Projeto Supabase
 
-**Data:** 11/03/2026
-**Versao:** 1.1
+**Data:** 16/03/2026
+**Versao:** 2.0 — Contagem definitiva: 155 tabelas unicas nos scripts
 
 ---
 
@@ -29,6 +29,8 @@ Tabelas criadas: 100
 Tabelas com RLS: 86
 ```
 
+> **Nota:** O script `SETUP-NOVO-SUPABASE.sql` cria as 100 tabelas base. Para as 55 tabelas adicionais definidas nos scripts pendentes (012, 050, 06, 07, 05), execute-os separadamente apos o setup principal.
+
 ### 4. Configurar Variaveis de Ambiente
 
 Copie as chaves do Supabase (Settings > API) e configure:
@@ -45,7 +47,9 @@ SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key
 
 | Categoria | Quantidade | Detalhes |
 |-----------|------------|----------|
-| Tabelas | 100 | Todas as tabelas do UPPI |
+| Tabelas (script SETUP-NOVO-SUPABASE.sql) | 100 | Tabelas base do UPPI |
+| Tabelas nos scripts pendentes (012, 050, 06, 07, 05) | +55 | Tabelas extras nao aplicadas |
+| **Total unico nos scripts** | **155** | Deduplicated |
 | ENUMs | 12 | Tipos customizados |
 | RLS Policies | 162 | Seguranca por linha |
 | Realtime | 51 tabelas | Atualizacoes em tempo real |
@@ -165,4 +169,6 @@ A extensao PostGIS pode nao estar disponivel em todos os planos. Verifique se se
 
 ---
 
-**Pronto!** Apos seguir estes passos, seu novo projeto Supabase estara configurado com todas as tabelas, RPCs e configuracoes do UPPI.
+**Pronto!** Apos seguir estes passos, seu novo projeto Supabase estara configurado com 100 tabelas base, 75 RPCs, 162 politicas RLS, 51 tabelas com Realtime e todas as configuracoes do UPPI. Para as 55 tabelas extras nos scripts pendentes, execute-os na sequencia indicada acima.
+
+**Atualizado em 16/03/2026** — v2.0
