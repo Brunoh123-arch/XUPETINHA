@@ -33,12 +33,29 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    request.nextUrl.pathname.startsWith('/protected') &&
-    !user
-  ) {
+  const { pathname } = request.nextUrl
+
+  // Rotas protegidas que exigem autenticacao
+  const isProtected =
+    pathname.startsWith('/uppi') ||
+    pathname.startsWith('/admin')
+
+  if (isProtected && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/onboarding/splash'
+    return NextResponse.redirect(url)
+  }
+
+  // Redireciona usuarios ja logados para fora das telas de auth
+  const isAuthPage =
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname.startsWith('/auth/login') ||
+    pathname.startsWith('/auth/driver/login')
+
+  if (isAuthPage && user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/uppi/home'
     return NextResponse.redirect(url)
   }
 
