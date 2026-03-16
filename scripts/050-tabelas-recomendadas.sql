@@ -2,7 +2,7 @@
 -- UPPI - TABELAS RECOMENDADAS (Migration 050)
 -- =====================================================
 -- +8 tabelas para producao completa
--- Total apos execucao: 111 tabelas
+-- Total apos execucao: 155 tabelas unicas nos scripts (100 aplicadas + 55 pendentes)
 -- Data: 16/03/2026
 -- =====================================================
 

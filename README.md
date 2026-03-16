@@ -33,13 +33,13 @@
 | Reconhecimento facial fake | Alta | `confidence_score` sempre ~0.95, sem integracao real — usar AWS Rekognition ou Facephi |
 | `Math.random()` em liveness check | Alta | Verificacao de motorista fake — substituir por SDK real |
 | Duplicacao de tabelas | Media | `favorites`+`favorite_addresses`, `reviews`+`driver_reviews`+`ratings`, `webhooks`+`webhook_endpoints`, `post_likes`+`social_post_likes` — consolidar em uma por dominio |
-| `database.types.ts` desatualizado | Media | Nao reflete as 111 tabelas — regenerar com `supabase gen types` |
+| `database.types.ts` desatualizado | Media | Nao reflete as 155 tabelas — regenerar com `supabase gen types` |
 | Pasta `android/` ausente | Bloqueante | Rodar `npx cap add android && npx cap sync` para gerar |
 | `google-services.json` ausente | Bloqueante para FCM | Copiar do Firebase Console para `android/app/` |
 
 ---
 
-## Banco de Dados — 111 Tabelas em Producao
+## Banco de Dados — 155 Tabelas nos Scripts (100 em producao)
 
 ### Contagem por Categoria (100 aplicadas + 55 nos scripts — total 155)
 
