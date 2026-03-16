@@ -1,6 +1,6 @@
 -- =====================================================
 -- UPPI - Corrigir RLS em Tabelas Faltantes
--- Atualizado em: 14/03/2026
+-- Atualizado em: 16/03/2026
 -- Executa no Supabase SQL Editor
 -- =====================================================
 

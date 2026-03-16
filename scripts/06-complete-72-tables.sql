@@ -1,5 +1,5 @@
 -- Script para criar as 21 tabelas faltantes e completar as 72 tabelas
--- Data: 14/03/2026
+-- Data: 16/03/2026
 -- Objetivo: Criar TODAS as tabelas restantes mencionadas na documentação
 
 -- ====================

@@ -1,6 +1,6 @@
 # Guia de Setup - Novo Projeto Supabase
 
-**Data:** 14/03/2026
+**Data:** 16/03/2026
 **Versao:** 2.0 — Contagem definitiva: 155 tabelas unicas nos scripts
 
 ---
@@ -171,4 +171,4 @@ A extensao PostGIS pode nao estar disponivel em todos os planos. Verifique se se
 
 **Pronto!** Apos seguir estes passos, seu novo projeto Supabase estara configurado com 100 tabelas base, 75 RPCs, 162 politicas RLS, 51 tabelas com Realtime e todas as configuracoes do UPPI. Para as 55 tabelas extras nos scripts pendentes, execute-os na sequencia indicada acima.
 
-**Atualizado em 14/03/2026** — v2.0
+**Atualizado em 16/03/2026** — v2.0

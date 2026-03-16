@@ -1,6 +1,6 @@
 # UPPI - Schema do Banco de Dados
 
-**Ultima Atualizacao:** 14/03/2026
+**Ultima Atualizacao:** 16/03/2026
 **Versao:** 22.0 — Contagem definitiva pos-varredura completa de todos os scripts
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
 **Projeto Supabase:** jpnwxqjrhzaobnugjnyx
@@ -33,7 +33,7 @@
 
 ---
 
-## 0B. 55 Tabelas Extras nos Scripts (nao aplicadas ainda — varredura completa 14/03/2026)
+## 0B. 55 Tabelas Extras nos Scripts (nao aplicadas ainda — varredura completa 16/03/2026)
 
 ### Do script `012-tabelas-rpcs-faltantes.sql` (12 tabelas)
 | Tabela | Descricao |
@@ -1027,7 +1027,7 @@ CREATE OR REPLACE VIEW ride_offers AS SELECT * FROM price_offers;
 
 ## 2. Tabelas com Realtime Ativo (51 tabelas)
 
-Verificadas via `pg_publication_tables` em 14/03/2026 (migrations 001-034):
+Verificadas via `pg_publication_tables` em 16/03/2026 (migrations 001-034):
 
 city_zones, delivery_orders, driver_locations, driver_profiles, driver_reviews, driver_withdrawals, emergency_alerts, emergency_contacts, error_logs, favorite_drivers, fcm_tokens, group_ride_members, group_ride_participants, group_rides, hot_zones, intercity_bookings, intercity_rides, leaderboard, messages, notifications, payments, post_comments, post_likes, price_offers, profiles, promo_banners, ratings, referrals, ride_tracking, rides, scheduled_rides, sms_deliveries, social_follows, social_post_likes, social_posts, subscriptions, support_messages, support_tickets, surge_pricing, user_achievements, user_push_tokens, user_wallets, wallet_transactions, webhook_deliveries, driver_schedule, family_members, promo_codes, push_log, system_config, promo_code_uses, user_social_stats
 
@@ -1178,7 +1178,7 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 ---
 
-## 6. Consolidado Final — VALORES REAIS (14/03/2026)
+## 6. Consolidado Final — VALORES REAIS (16/03/2026)
 
 | Metrica | Valor | Observacao |
 |---------|-------|------------|
@@ -1210,4 +1210,4 @@ CREATE INDEX idx_driver_profiles_available ON driver_profiles(is_available, is_v
 
 **NOTA:** O banco jpnwxqjrhzaobnugjnyx possui 100 tabelas aplicadas (migrations 001-049). Os scripts nao aplicados contem mais 55 tabelas unicas definidas. O total de tabelas unicas definidas em todo o repositorio e **155**.
 
-**Atualizado em 14/03/2026** — Verificado via varredura completa de todos os 88 arquivos .sql do repositorio com grep em cada arquivo — migrations 001-049 aplicadas (100 tabelas) + 55 tabelas extras em scripts pendentes = **155 total unico nos scripts**
+**Atualizado em 16/03/2026** — Verificado via varredura completa de todos os 88 arquivos .sql do repositorio com grep em cada arquivo — migrations 001-049 aplicadas (100 tabelas) + 55 tabelas extras em scripts pendentes = **155 total unico nos scripts**

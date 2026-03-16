@@ -3,7 +3,7 @@
 -- =====================================================
 -- Este script configura um projeto Supabase do zero
 -- Execute no SQL Editor do Supabase Dashboard
--- Data: 14/03/2026 | Versao: 2.0
+-- Data: 16/03/2026 | Versao: 2.0
 -- =====================================================
 
 -- =====================================================

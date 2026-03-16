@@ -1,6 +1,6 @@
 # Publicar na Play Store — Guia Capacitor
 
-**Atualizado em:** 14/03/2026  
+**Atualizado em:** 16/03/2026  
 **Package ID:** `app.uppi.mobile`
 
 O Uppi usa **Capacitor 8** para gerar um APK/AAB nativo Android a partir do codigo Next.js.

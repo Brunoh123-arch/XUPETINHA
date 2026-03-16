@@ -2,12 +2,12 @@
 
 **Status:** MVP pronto para Play Store (Android) — em finalizacao para iOS  
 **Stack:** Next.js 16 + React 19 + Supabase PostgreSQL + Capacitor 8 + PIX (Paradise Gateway)  
-**Data da ultima revisao:** 14/03/2026  
+**Data da ultima revisao:** 16/03/2026  
 **Natividade:** 95% nativo Capacitor — 5% sao guards intencionais dentro do WebView
 
 ---
 
-## Analise do Projeto (revisao 14/03/2026)
+## Analise do Projeto (revisao 16/03/2026)
 
 ### Boas Noticias
 
