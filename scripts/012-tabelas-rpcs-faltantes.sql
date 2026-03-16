@@ -1,6 +1,6 @@
 -- ==========================================================
 -- MIGRATION 012 — Tabelas e RPCs faltantes (corrigida)
--- Colunas reais verificadas antes da execucao — 09/03/2026
+-- Colunas reais verificadas antes da execucao — 14/03/2026
 -- ==========================================================
 
 -- ----------------------------------------------------------

@@ -2,7 +2,7 @@
 -- SCRIPT 05: TABELAS FALTANTES CRÍTICAS
 -- ============================================
 -- Cria tabelas que o código está usando mas que não existem no banco
--- Data: 23/02/2026
+-- Data: 14/03/2026
 
 -- ============================================
 -- 1. DRIVER LOCATIONS (rastreamento em tempo real)
