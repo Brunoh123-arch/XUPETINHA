@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { apiLimiter, rateLimitResponse } from '@/lib/utils/rate-limit'
+import { getDecryptedCpf } from '@/lib/encryption'
 
 const PARADISE_API_URL = 'https://multi.paradisepags.com/api/v1/transaction.php'
 
@@ -52,11 +53,15 @@ export async function POST(request: NextRequest) {
   if (!payerName || !payerCpf) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('full_name, cpf')
+      .select('full_name')
       .eq('id', user.id)
       .single()
     payerName = payerName || profile?.full_name || 'Passageiro Uppi'
-    payerCpf = payerCpf || profile?.cpf || ''
+
+    // Buscar CPF descriptografado se não informado
+    if (!payerCpf) {
+      payerCpf = await getDecryptedCpf(user.id) || ''
+    }
   }
 
   const reference = `UPPI-${body.ride_id || user.id}-${Date.now()}`
