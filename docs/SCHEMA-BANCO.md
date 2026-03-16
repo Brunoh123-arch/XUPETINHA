@@ -1,18 +1,19 @@
 # UPPI - Schema do Banco de Dados
 
 **Ultima Atualizacao:** 16/03/2026
-**Versao:** 22.0 — Contagem definitiva pos-varredura completa de todos os scripts
+**Versao:** 23.0 — Numeros confirmados via SQL direto no banco gosbixgctmljidfwmfut
 **Banco:** Supabase PostgreSQL 15+ com PostGIS
-**Projeto Supabase:** jpnwxqjrhzaobnugjnyx
-**Tabelas no schema public (banco jpnwxqjrhzaobnugjnyx):** 100 (migrations 001-049 aplicadas)
-**Tabelas definidas nos scripts (total unico deduplicated):** 155 (100 aplicadas + 55 extras nos scripts nao aplicados)
-**Tabelas com RLS ativo:** 86 (exceto spatial_ref_sys — sistema PostGIS)
+**Projeto Supabase (producao):** jpnwxqjrhzaobnugjnyx
+**Projeto Supabase (atual/novo):** gosbixgctmljidfwmfut — 100 tabelas criadas em 16/03/2026
+**Tabelas no schema public (CONFIRMADO VIA SQL 16/03/2026):** 100 tabelas de negocio + spatial_ref_sys (PostGIS) = 101 total
+**Tabelas definidas nos scripts (deduplicated):** 155 (100 no banco + 55 extras em scripts pendentes)
+**Tabelas com RLS ativo:** 86
 **Tabelas com Realtime:** 51
 **RPCs de negocio callable:** 75
 **Politicas RLS:** 162
 **Indices:** 260
 **Triggers customizados:** 34
-**Views:** 4 (ride_offers + geometry_columns + geography_columns + ride_offers em 000-migration-consolidada)
+**Views:** 1 (ride_offers — alias de price_offers) + 2 PostGIS sistema
 **Extensoes instaladas:** PostGIS, pgcrypto, uuid-ossp, pg_graphql, pg_stat_statements, supabase_vault, plpgsql
 
 ---
@@ -21,8 +22,9 @@
 
 | Schema | Tabelas | Descricao |
 |--------|---------|-----------|
-| **public (aplicadas)** | **100** | Dominio da aplicacao UPPI — migrations 001-049 aplicadas |
-| **public (scripts pendentes)** | **+55** | Tabelas extras nos scripts ainda nao aplicados (012, 050, 000, 02, SETUP-NOVO-SUPABASE) |
+| **public (gosbixgctmljidfwmfut) — CONFIRMADO VIA SQL** | **100** | Criadas em 16/03/2026 via SETUP-NOVO-SUPABASE.sql |
+| **public (jpnwxqjrhzaobnugjnyx) — producao** | **100** | Migrations 001-049 aplicadas |
+| **public (scripts pendentes)** | **+55** | Tabelas extras nos scripts ainda nao aplicados (012, 050, 000, 02) |
 | auth | 21 | Gerenciadas pelo Supabase Auth |
 | storage | 8 | Gerenciadas pelo Supabase Storage |
 | realtime | 3 | Gerenciadas pelo Supabase Realtime |
