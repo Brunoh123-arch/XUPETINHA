@@ -11,46 +11,43 @@ O UPPI implementa multiplas camadas de seguranca para proteger dados de usuarios
 ## 1. AUTENTICACAO
 
 ### Supabase Auth
-- JWT tokens com expiracao
-- Refresh tokens seguros
+- JWT tokens com expiracao configuravel
+- Refresh tokens seguros (HttpOnly cookies)
 - Session management automatico
 
 ### OTP (One-Time Password)
 - Codigo de 6 digitos
 - Expira em 10 minutos
 - Maximo 5 tentativas
-- Rate limiting por IP
+- Rate limiting por IP (10 req/min)
 
 ### 2FA (Autenticacao de 2 Fatores)
-- TOTP (Google Authenticator, Authy)
-- Codigos de backup
+- TOTP compativel com Google Authenticator e Authy
+- Codigos de backup (8 codigos de uso unico)
 - Opcional para usuarios, obrigatorio para admins
+- Secret criptografado com AES-256-GCM no banco
 
 ---
 
 ## 2. AUTORIZACAO (RLS)
 
-### Row Level Security
-Todas as 164 tabelas tem RLS habilitado.
+### Row Level Security — 275 tabelas, 100%
+Todas as 275 tabelas tem RLS habilitado.
 
-**Exemplo - Tabela `profiles`:**
+**Exemplo — Tabela `profiles`:**
 ```sql
--- Usuario so ve seu proprio perfil
 CREATE POLICY "profiles_select_own" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
--- Usuario so edita seu proprio perfil
 CREATE POLICY "profiles_update_own" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 ```
 
-**Exemplo - Tabela `rides`:**
+**Exemplo — Tabela `rides`:**
 ```sql
--- Passageiro ve suas corridas
 CREATE POLICY "rides_passenger" ON rides
   FOR SELECT USING (auth.uid() = passenger_id);
 
--- Motorista ve corridas atribuidas a ele
 CREATE POLICY "rides_driver" ON rides
   FOR SELECT USING (auth.uid() = driver_id);
 ```
@@ -70,15 +67,14 @@ CREATE POLICY "rides_driver" ON rides
 ## 3. CRIPTOGRAFIA
 
 ### Dados Sensiveis Criptografados
-- CPF
-- Segredos 2FA
-- Chaves de webhook
-- Tokens de API
+- CPF — `profiles.cpf`
+- Segredo 2FA — `user_2fa.secret`
+- Chave de webhook — `webhook_endpoints.secret`
 
 ### Implementacao
 ```typescript
 // lib/encryption.ts
-import { createCipheriv, createDecipheriv } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const KEY = Buffer.from(process.env.ENCRYPTION_KEY!, 'base64');
@@ -86,11 +82,11 @@ const KEY = Buffer.from(process.env.ENCRYPTION_KEY!, 'base64');
 export function encrypt(text: string): string {
   const iv = randomBytes(16);
   const cipher = createCipheriv(ALGORITHM, KEY, iv);
-  // ... criptografa e retorna
+  // ... criptografa e retorna com iv + authTag
 }
 
 export function decrypt(encrypted: string): string {
-  // ... decriptografa e retorna
+  // ... decriptografa e retorna texto original
 }
 ```
 
@@ -99,32 +95,36 @@ export function decrypt(encrypted: string): string {
 openssl rand -base64 32
 ```
 
+Adicionar como `ENCRYPTION_KEY` nas variaveis de ambiente do Vercel.
+
 ---
 
 ## 4. VALIDACAO DE ENTRADA
 
-### APIs
-Todas as APIs validam entrada com Zod:
+### APIs — Zod
+Todas as 100 rotas de API validam entrada com Zod:
 
 ```typescript
 const schema = z.object({
   email: z.string().email(),
   amount: z.number().positive().max(10000),
-  phone: z.string().regex(/^\+55\d{11}$/),
+  phone: z.string().regex(/^\+55\d{10,11}$/),
+  vehicle_type: z.enum(['standard', 'premium', 'electric', 'moto']),
 });
 ```
 
-### Banco de Dados
-CHECK constraints validam dados:
+### Banco de Dados — CHECK Constraints
 
 ```sql
--- Valores financeiros devem ser >= 0
-ALTER TABLE wallets ADD CONSTRAINT wallet_balance_positive
-  CHECK (balance >= 0);
+-- Valores financeiros nao podem ser negativos
+ALTER TABLE wallets ADD CONSTRAINT wallet_balance_positive CHECK (balance >= 0);
 
 -- Status validos
 ALTER TABLE rides ADD CONSTRAINT valid_status
   CHECK (status IN ('pending', 'accepted', 'in_progress', 'completed', 'cancelled'));
+
+-- Avaliacoes de 1 a 5
+ALTER TABLE reviews ADD CONSTRAINT valid_rating CHECK (rating BETWEEN 1 AND 5);
 ```
 
 ---
@@ -132,34 +132,26 @@ ALTER TABLE rides ADD CONSTRAINT valid_status
 ## 5. PROTECAO CONTRA ATAQUES
 
 ### SQL Injection
-- Queries parametrizadas (Supabase client)
-- Nunca concatenar strings em SQL
+- Queries parametrizadas via Supabase client
+- Nunca concatenar strings em SQL diretamente
 
 ### XSS (Cross-Site Scripting)
-- React escapa automaticamente
-- CSP headers configurados
-- Sanitizacao de HTML
+- React escapa automaticamente conteudo JSX
+- Headers CSP configurados no Next.js
+- Sanitizacao de HTML em inputs livres
 
 ### CSRF (Cross-Site Request Forgery)
-- Supabase Auth usa cookies HttpOnly
-- SameSite=Strict
+- Supabase Auth usa cookies HttpOnly com SameSite=Strict
+- Tokens Bearer validados server-side
 
 ### Rate Limiting
 ```typescript
-// APIs criticas tem rate limiting
-const rateLimit = new Map();
-const LIMIT = 10; // requests
-const WINDOW = 60000; // 1 minuto
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const requests = rateLimit.get(ip) || [];
-  const recent = requests.filter(t => now - t < WINDOW);
-  if (recent.length >= LIMIT) return false;
-  recent.push(now);
-  rateLimit.set(ip, recent);
-  return true;
-}
+// Implementado em cada rota critica
+const LIMITS = {
+  auth: { limit: 10, window: 60000 },      // 10 req/min
+  public: { limit: 100, window: 60000 },   // 100 req/min
+  authenticated: { limit: 1000, window: 60000 }, // 1000 req/min
+};
 ```
 
 ---
@@ -169,49 +161,54 @@ function checkRateLimit(ip: string): boolean {
 ### Verificacao de Documentos
 - CNH valida e vigente
 - CRLV do veiculo
-- Foto recente
+- Foto recente do rosto
 - Verificacao de antecedentes criminais
 
 ### Aprovacao Manual
-- Admin revisa todos os documentos
-- Checklist de aprovacao
-- Historico de verificacoes
+- Admin revisa todos os documentos via `/admin/drivers`
+- Checklist de aprovacao com historico
+- Motorista so pode operar apos aprovacao completa
 
 ---
 
 ## 7. SEGURANCA DO PASSAGEIRO
 
 ### Compartilhamento de Corrida
-- Envia link para contatos de emergencia
-- Mostra localizacao em tempo real
-- Dados do motorista e veiculo
+- Link em tempo real para contatos de emergencia
+- Exibe localizacao GPS do motorista
+- Mostra nome, foto, placa e avaliacao do motorista
 
 ### Botao SOS
-- Aciona emergencia com 1 toque
-- Notifica contatos de emergencia
-- Grava audio automaticamente
-- Admin recebe alerta
+- Aciona emergencia com 1 toque via `/uppi/emergency`
+- Notifica contatos de emergencia cadastrados
+- Grava audio automaticamente (com consentimento)
+- Admin recebe alerta em tempo real via `/admin/emergency`
 
 ### Gravacao de Audio
-- Opcional durante corrida
-- Armazenado criptografado
-- Disponivel para disputas
+- Opt-in pelo usuario em `/uppi/settings/recording`
+- Armazenada criptografada no bucket `ride-recordings` (privado)
+- Disponivel apenas para revisao em disputas
+
+### Trust Score
+- Score de confianca calculado automaticamente
+- Baseado em: avaliacoes, tempo de uso, comportamento
+- Visivel para o usuario em `/uppi/trust-score`
 
 ---
 
 ## 8. SEGURANCA FINANCEIRA
 
 ### Transacoes
-- Todas logadas
-- Valores validados
-- Saldo verificado antes de debito
-- Audit trail completo
+- Todas logadas em `wallet_transactions` e `pix_transactions`
+- Valores validados (sem negativos por CHECK constraint)
+- Saldo verificado antes de qualquer debito
+- Audit trail completo imutavel
 
 ### Saques
-- Verificacao de identidade
-- Limite diario
-- Aprovacao manual para valores altos
-- PIX apenas para conta verificada
+- Verificacao de identidade obrigatoria
+- Limite diario configuravel
+- Aprovacao manual via admin para valores altos
+- PIX apenas para chave cadastrada e verificada
 
 ---
 
@@ -221,11 +218,11 @@ function checkRateLimit(ip: string): boolean {
 
 | Bucket | Publico | Uso |
 |--------|---------|-----|
-| avatars | Sim | Fotos de perfil |
-| driver-documents | Nao | CNH, CRLV |
-| vehicle-photos | Nao | Fotos do veiculo |
-| ride-recordings | Nao | Gravacoes de audio |
-| support-attachments | Nao | Prints de suporte |
+| `avatars` | SIM | Fotos de perfil |
+| `driver-documents` | NAO | CNH, CRLV |
+| `vehicle-photos` | NAO | Fotos do veiculo |
+| `ride-recordings` | NAO | Gravacoes de audio |
+| `support-attachments` | NAO | Anexos de suporte |
 
 ### Politicas de Storage
 ```sql
@@ -242,55 +239,56 @@ CREATE POLICY "driver_documents_policy" ON storage.objects
 ## 10. LOGS E AUDITORIA
 
 ### Tabelas de Log
-- `error_logs` - Erros do sistema
-- `admin_actions` - Acoes de admin
-- `webhook_logs` - Chamadas de webhook
-- `sms_logs` - SMS enviados
-- `email_logs` - Emails enviados
-- `push_logs` - Push notifications
+- `error_logs` — Erros do sistema
+- `admin_logs` — Acoes de admin
+- `webhook_deliveries` — Chamadas de webhook
+- `sms_logs` + `sms_deliveries` — SMS enviados
+- `push_log` — Push notifications
+- `user_activity_log` — Atividades do usuario
 
 ### Informacoes Logadas
-- Timestamp
-- Usuario
-- Acao
-- IP
+- Timestamp exato
+- ID do usuario
+- Tipo de acao
+- IP de origem
 - User Agent
 - Dados da acao
 
 ---
 
-## 11. AMBIENTE
+## 11. VARIAVEIS DE AMBIENTE CRITICAS
 
-### Variaveis de Ambiente
-- Nunca commitar .env
-- Usar Vercel Environment Variables
-- Rotacionar chaves periodicamente
-
-### Separacao de Ambientes
-- Development: dados de teste
-- Staging: replica de producao
-- Production: dados reais
+| Variavel | Descricao | Obrigatorio |
+|----------|-----------|-------------|
+| `ENCRYPTION_KEY` | Chave AES-256 para CPF/2FA | **SIM** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Chave admin Supabase | **SIM** |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto | **SIM** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave publica | **SIM** |
+| `FIREBASE_SERVER_KEY` | FCM push notifications | Para producao |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Mapas e geocoding | Para producao |
+| `PARADISE_API_KEY` | Gateway PIX | Para producao |
 
 ---
 
 ## 12. CHECKLIST DE SEGURANCA
 
-### Antes de Publicar
-- [x] RLS em todas as tabelas
-- [x] Criptografia de dados sensiveis
-- [x] Validacao de entrada em todas as APIs
-- [x] Rate limiting configurado
-- [x] HTTPS obrigatorio
+### Implementado
+- [x] RLS em 275/275 tabelas (100%)
+- [x] Criptografia AES-256-GCM para dados sensiveis
+- [x] Validacao com Zod em todas as 100 APIs
+- [x] Rate limiting por IP e por usuario
+- [x] HTTPS obrigatorio (Vercel)
 - [x] Logs de auditoria ativos
-- [x] Backup automatico do banco
+- [x] Backup automatico Supabase
 - [x] Politicas de storage configuradas
+- [x] CHECK constraints em valores financeiros
+- [x] Nenhuma FK sem indice no banco
 
 ### Periodicamente
-- [ ] Rotacionar ENCRYPTION_KEY
-- [ ] Revisar logs de erro
-- [ ] Atualizar dependencias
-- [ ] Penetration testing
-- [ ] Revisar acessos de admin
+- [ ] Rotacionar ENCRYPTION_KEY a cada 6 meses
+- [ ] Revisar logs de erro semanalmente
+- [ ] Atualizar dependencias npm mensalmente
+- [ ] Penetration testing antes de publicacao
 
 ---
 

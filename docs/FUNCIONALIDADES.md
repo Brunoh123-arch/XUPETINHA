@@ -5,9 +5,9 @@
 ## VISAO GERAL
 
 O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
-- **Passageiro** - Solicita corridas
-- **Motorista** - Aceita e realiza corridas
-- **Admin** - Gerencia a plataforma
+- **Passageiro** — Solicita corridas, entregas, viagens intermunicipais
+- **Motorista** — Aceita e realiza corridas
+- **Admin** — Gerencia a plataforma
 
 ---
 
@@ -18,224 +18,257 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Login com telefone + SMS
 - [x] Cadastro de novo usuario
 - [x] Recuperacao de senha
-- [x] Autenticacao 2FA (opcional)
+- [x] Autenticacao 2FA (TOTP — Google Authenticator, Authy)
+- [x] Codigos de backup 2FA
 - [x] Logout
 
 ### Solicitar Corrida
 - [x] Buscar endereco de origem (geolocalizacao automatica)
 - [x] Buscar endereco de destino (autocomplete Google)
-- [x] Ver estimativa de preco
-- [x] Escolher tipo de veiculo (UberX, Comfort, Black, Moto)
+- [x] Ver estimativa de preco por tipo de veiculo
+- [x] Escolher tipo de veiculo (Standard, Premium, Electric, Moto)
 - [x] Escolher forma de pagamento (PIX, Cartao, Dinheiro, Carteira)
 - [x] Aplicar cupom de desconto
-- [x] Agendar corrida para depois
-- [x] Corrida em grupo (dividir com amigos)
-- [x] Corrida compartilhada (carona)
+- [x] Agendar corrida para data/hora futura (/ride/schedule)
+- [x] Corrida em grupo — dividir com amigos (/ride/group)
+- [x] Rotas alternativas (/ride/route-alternatives)
+- [x] Corrida em leilao — negociacao por lances (/ride/auction)
+
+### Servicos Extras
+- [x] Entregas de pacotes (/uppi/entregas)
+- [x] Viagens intermunicipais (/uppi/cidade-a-cidade)
 
 ### Negociacao de Preco
 - [x] Fazer contra-oferta ao motorista
-- [x] Ver ofertas de motoristas proximos
+- [x] Ver ofertas de motoristas proximos (/ride/[id]/offers)
 - [x] Aceitar/rejeitar ofertas
-- [x] Negociacao em tempo real
+- [x] Negociacao em tempo real via Supabase Realtime
 
 ### Durante a Corrida
-- [x] Rastreamento em tempo real no mapa
-- [x] Ver dados do motorista (nome, foto, placa, avaliacao)
-- [x] Chat com motorista
-- [x] Compartilhar corrida com contatos
-- [x] Botao de emergencia (SOS)
+- [x] Rastreamento em tempo real no mapa (/ride/[id]/tracking)
+- [x] Ver dados do motorista (nome, foto, placa, avaliacao) (/ride/[id]/driver-profile)
+- [x] Chat com motorista (/ride/[id]/chat)
+- [x] Compartilhar corrida com contatos (/ride/[id]/share)
+- [x] Botao de emergencia SOS (/uppi/emergency)
 - [x] Gravacao de audio da corrida
-- [x] Alterar destino durante corrida
-- [x] Cancelar corrida
+- [x] Cancelar corrida (/ride/[id]/cancel)
 
 ### Apos a Corrida
-- [x] Avaliar motorista (1-5 estrelas)
-- [x] Deixar comentario
-- [x] Dar gorjeta
-- [x] Ver recibo detalhado
+- [x] Avaliar motorista — estrelas + comentario (/ride/[id]/rate)
+- [x] Avaliacao simples (/ride/[id]/review)
+- [x] Avaliacao detalhada por categorias (/ride/[id]/review-enhanced)
+- [x] Dar gorjeta ao motorista (/ride/[id]/payment)
+- [x] Ver recibo detalhado (/ride/[id]/receipt)
+- [x] Ver detalhes da corrida (/ride/[id]/details)
 - [x] Reportar problema
-- [x] Abrir disputa
 
 ### Pagamentos
-- [x] Pagar com PIX (QR Code)
+- [x] Pagar com PIX (QR Code + copia-e-cola)
 - [x] Pagar com cartao de credito
 - [x] Pagar com dinheiro
 - [x] Pagar com saldo da carteira
-- [x] Dividir pagamento com amigos
-- [x] Ver historico de pagamentos
-- [x] Solicitar reembolso
+- [x] Ver historico de pagamentos (/uppi/payments)
 
 ### Carteira Digital
-- [x] Ver saldo
-- [x] Adicionar creditos (PIX)
+- [x] Ver saldo (/uppi/wallet)
+- [x] Adicionar creditos via PIX
 - [x] Ver extrato de transacoes
 - [x] Cashback automatico
 
-### Perfil
-- [x] Editar nome, foto, telefone
-- [x] Gerenciar enderecos favoritos (casa, trabalho)
-- [x] Contatos de emergencia
+### Perfil e Configuracoes
+- [x] Editar nome, foto, telefone (/uppi/profile)
+- [x] Gerenciar enderecos favoritos (/uppi/favorites, /uppi/favorites/add)
+- [x] Motoristas favoritos (/uppi/favorites/drivers)
+- [x] Contatos de emergencia (/uppi/emergency-contacts, /uppi/settings/emergency)
+- [x] Gerenciar membros da familia (/uppi/family)
 - [x] Preferencias de notificacao
-- [x] Ativar/desativar 2FA
-- [x] Alterar idioma
+- [x] Preferencias de SMS (/uppi/settings/sms)
+- [x] Preferencias de gravacao (/uppi/settings/recording)
+- [x] Ativar/desativar 2FA (/uppi/settings/2fa)
+- [x] Alterar senha (/uppi/settings/password)
+- [x] Alterar idioma (/uppi/settings/language)
 - [x] Modo escuro
-- [x] Deletar conta
+- [x] Deletar conta (LGPD)
 
-### Social
-- [x] Ver feed de posts
-- [x] Criar posts
+### Social e Gamificacao
+- [x] Ver feed de posts (/uppi/social)
+- [x] Criar posts com foto (/uppi/social/create)
 - [x] Curtir e comentar
 - [x] Seguir outros usuarios
-- [x] Ver leaderboard
-- [x] Conquistas e badges
+- [x] Ver leaderboard (/uppi/leaderboard)
+- [x] Conquistas e badges (/uppi/achievements)
+- [x] Programa de indicacao (/uppi/referral, /uppi/referrals)
+- [x] Club de fidelidade (/uppi/club)
+- [x] Trust Score (/uppi/trust-score)
 
-### Suporte
-- [x] Chat com suporte
-- [x] FAQ
-- [x] Abrir ticket
-- [x] Ver historico de tickets
+### Suporte e Legal
+- [x] Chat com suporte (/uppi/suporte/chat)
+- [x] FAQ (/uppi/help)
+- [x] Abrir ticket (/uppi/suporte, /uppi/support)
+- [x] Politica de privacidade (/uppi/privacy, /uppi/legal/privacy)
+- [x] Termos de uso (/uppi/terms, /uppi/legal/terms)
+
+### Notificacoes
+- [x] Ver todas as notificacoes (/uppi/notifications)
+- [x] Marcar como lidas
+- [x] Push notifications via Firebase
+
+### Seguranca
+- [x] Botao de emergencia SOS (/uppi/seguranca)
+- [x] Historico de corridas (/uppi/history)
+- [x] Agendamentos (/uppi/schedule)
+- [x] Analytics pessoal (/uppi/analytics)
 
 ---
 
 ## FUNCIONALIDADES DO MOTORISTA
 
 ### Cadastro e Verificacao
-- [x] Cadastro como motorista
-- [x] Upload de documentos (CNH, CRLV, foto)
+- [x] Cadastro como motorista (/uppi/driver/register)
+- [x] Upload de documentos (CNH, CRLV, foto) (/uppi/driver/documents)
 - [x] Verificacao de antecedentes
-- [x] Aprovacao pelo admin
-- [x] Treinamento obrigatorio
+- [x] Aprovacao pelo admin (/uppi/driver/verify)
 
 ### Modo Motorista
-- [x] Ativar/desativar modo online
-- [x] Ver corridas disponiveis no mapa
-- [x] Aceitar/rejeitar corridas
+- [x] Ativar/desativar modo online (/uppi/driver-mode)
+- [x] Ver corridas disponiveis
+- [x] Aceitar/rejeitar corridas (/uppi/driver/ride/[id]/accept)
 - [x] Fazer oferta de preco
 - [x] Navegar ate o passageiro
-- [x] Iniciar corrida
+- [x] Iniciar corrida (/uppi/driver/ride/[id]/active)
 - [x] Navegar ate o destino
-- [x] Finalizar corrida
-
-### Durante a Corrida
-- [x] Navegacao GPS integrada
-- [x] Chat com passageiro
-- [x] Botao de emergencia
-- [x] Gravacao de audio
-- [x] Reportar problema com passageiro
+- [x] Finalizar corrida (/uppi/driver/ride/[id]/summary)
+- [x] Home do motorista (/uppi/driver/home)
 
 ### Ganhos
-- [x] Ver ganhos do dia/semana/mes
+- [x] Ver ganhos do dia/semana/mes (/uppi/driver/earnings)
 - [x] Ver detalhamento por corrida
-- [x] Solicitar saque (PIX)
+- [x] Solicitar saque PIX (/uppi/driver/wallet)
 - [x] Ver historico de saques
-- [x] Bonus e incentivos
 
 ### Avaliacoes
-- [x] Ver media de avaliacao
+- [x] Ver media de avaliacao (/uppi/driver/ratings)
 - [x] Ver comentarios recebidos
 - [x] Avaliar passageiros
-- [x] Sistema de niveis (Bronze, Prata, Ouro, Diamante)
+- [x] Sistema de niveis e performance
 
 ### Ferramentas
-- [x] Mapa de zonas quentes (alta demanda)
-- [x] Rotas populares
-- [x] Previsao de demanda
-- [x] Calculadora de ganhos
-
-### Perfil
-- [x] Editar dados pessoais
-- [x] Atualizar documentos
-- [x] Gerenciar veiculos
-- [x] Configuracoes de notificacao
+- [x] Mapa de zonas quentes (/uppi/driver/hot-zones)
+- [x] Historico de corridas (/uppi/driver/history)
+- [x] Agenda de turnos (/uppi/driver/schedule)
+- [x] Configuracoes do motorista (/uppi/driver/settings)
+- [x] Perfil do motorista (/uppi/driver/profile)
 
 ---
 
-## FUNCIONALIDADES DO ADMIN
+## FUNCIONALIDADES DO ADMIN (42 paginas)
 
 ### Dashboard
-- [x] Metricas em tempo real
-- [x] Total de corridas hoje
-- [x] Receita do dia
-- [x] Usuarios ativos
-- [x] Graficos e relatorios
+- [x] Metricas em tempo real (/admin)
+- [x] Total de corridas, receita, usuarios ativos
+- [x] Monitor em tempo real (/admin/monitor)
+- [x] Analytics completo (/admin/analytics)
 
 ### Gestao de Usuarios
-- [x] Listar todos os usuarios
-- [x] Buscar por nome/email/telefone
-- [x] Ver detalhes do usuario
-- [x] Editar usuario
-- [x] Banir/desbanir usuario
-- [x] Resetar senha
-
-### Gestao de Motoristas
-- [x] Listar motoristas pendentes
-- [x] Aprovar/rejeitar documentos
-- [x] Verificar antecedentes
-- [x] Listar motoristas ativos
-- [x] Suspender motorista
+- [x] Listar todos os usuarios (/admin/users)
+- [x] Ver, editar, banir usuarios
+- [x] Gestao de motoristas (/admin/drivers)
+- [x] Ganhos dos motoristas (/admin/drivers/earnings, /admin/driver-earnings)
 
 ### Gestao de Corridas
-- [x] Listar todas as corridas
-- [x] Filtrar por status/data/motorista
-- [x] Ver detalhes da corrida
-- [x] Cancelar corrida
-- [x] Resolver disputas
+- [x] Todas as corridas (/admin/rides)
+- [x] Detalhe de cada corrida (/admin/rides/[id])
+- [x] Corridas em grupo (/admin/group-rides)
+- [x] Corridas intermunicipais (/admin/cidade-a-cidade)
+- [x] Agendamentos (/admin/agendamentos)
+- [x] Entregas (/admin/entregas)
+- [x] Ofertas de preco (/admin/price-offers)
 
 ### Financeiro
-- [x] Ver receita total
-- [x] Listar saques pendentes
-- [x] Aprovar/rejeitar saques
-- [x] Processar reembolsos
-- [x] Relatorios financeiros
+- [x] Pagamentos (/admin/payments)
+- [x] Financeiro completo (/admin/financeiro)
+- [x] Saques pendentes (/admin/withdrawals)
+- [x] Assinaturas (/admin/subscriptions)
 
 ### Marketing
-- [x] Criar cupons de desconto
-- [x] Gerenciar promocoes
-- [x] Campanhas de marketing
-- [x] Push notifications em massa
+- [x] Promocoes (/admin/promotions)
+- [x] Cupons (/admin/cupons)
+- [x] Indicacoes (/admin/referrals)
+
+### Avaliacoes e Social
+- [x] Avaliacoes (/admin/reviews)
+- [x] Posts sociais (/admin/social)
+- [x] Leaderboard (/admin/leaderboard)
+- [x] Conquistas (/admin/achievements)
+- [x] Favoritos (/admin/favoritos)
+
+### Comunicacao
+- [x] Notificacoes (/admin/notifications)
+- [x] Mensagens (/admin/messages)
+- [x] SMS (/admin/sms)
+- [x] Webhooks (/admin/webhooks)
+- [x] Integracoes (/admin/integrations)
 
 ### Suporte
-- [x] Ver tickets abertos
-- [x] Responder tickets
-- [x] Chat com usuarios
-- [x] Alertas de emergencia (SOS)
+- [x] Tickets de suporte (/admin/suporte)
+- [x] FAQ (/admin/faq)
+- [x] Documentos legais (/admin/legal)
+- [x] Emergencias SOS (/admin/emergency)
+- [x] Contatos de emergencia (/admin/emergency-contacts)
+- [x] Gravacoes (/admin/recordings)
 
-### Configuracoes
-- [x] Precos por tipo de veiculo
-- [x] Taxas da plataforma
-- [x] Zonas de atendimento
-- [x] Feature flags
-- [x] Configuracoes do sistema
+### Sistema
+- [x] Logs do sistema (/admin/logs)
+- [x] Precificacao dinamica (surge) (/admin/surge)
+- [x] Zonas de atendimento (/admin/zones)
+- [x] Configuracoes (/admin/settings)
 
 ---
 
 ## FUNCIONALIDADES TECNICAS
 
 ### Seguranca
-- [x] RLS em todas as tabelas (Row Level Security)
-- [x] Criptografia de dados sensiveis
+- [x] RLS em 275 tabelas (100%)
+- [x] Criptografia AES-256-GCM para dados sensiveis
 - [x] Rate limiting nas APIs
-- [x] Validacao de entrada
-- [x] Protecao contra SQL injection
+- [x] Validacao com Zod em todas as rotas
 - [x] HTTPS obrigatorio
 
 ### Performance
-- [x] Indices otimizados no banco
-- [x] Cache de dados frequentes
+- [x] 702+ indices otimizados no banco
 - [x] Lazy loading de componentes
-- [x] Compressao de imagens
+- [x] Capacitor para acesso nativo
 
 ### Realtime
-- [x] Atualizacao de localizacao em tempo real
+- [x] 36 tabelas com Supabase Realtime
+- [x] GPS em tempo real
 - [x] Chat em tempo real
-- [x] Notificacoes push
+- [x] Push notifications via Firebase (FCM)
 - [x] Status de corrida em tempo real
 
-### Integracao
-- [x] Google Maps (geocoding, rotas)
-- [x] Firebase (push notifications)
-- [x] Supabase (banco, auth, storage)
-- [x] PIX (pagamentos)
+### Integracoes
+- [x] Google Maps (geocoding, rotas, autocomplete)
+- [x] Firebase FCM (push notifications)
+- [x] Supabase (banco, auth, storage, realtime)
+- [x] PIX — Paradise/EfiPay
+- [x] Capacitor 8 (Android nativo)
+
+### APIs (100 rotas)
+- [x] Auth (OTP email, OTP SMS, 2FA, JWT verify)
+- [x] Perfil e configuracoes
+- [x] Corridas completo (CRUD + fluxo inteiro)
+- [x] Motorista (documentos, ganhos, localizacao, saque)
+- [x] Ofertas e negociacao
+- [x] Pagamentos (PIX, cartao, carteira, reembolso)
+- [x] Cupons e promocoes
+- [x] Social (posts, likes, comentarios, follows)
+- [x] Suporte (tickets, mensagens, emergencia, SOS)
+- [x] Admin (stats, usuarios, saques, setup)
+- [x] Webhooks (registro e processamento)
+- [x] Notificacoes (push, FCM, broadcast)
+- [x] Geocoding, rotas, distancia
+- [x] Familia, favoritos, assinaturas, referrals
+- [x] Gravacoes, SMS, logs
 
 ---
 
@@ -243,19 +276,29 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 
 | Categoria | Quantidade |
 |-----------|------------|
-| Passageiro | 58 |
-| Motorista | 32 |
-| Admin | 28 |
-| Tecnico | 14 |
-| **TOTAL** | **132 funcionalidades** |
+| Passageiro | 75+ |
+| Motorista | 25+ |
+| Admin (42 paginas) | 42 |
+| Tecnico | 20+ |
+| **TOTAL** | **160+ funcionalidades** |
 
 ---
 
-## PROXIMAS FUNCIONALIDADES (Roadmap)
+## PAGINAS DO APP
+
+| Categoria | Quantidade |
+|-----------|------------|
+| /uppi (passageiro + motorista) | 85 |
+| /admin | 42 |
+| /auth | 8 |
+| **Total** | **135** |
+
+---
+
+## ROADMAP
 
 - [ ] Login com Google/Apple
 - [ ] Corridas internacionais
 - [ ] Aluguel de veiculos
-- [ ] Entrega de pacotes (expandir)
-- [ ] Integracao com Apple Pay
-- [ ] App para iOS nativo
+- [ ] Apple Pay / Google Pay
+- [ ] App para iOS (App Store)
