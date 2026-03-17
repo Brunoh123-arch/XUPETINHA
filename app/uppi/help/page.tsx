@@ -39,12 +39,14 @@ export default function HelpPage() {
 
   useEffect(() => {
     supabase
-      .from('faqs')
-      .select('id, question, answer, category, order_index')
-      .eq('is_active', true)
-      .order('order_index', { ascending: true })
+      .from('knowledge_base_articles')
+      .select('id, question:title, answer:content, category, order_index:helpful_count')
+      .eq('is_published', true)
+      .eq('target_audience', 'passenger')
+      .order('helpful_count', { ascending: false })
+      .limit(20)
       .then(({ data }) => {
-        if (data && data.length > 0) setFaqs(data as Faq[])
+        if (data && data.length > 0) setFaqs(data as unknown as Faq[])
       })
   }, [])
 
