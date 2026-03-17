@@ -18,9 +18,12 @@ import { Plane, Plus, MapPin, Search } from "lucide-react"
 interface Airport {
   id: string
   name: string
-  iata_code: string
+  code: string
   city: string
-  pickup_zones: Record<string, unknown> | null
+  state: string | null
+  lat: number | null
+  lng: number | null
+  is_active: boolean | null
   created_at: string
 }
 
@@ -42,7 +45,7 @@ export default function AdminAirportsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [openNew, setOpenNew] = useState(false)
-  const [form, setForm] = useState({ name: "", iata_code: "", city: "" })
+  const [form, setForm] = useState({ name: "", code: "", city: "" })
   const [areaForm, setAreaForm] = useState({ name: "", city: "", state: "", launch_date: "" })
   const [saving, setSaving] = useState(false)
 
@@ -62,10 +65,10 @@ export default function AdminAirportsPage() {
 
   async function saveAirport() {
     setSaving(true)
-    await supabase.from("airports").insert({ name: form.name, iata_code: form.iata_code.toUpperCase(), city: form.city })
+    await supabase.from("airports").insert({ name: form.name, code: form.code.toUpperCase(), city: form.city })
     setSaving(false)
     setOpenNew(false)
-    setForm({ name: "", iata_code: "", city: "" })
+    setForm({ name: "", code: "", city: "" })
     fetchData()
   }
 
@@ -89,7 +92,7 @@ export default function AdminAirportsPage() {
     fetchData()
   }
 
-  const filteredAirports = airports.filter(a => a.name.toLowerCase().includes(search.toLowerCase()) || a.iata_code?.includes(search.toUpperCase()) || a.city?.toLowerCase().includes(search.toLowerCase()))
+  const filteredAirports = airports.filter(a => a.name.toLowerCase().includes(search.toLowerCase()) || a.code?.includes(search.toUpperCase()) || a.city?.toLowerCase().includes(search.toLowerCase()))
   const filteredAreas = areas.filter(a => a.city.toLowerCase().includes(search.toLowerCase()) || a.state?.toLowerCase().includes(search.toLowerCase()))
 
   return (
@@ -109,10 +112,10 @@ export default function AdminAirportsPage() {
               <div className="space-y-4 mt-2">
                 <div className="space-y-1"><Label>Nome do Aeroporto</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Aeroporto Internacional de Guarulhos" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1"><Label>Codigo IATA</Label><Input value={form.iata_code} onChange={e => setForm(f => ({ ...f, iata_code: e.target.value }))} placeholder="GRU" maxLength={3} className="uppercase" /></div>
+                  <div className="space-y-1"><Label>Codigo IATA</Label><Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} placeholder="GRU" maxLength={3} className="uppercase" /></div>
                   <div className="space-y-1"><Label>Cidade</Label><Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Guarulhos" /></div>
                 </div>
-                <Button onClick={saveAirport} disabled={saving || !form.name || !form.iata_code} className="w-full">{saving ? "Salvando..." : "Cadastrar"}</Button>
+                <Button onClick={saveAirport} disabled={saving || !form.name || !form.code} className="w-full">{saving ? "Salvando..." : "Cadastrar"}</Button>
               </div>
             ) : (
               <div className="space-y-4 mt-2">
@@ -152,7 +155,7 @@ export default function AdminAirportsPage() {
             <div key={a.id} className="bg-card border rounded-xl p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex flex-col items-center justify-center">
                 <Plane className="w-5 h-5 text-primary" />
-                <span className="text-xs font-bold text-primary leading-none mt-0.5">{a.iata_code}</span>
+                <span className="text-xs font-bold text-primary leading-none mt-0.5">{a.code}</span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground truncate">{a.name}</p>
@@ -160,8 +163,8 @@ export default function AdminAirportsPage() {
                   <MapPin className="w-3 h-3" />{a.city}
                 </p>
               </div>
-              {a.pickup_zones && (
-                <Badge variant="secondary" className="text-xs">Zonas config.</Badge>
+              {a.is_active && (
+                <Badge variant="secondary" className="text-xs">Ativo</Badge>
               )}
             </div>
           ))}

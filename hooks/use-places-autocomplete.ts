@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useMapsLibrary } from '@vis.gl/react-google-maps'
-import { google } from 'google-maps'
 
 export interface PlacePrediction {
   place_id: string
