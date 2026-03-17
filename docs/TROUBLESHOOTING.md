@@ -1,6 +1,6 @@
 # TROUBLESHOOTING - SOLUCAO DE PROBLEMAS
 
-> Ultima atualizacao: 16/03/2026
+> Ultima atualizacao: 16/03/2026 — Versao 31.0
 
 ## PROBLEMAS COMUNS E SOLUCOES
 
@@ -325,7 +325,80 @@ npx cap build android
 
 ---
 
-## 12. SUPORTE
+## 13. ERROS NOS NOVOS MODULOS (v31)
+
+### "corporate_accounts: permission denied"
+**Solucao:**
+- Apenas o dono da conta corporativa ou admin pode acessar
+- Verificar se o user_id bate com o campo `owner_id` da tabela `corporate_accounts`
+
+### Split de corrida nao notifica participantes
+**Solucao:**
+1. Verificar se os participantes aceitaram o convite na tabela `payment_split_members`
+2. Status deve ser `'accepted'` para cobrar
+3. Verificar se o `ride_id` esta correto
+
+### Reembolso fica em "pendente" eternamente
+**Solucao:**
+- Reembolsos precisam de aprovacao manual do admin em `/admin/refunds`
+- Verificar se existe admin com permissao de `can_approve_refunds`
+
+### Feature flag nao ativa para o usuario
+**Solucao:**
+1. Verificar se `rollout_percentage` esta acima de 0 em `/admin/feature-flags`
+2. Feature flags usam hash do user_id — nem todos os usuarios recebem na mesma hora
+3. Flag de tipo `boolean` ativa para todos; tipo `percentage` usa distribuicao gradual
+
+### Incentivo nao aparece para o motorista
+**Solucao:**
+1. Verificar datas `start_date` e `end_date` em `driver_incentives`
+2. Campo `is_active = true` deve estar habilitado
+3. Verificar `driver_level_required` — motorista precisa ter o nivel minimo
+
+### Experimento A/B nao registra participante
+**Solucao:**
+- A tabela `ab_test_participants` so registra na primeira vez que o usuario acessa a feature
+- Verificar se `experiment_id` existe e esta ativo em `pricing_experiments`
+
+## 14. COMANDOS UTEIS v31
+
+### Verificar tabelas novas
+```sql
+-- Verificar status das 192 tabelas
+SELECT table_name, (SELECT COUNT(*) FROM pg_policies WHERE tablename = t.table_name) AS rls_policies
+FROM information_schema.tables t
+WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+ORDER BY table_name;
+```
+
+### Verificar feature flags ativos
+```sql
+SELECT name, rollout_percentage, is_active, type
+FROM feature_flags
+WHERE is_active = true
+ORDER BY name;
+```
+
+### Verificar incentivos ativos hoje
+```sql
+SELECT di.*, dp.full_name
+FROM driver_incentives di
+JOIN driver_profiles dp ON dp.user_id = di.driver_id
+WHERE di.is_active = true
+AND di.start_date <= NOW()
+AND (di.end_date IS NULL OR di.end_date >= NOW());
+```
+
+---
+
+## 15. SUPORTE
+
+Se nenhuma solucao funcionar:
+
+1. Verificar `/api/v1/health` para status das integracoes
+2. Consultar `docs/STATUS.md` para ver metricas reais do projeto
+3. Consultar `docs/API-REFERENCE.md` para payloads esperados
+4. Contatar suporte: suporte@uppi.app
 
 Se nenhuma solucao funcionar:
 

@@ -1,6 +1,6 @@
 # UPPI - Documentacao Completa
 
-> Atualizado em: 16/03/2026 — Versao 30.0
+> Atualizado em: 16/03/2026 — Versao 31.0
 
 ---
 
@@ -9,7 +9,7 @@
 | # | Documento | Descricao |
 |---|-----------|-----------|
 | 1 | [STATUS.md](./STATUS.md) | Auditoria completa do projeto — metricas reais |
-| 2 | [FUNCIONALIDADES.md](./FUNCIONALIDADES.md) | 190+ funcionalidades detalhadas |
+| 2 | [FUNCIONALIDADES.md](./FUNCIONALIDADES.md) | 200+ funcionalidades detalhadas |
 | 3 | [SCHEMA-BANCO.md](./SCHEMA-BANCO.md) | 192 tabelas por categoria |
 | 4 | [API-REFERENCE.md](./API-REFERENCE.md) | 98 endpoints documentados |
 | 5 | [SEGURANCA.md](./SEGURANCA.md) | RLS, criptografia, checklist |
@@ -37,9 +37,9 @@
 | Realtime | 36 tabelas | OK |
 | Storage Buckets | 5 | OK |
 | APIs | 98 rotas | OK |
-| Paginas /uppi | 103 | OK |
-| Paginas /admin | 50 | OK |
-| Total paginas | 153+ | OK |
+| Paginas /uppi | 102 | OK |
+| Paginas /admin | 59 | OK |
+| Total paginas | 161+ | OK |
 | Tabelas lixo removidas | 88 | FEITO |
 
 ### Stack Tecnologica
@@ -91,12 +91,12 @@
 - [x] 192 tabelas criadas e limpas (88 duplicatas removidas)
 - [x] 302 politicas RLS configuradas
 - [x] 98 APIs funcionando
-- [x] 153+ paginas criadas
+- [x] 161+ paginas criadas
 - [x] Capacitor Android configurado
 - [x] Deep links configurados
 - [x] Push notifications preparado
-- [x] 190+ funcionalidades implementadas
-- [x] Novas features: split, disputas, reembolsos, pontos, performance motorista, equipe admin
+- [x] 200+ funcionalidades implementadas
+- [x] Features v31: corporate, experiments, knowledge-base, airports, security, team, invoices, performance individual, experience, parceiros
 
 ### Configuracoes Externas (Pendente — voce faz)
 - [ ] ENCRYPTION_KEY definida no Vercel
@@ -115,8 +115,8 @@
 /
 ├── app/                    # Paginas Next.js
 │   ├── api/v1/            # APIs REST (98 rotas)
-│   ├── uppi/              # App passageiro/motorista (103 paginas)
-│   ├── admin/             # Painel admin (50 paginas)
+│   ├── uppi/              # App passageiro/motorista (102 paginas)
+│   ├── admin/             # Painel admin (59 paginas)
 │   └── auth/              # Autenticacao (8 paginas)
 ├── components/            # Componentes React
 ├── lib/                   # Utilitarios

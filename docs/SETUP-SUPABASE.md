@@ -1,6 +1,6 @@
 # Guia de Setup - Supabase
 
-**Data:** 16/03/2026
+**Data:** 16/03/2026 — Versao 31.0
 
 ---
 
@@ -8,9 +8,9 @@
 
 O projeto ja esta conectado ao Supabase:
 - **Projeto:** ullmjdgppucworavoiia
-- **Tabelas:** 164
-- **RLS:** 163/164 com politicas ativas
-- **Realtime:** 22 tabelas
+- **Tabelas:** 192 (88 duplicatas removidas na v31)
+- **RLS:** 192/192 com politicas ativas (302 policies)
+- **Realtime:** 36 tabelas
 - **Storage:** 5 buckets
 
 **NAO e necessario criar novo projeto.** O banco ja esta 100% configurado.
