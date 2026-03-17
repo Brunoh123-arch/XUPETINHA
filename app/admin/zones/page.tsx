@@ -13,17 +13,13 @@ import { cn } from '@/lib/utils'
 interface Zone {
   id: string
   name: string
-  type: string
-  lat: number
-  lng: number
-  radius_km: number
+  zone_type: string
   city: string
-  state: string
-  is_hot_zone: boolean
+  description: string | null
+  polygon: Record<string, unknown> | null
   is_active: boolean
-  surge_factor: number
-  demand_index: number
   created_at: string
+  updated_at: string
 }
 
 const TYPE_META: Record<string, { icon: React.ElementType; label: string; color: string; bg: string }> = {
@@ -34,13 +30,13 @@ const TYPE_META: Record<string, { icon: React.ElementType; label: string; color:
   stadium:    { icon: Trophy,         label: 'Estádio',      color: 'text-amber-400',   bg: 'bg-amber-500/10' },
   downtown:   { icon: Building2,      label: 'Centro',       color: 'text-cyan-400',    bg: 'bg-cyan-500/10' },
   suburb:     { icon: Home,           label: 'Subúrbio',     color: 'text-slate-400',   bg: 'bg-slate-500/10' },
+  standard:   { icon: MapPin,         label: 'Padrão',       color: 'text-slate-400',   bg: 'bg-slate-500/10' },
   general:    { icon: MapPin,         label: 'Geral',        color: 'text-slate-400',   bg: 'bg-slate-500/10' },
 }
 
 const EMPTY: Partial<Zone> = {
-  name: '', type: 'general', lat: -23.5505, lng: -46.6333,
-  radius_km: 2, city: 'São Paulo', state: 'SP',
-  is_hot_zone: false, is_active: true, surge_factor: 1.0, demand_index: 50,
+  name: '', zone_type: 'standard', city: 'São Paulo',
+  description: '', is_active: true,
 }
 
 export default function AdminZonesPage() {
@@ -74,12 +70,11 @@ export default function AdminZonesPage() {
     if (!form.name?.trim()) return
     setSaving(true)
     const payload = {
-      name: form.name, type: form.type || 'general',
-      lat: form.lat || -23.5505, lng: form.lng || -46.6333,
-      radius_km: form.radius_km || 2, city: form.city || 'São Paulo',
-      state: form.state || 'SP', is_hot_zone: form.is_hot_zone ?? false,
-      is_active: form.is_active ?? true, surge_factor: form.surge_factor ?? 1.0,
-      demand_index: form.demand_index ?? 50,
+      name: form.name,
+      zone_type: form.zone_type || 'standard',
+      city: form.city || 'São Paulo',
+      description: form.description || null,
+      is_active: form.is_active ?? true,
     }
     if (editId) {
       await supabase.from('city_zones').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
@@ -101,12 +96,12 @@ export default function AdminZonesPage() {
 
   const handleEdit = (z: Zone) => { setForm(z); setEditId(z.id); setShowForm(true) }
 
-  const handleToggleHot = async (id: string, current: boolean) => {
-    await supabase.from('city_zones').update({ is_hot_zone: !current }).eq('id', id)
-    setZones(prev => prev.map(z => z.id === id ? { ...z, is_hot_zone: !current } : z))
+  const handleToggleActive = async (id: string, current: boolean) => {
+    await supabase.from('city_zones').update({ is_active: !current }).eq('id', id)
+    setZones(prev => prev.map(z => z.id === id ? { ...z, is_active: !current } : z))
   }
 
-  const filtered = filterType === 'all' ? zones : zones.filter(z => z.type === filterType)
+  const filtered = filterType === 'all' ? zones : zones.filter(z => z.zone_type === filterType)
 
   const headerActions = (
     <div className="flex items-center gap-2">
@@ -125,7 +120,7 @@ export default function AdminZonesPage() {
     <>
       <AdminHeader
         title="Zonas da Cidade"
-        subtitle={`${zones.length} zonas — ${zones.filter(z => z.is_hot_zone).length} zonas quentes`}
+        subtitle={`${zones.length} zonas — ${zones.filter(z => z.is_active).length} ativas`}
         actions={headerActions}
       />
       <div className="flex-1 overflow-y-auto bg-[hsl(var(--admin-bg))] p-5">
@@ -140,7 +135,7 @@ export default function AdminZonesPage() {
               Todos ({zones.length})
             </button>
             {Object.entries(TYPE_META).map(([type, meta]) => {
-              const count = zones.filter(z => z.type === type).length
+              const count = zones.filter(z => z.zone_type === type).length
               if (!count) return null
               return (
                 <button key={type} type="button" onClick={() => setFilterType(type)}
@@ -171,48 +166,24 @@ export default function AdminZonesPage() {
                 </div>
                 <div>
                   <label className="text-[11px] text-slate-500 font-semibold block mb-1">Tipo</label>
-                  <select value={form.type || 'general'} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
+                  <select value={form.zone_type || 'standard'} onChange={e => setForm(p => ({ ...p, zone_type: e.target.value }))}
                     className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--admin-bg))] border border-[hsl(var(--admin-border))] text-[13px] text-slate-200 outline-none focus:border-[hsl(var(--admin-green))]">
                     {Object.entries(TYPE_META).map(([v, m]) => <option key={v} value={v}>{m.label}</option>)}
                   </select>
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Latitude</label>
-                  <Input type="number" step="0.0001" value={form.lat || ''} onChange={e => setForm(p => ({ ...p, lat: parseFloat(e.target.value) }))}
-                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Longitude</label>
-                  <Input type="number" step="0.0001" value={form.lng || ''} onChange={e => setForm(p => ({ ...p, lng: parseFloat(e.target.value) }))}
-                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Raio (km)</label>
-                  <Input type="number" step="0.5" min="0.5" value={form.radius_km || 2} onChange={e => setForm(p => ({ ...p, radius_km: parseFloat(e.target.value) }))}
-                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Fator de Surge</label>
-                  <Input type="number" step="0.1" min="1.0" max="5.0" value={form.surge_factor || 1} onChange={e => setForm(p => ({ ...p, surge_factor: parseFloat(e.target.value) }))}
-                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
-                </div>
-                <div>
-                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Índice de Demanda (0-100)</label>
-                  <Input type="number" min="0" max="100" value={form.demand_index || 50} onChange={e => setForm(p => ({ ...p, demand_index: parseInt(e.target.value) }))}
-                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
                 </div>
                 <div>
                   <label className="text-[11px] text-slate-500 font-semibold block mb-1">Cidade</label>
                   <Input value={form.city || ''} onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
                     className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
                 </div>
+                <div className="sm:col-span-3">
+                  <label className="text-[11px] text-slate-500 font-semibold block mb-1">Descrição</label>
+                  <Input value={form.description || ''} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                    placeholder="Descrição opcional da zona"
+                    className="bg-[hsl(var(--admin-bg))] border-[hsl(var(--admin-border))] text-slate-200 text-[13px]" />
+                </div>
               </div>
               <div className="flex items-center gap-4 pt-3 border-t border-[hsl(var(--admin-border))]">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.is_hot_zone ?? false} onChange={e => setForm(p => ({ ...p, is_hot_zone: e.target.checked }))}
-                    className="w-4 h-4 accent-[hsl(var(--admin-green))]" />
-                  <span className="text-[12px] text-slate-400">Zona Quente (exibir no mapa do app)</span>
-                </label>
                 <label className="flex items-center gap-2 cursor-pointer ml-auto">
                   <input type="checkbox" checked={form.is_active ?? true} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))}
                     className="w-4 h-4 accent-[hsl(var(--admin-green))]" />
@@ -235,9 +206,8 @@ export default function AdminZonesPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {filtered.map(z => {
-                const meta = TYPE_META[z.type] || TYPE_META.general
+                const meta = TYPE_META[z.zone_type] || TYPE_META.general
                 const Icon = meta.icon
-                const demandColor = z.demand_index >= 80 ? 'text-red-400' : z.demand_index >= 60 ? 'text-amber-400' : z.demand_index >= 40 ? 'text-blue-400' : 'text-slate-400'
                 return (
                   <div key={z.id} className={cn(
                     'bg-[hsl(var(--admin-surface))] rounded-xl border p-4',
@@ -250,22 +220,20 @@ export default function AdminZonesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <p className="text-[13px] font-bold text-slate-100 truncate">{z.name}</p>
-                          {z.is_hot_zone && (
-                            <span className="text-[10px] bg-orange-500/15 text-orange-400 px-1.5 py-0.5 rounded-full font-semibold">HOT</span>
+                          {!z.is_active && (
+                            <span className="text-[10px] bg-slate-500/15 text-slate-400 px-1.5 py-0.5 rounded-full font-semibold">Inativa</span>
                           )}
                         </div>
                         <div className="flex items-center gap-3 text-[11px] text-slate-500">
                           <span>{meta.label}</span>
-                          <span>r: {z.radius_km}km</span>
-                          {z.surge_factor > 1 && <span className="text-amber-400 font-semibold">{z.surge_factor}x surge</span>}
-                          <span className={cn('font-semibold', demandColor)}>demanda {z.demand_index}</span>
+                          <span>{z.city}</span>
+                          {z.description && <span className="truncate max-w-32">{z.description}</span>}
                         </div>
-                        <p className="text-[10px] text-slate-600 mt-1 font-mono">{z.lat.toFixed(4)}, {z.lng.toFixed(4)} — {z.city}/{z.state}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button type="button" onClick={() => handleToggleHot(z.id, z.is_hot_zone)}
-                          title={z.is_hot_zone ? 'Remover zona quente' : 'Marcar como zona quente'}
-                          className={cn('p-1.5 rounded-lg transition-colors', z.is_hot_zone ? 'text-orange-400 hover:bg-orange-500/10' : 'text-slate-600 hover:bg-slate-500/10')}>
+                        <button type="button" onClick={() => handleToggleActive(z.id, z.is_active)}
+                          title={z.is_active ? 'Desativar' : 'Ativar'}
+                          className={cn('p-1.5 rounded-lg transition-colors', z.is_active ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-slate-600 hover:bg-slate-500/10')}>
                           <Map className="w-4 h-4" />
                         </button>
                         <button type="button" onClick={() => handleEdit(z)}
