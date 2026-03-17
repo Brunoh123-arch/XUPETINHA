@@ -1,6 +1,6 @@
 # FUNCIONALIDADES DO APP UPPI
 
-> Ultima atualizacao: 16/03/2026 — Versao 30.0
+> Ultima atualizacao: 16/03/2026 — Versao 31.0
 
 ## VISAO GERAL
 
@@ -210,11 +210,11 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 ### Gestao de Corridas
 - [x] Todas as corridas (/admin/rides)
 - [x] Detalhe de cada corrida (/admin/rides/[id])
-- [x] Corridas em grupo (/admin/group-rides)
-- [x] Corridas intermunicipais (/admin/cidade-a-cidade)
-- [x] Agendamentos (/admin/agendamentos)
-- [x] Entregas (/admin/entregas)
-- [x] Ofertas de preco (/admin/price-offers)
+    - [x] Corridas em grupo (/admin/group-rides)
+    - [x] Corridas intermunicipais (/admin/cidade-a-cidade)
+    - [x] Agendamentos (/admin/agendamentos)
+    - [x] Entregas (/admin/entregas)
+    - [x] Ofertas de preco (/admin/price-offers)
 
 ### Financeiro
 - [x] Pagamentos (/admin/payments)
@@ -225,12 +225,14 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Disputas de corridas (/admin/disputes) — NOVO
 - [x] Incentivos e bonus para motoristas (/admin/incentives) — NOVO
 - [x] Regras de cashback (/admin/cashback) — NOVO
+- [x] Faturas gerais (/admin/invoices) — NOVO
 
-### Marketing
+### Marketing e Experimentos
 - [x] Promocoes (/admin/promotions)
 - [x] Cupons (/admin/cupons)
 - [x] Indicacoes (/admin/referrals)
 - [x] Feature Flags — ativar/desativar features (/admin/feature-flags) — NOVO
+- [x] Testes A/B e experimentos de preco (/admin/experiments) — NOVO
 
 ### Avaliacoes e Social
 - [x] Avaliacoes (/admin/reviews)
@@ -260,8 +262,18 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Feature Flags por percentual de rollout (/admin/feature-flags)
 - [x] Logs do sistema (/admin/logs)
 - [x] Precificacao dinamica (surge) (/admin/surge)
-- [x] Zonas de atendimento (/admin/zones)
+- [x] Zonas de atendimento e aeroportos (/admin/zones, /admin/airports)
+- [x] Versoes app e janelas de manutencao (/admin/system)
+- [x] Banimentos e IPs bloqueados (/admin/security)
 - [x] Configuracoes (/admin/settings)
+
+### Parceiros e Corporativo — NOVO
+- [x] Empresas corporativas com funcionarios e faturas (/admin/corporate)
+- [x] Parceiros, hoteis e lista de espera (/admin/partners)
+
+### Conhecimento e Comunicacoes — NOVO
+- [x] Base de conhecimento / central de ajuda (/admin/knowledge-base)
+- [x] Templates push/email, anuncios e banners in-app (/admin/communications)
 
 ---
 

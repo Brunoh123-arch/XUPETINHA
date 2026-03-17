@@ -1,7 +1,7 @@
 # UPPI - Status Completo do Projeto
 
 **Ultima Atualizacao:** 16/03/2026
-**Versao:** 30.0 — Banco limpo (88 tabelas lixo removidas) + 73 features novas implementadas
+**Versao:** 31.0 — Banco limpo + 73 features novas + 161 paginas
 **Status Geral:** 100% Backend — Supabase ullmjdgppucworavoiia
 
 ---
@@ -17,9 +17,9 @@
 | **Indices** | 508 | **OK** |
 | **Storage Buckets** | 5 | **OK** |
 | **APIs** | 98 | **OK** |
-| **Paginas /uppi** | 103 | **OK** |
-| **Paginas /admin** | 50 | **OK** |
-| **Total Paginas** | 153+ | **OK** |
+| **Paginas /uppi** | 102 | **OK** |
+| **Paginas /admin** | 59 | **OK** |
+| **Total Paginas** | 161+ | **OK** |
 | **Tabelas duplicadas removidas** | 88 | **FEITO** |
 
 ---
@@ -244,8 +244,17 @@ driver_bonuses_log, user_social_stats, user_stats, social_shares, user_levels
 | /admin/cashback | Regras de cashback | cashback_rules |
 | /admin/feature-flags | Ativar/desativar features | feature_flags |
 | /admin/verifications | Verificar motoristas | driver_verifications |
-| /admin/communications | Templates e anuncios | notification_templates, email_templates, announcements |
-| /admin/team | Equipe admin e roles | admin_roles, admin_permissions, admin_users, admin_actions |
+| /admin/communications | Templates push/email, anuncios, banners | notification_templates, email_templates, announcements, in_app_banners |
+| /admin/team | Equipe admin, roles e auditoria | admin_roles, admin_permissions, admin_users, admin_actions |
+| /admin/corporate | Empresas corporativas e faturas | corporate_accounts, corporate_invoices |
+| /admin/partners | Parceiros, hoteis e lista de espera | partner_companies, hotels, waitlist |
+| /admin/system | Versoes app, manutencao, config cidades | app_versions, maintenance_windows, city_configurations |
+| /admin/security | Banimentos e IPs bloqueados | ban_history, blocked_ips |
+| /admin/airports | Aeroportos e areas de cobertura | airports, service_areas |
+| /admin/knowledge-base | Base de conhecimento / central de ajuda | knowledge_base_articles |
+| /admin/invoices | Faturas gerais com aprovacao | invoices, invoice_items |
+| /admin/experiments | Testes A/B, experimentos preco, analytics campanha | ab_test_participants, pricing_experiments, campaign_analytics |
+| /admin/drivers/[id]/performance | Performance individual do motorista | driver_performance, driver_performance_metrics |
 
 ---
 
@@ -300,8 +309,8 @@ npm install && npm run build:android && npm run android:open
 | Realtime | 36 tabelas | **OK** |
 | Storage | 5 buckets | **OK** |
 | APIs | 98 rotas | **OK** |
-| Paginas /uppi | 103 | **OK** |
-| Paginas /admin | 50 | **OK** |
+| Paginas /uppi | 102 | **OK** |
+| Paginas /admin | 59 | **OK** |
 | Tabelas removidas | 88 duplicatas | **OK** |
 | Config Externa | Firebase, Maps, Play Store | **PENDENTE** |
 
