@@ -53,6 +53,10 @@ import {
   ToggleRight,
   Percent,
   BadgeCheck,
+  Plane,
+  Settings2,
+  Building2,
+  Handshake,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -119,13 +123,23 @@ const navGroups = [
     items: [
       { href: '/admin/surge', icon: Zap, label: 'Tarifa Dinamica' },
       { href: '/admin/zones', icon: Map, label: 'Zonas da Cidade' },
+      { href: '/admin/airports', icon: Plane, label: 'Aeroportos e Areas' },
+      { href: '/admin/system', icon: Settings2, label: 'Versoes e Cidades' },
       { href: '/admin/feature-flags', icon: ToggleRight, label: 'Feature Flags' },
+      { href: '/admin/security', icon: ShieldAlert, label: 'Banimentos e IPs' },
       { href: '/admin/webhooks', icon: Webhook, label: 'Webhooks' },
       { href: '/admin/recordings', icon: Mic, label: 'Gravacoes' },
       { href: '/admin/logs', icon: AlertTriangle, label: 'Logs de Erro' },
       { href: '/admin/legal', icon: FileText, label: 'Termos / Privacidade' },
       { href: '/admin/integrations', icon: KeyRound, label: 'Integracoes & APIs' },
       { href: '/admin/settings', icon: Settings, label: 'Configuracoes' },
+    ],
+  },
+  {
+    label: 'Parceiros',
+    items: [
+      { href: '/admin/corporate', icon: Building2, label: 'Corporativo' },
+      { href: '/admin/partners', icon: Handshake, label: 'Parceiros e Hoteis' },
     ],
   },
   {
