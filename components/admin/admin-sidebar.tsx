@@ -57,6 +57,8 @@ import {
   Settings2,
   Building2,
   Handshake,
+  BookOpen,
+  FlaskConical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -104,6 +106,7 @@ const navGroups = [
       { href: '/admin/financeiro', icon: DollarSign, label: 'Financeiro' },
       { href: '/admin/withdrawals', icon: Banknote, label: 'Saques' },
       { href: '/admin/payments', icon: CreditCard, label: 'Pagamentos' },
+      { href: '/admin/invoices', icon: FileText, label: 'Faturas' },
       { href: '/admin/refunds', icon: RotateCcw, label: 'Reembolsos' },
       { href: '/admin/disputes', icon: Swords, label: 'Disputas' },
       { href: '/admin/incentives', icon: Gift, label: 'Incentivos' },
@@ -114,6 +117,7 @@ const navGroups = [
       { href: '/admin/notifications', icon: Bell, label: 'Notificacoes' },
       { href: '/admin/sms', icon: MessageCircle, label: 'SMS' },
       { href: '/admin/suporte', icon: HeadphonesIcon, label: 'Suporte' },
+      { href: '/admin/knowledge-base', icon: BookOpen, label: 'Base de Conhecimento' },
       { href: '/admin/social', icon: Rss, label: 'Feed Social' },
       { href: '/admin/faq', icon: HelpCircle, label: 'FAQ / Ajuda' },
     ],
@@ -126,6 +130,7 @@ const navGroups = [
       { href: '/admin/airports', icon: Plane, label: 'Aeroportos e Areas' },
       { href: '/admin/system', icon: Settings2, label: 'Versoes e Cidades' },
       { href: '/admin/feature-flags', icon: ToggleRight, label: 'Feature Flags' },
+      { href: '/admin/experiments', icon: FlaskConical, label: 'Experimentos' },
       { href: '/admin/security', icon: ShieldAlert, label: 'Banimentos e IPs' },
       { href: '/admin/webhooks', icon: Webhook, label: 'Webhooks' },
       { href: '/admin/recordings', icon: Mic, label: 'Gravacoes' },
