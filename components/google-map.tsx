@@ -282,10 +282,7 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
               : location === 'denied' ? 'denied'
               : 'prompt'
             )
-            if (location !== 'granted') {
-              setPermissionState('prompt')
-            }
-          } else {
+          } catch {
             setPermissionState('prompt')
           }
 
@@ -303,7 +300,7 @@ export const GoogleMap = forwardRef<GoogleMapHandle, GoogleMapProps>(
             initMap(DEFAULT_CENTER)
             setPermissionState('denied')
           }
-          } catch (error) {
+        } catch (error) {
             console.error('Error loading Google Maps:', error)
             if (!cancelled) {
               if (retryCountRef.current < MAX_RETRIES) {
