@@ -56,11 +56,12 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Turbopack aliases (Next.js 16 usa Turbopack por padrao)
-  turbopack: {
-    resolveAlias: !isAndroidBuild
-      ? Object.fromEntries(NATIVE_PACKAGES.map((pkg) => [pkg, capacitorMockPath]))
-      : {},
-  },
+  // resolveAlias mapeia cada pacote nativo para o mock local
+  turbopack: !isAndroidBuild ? {
+    resolveAlias: Object.fromEntries(
+      NATIVE_PACKAGES.map((pkg) => [pkg, capacitorMockPath])
+    ),
+  } : {},
 
   // Manter webpack config para compatibilidade com builds Android e edge cases
   webpack(config) {
