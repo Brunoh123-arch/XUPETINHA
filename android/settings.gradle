@@ -1,10 +1,22 @@
-// Uppi — Android Settings
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'Uppi'
 include ':app'
-
-// Inclui o projeto core do Capacitor
 include ':capacitor-android'
 project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
-// Inclui plugins Capacitor (auto-gerado pelo `cap sync`)
 apply from: "capacitor.settings.gradle"

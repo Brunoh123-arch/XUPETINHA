@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getDecryptedCpf, updateEncryptedCpf } from '@/lib/encryption'
 
 // GET - Retorna perfil do usuário autenticado
 export async function GET() {
@@ -31,9 +32,16 @@ export async function GET() {
     const { data: walletBalance } = await supabase
       .rpc('calculate_wallet_balance', { p_user_id: user.id })
 
+    // Buscar CPF descriptografado (se existir)
+    const cpf = await getDecryptedCpf(user.id)
+
+    // Não retornar cpf_encrypted na resposta
+    const { cpf_encrypted, ...safeProfile } = profile as any
+
     return NextResponse.json({
       success: true,
-      ...profile,
+      ...safeProfile,
+      cpf: cpf || null, // CPF descriptografado
       driver_profile: driverProfile || null,
       wallet_balance: walletBalance ?? 0,
     })
@@ -53,7 +61,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { full_name, phone, avatar_url, preferences, ...rest } = body
+    const { full_name, phone, avatar_url, preferences, cpf, ...rest } = body
 
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString(),
@@ -64,6 +72,15 @@ export async function PATCH(request: Request) {
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url
     if (preferences !== undefined) updateData.preferences = preferences
 
+    // Se CPF foi enviado, criptografar antes de salvar
+    if (cpf !== undefined && cpf !== null && cpf !== '') {
+      const encrypted = await updateEncryptedCpf(user.id, cpf)
+      if (!encrypted) {
+        return NextResponse.json({ error: 'Erro ao criptografar CPF' }, { status: 500 })
+      }
+      // CPF já foi salvo pela função updateEncryptedCpf, não precisa incluir no updateData
+    }
+
     const { data: profile, error } = await supabase
       .from('profiles')
       .update(updateData)
@@ -73,7 +90,14 @@ export async function PATCH(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, profile })
+    // Buscar CPF descriptografado para retornar
+    const decryptedCpf = await getDecryptedCpf(user.id)
+    const { cpf_encrypted, ...safeProfile } = profile as any
+
+    return NextResponse.json({ 
+      success: true, 
+      profile: { ...safeProfile, cpf: decryptedCpf || null }
+    })
   } catch {
     return NextResponse.json({ error: 'Erro ao atualizar perfil' }, { status: 500 })
   }

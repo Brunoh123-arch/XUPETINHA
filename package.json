@@ -1,6 +1,6 @@
 {
   "name": "my-project",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -75,11 +75,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",
-    "date-fns": "4.1.0",
+    "date-fns": "^3.6.0",
     "embla-carousel-react": "8.5.1",
     "firebase": "^11.3.1",
     "framer-motion": "^11.15.0",
-    "glob": "^13.0.6",
     "google-maps": "^4.3.3",
     "input-otp": "1.4.1",
     "lucide-react": "^0.544.0",
