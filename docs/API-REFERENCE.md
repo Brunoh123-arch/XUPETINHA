@@ -1,7 +1,7 @@
 # UPPI - Documentacao das APIs
 
 > Atualizado em: 16/03/2026
-> Total: **100 endpoints**
+> Total: **98 endpoints**
 
 ---
 
@@ -94,7 +94,7 @@ Lista corridas do usuario ou cria nova solicitacao.
   "dropoff_address": "Rua B, 456",
   "dropoff_lat": -23.5605,
   "dropoff_lng": -46.6433,
-  "vehicle_type": "standard",
+  "vehicle_type": "economy",
   "payment_method": "pix"
 }
 ```
@@ -110,8 +110,9 @@ Estima preco e tempo.
 ```json
 {
   "estimates": [
-    { "vehicle_type": "standard", "price": 25.50, "duration": 15 },
-    { "vehicle_type": "premium", "price": 35.00, "duration": 15 }
+    { "vehicle_type": "economy", "price": 18.50, "duration": 15 },
+    { "vehicle_type": "comfort", "price": 25.00, "duration": 15 },
+    { "vehicle_type": "exec", "price": 40.00, "duration": 15 }
   ]
 }
 ```
@@ -155,59 +156,23 @@ Re-busca motoristas para corrida pendente.
 ### GET | POST /api/v1/scheduled-rides
 Lista ou agenda corridas futuras.
 
-**POST Body:**
-```json
-{
-  "pickup_address": "...",
-  "dropoff_address": "...",
-  "scheduled_at": "2026-03-20T10:00:00Z"
-}
-```
-
----
-
 ### GET | POST /api/v1/group-rides
 Lista ou cria corrida em grupo.
 
 ### POST /api/v1/group-rides/join
-Entrar em corrida de grupo. **Body:** `{ "group_ride_id": "uuid" }`
+Entrar em corrida de grupo.
 
 ### POST /api/v1/group-rides/{id}/leave
 Sair de corrida de grupo.
 
----
-
 ### GET /api/v1/intercity
-Lista rotas intermunicipais disponíveis.
+Lista rotas intermunicipais disponiveis.
 
 ### POST /api/v1/intercity/book
 Reservar assento em viagem intermunicipal.
 
-**Body:**
-```json
-{
-  "ride_id": "uuid",
-  "seats": 2,
-  "passenger_info": { "name": "...", "phone": "..." }
-}
-```
-
----
-
 ### GET | POST /api/v1/delivery
 Lista ou cria pedido de entrega.
-
-**POST Body:**
-```json
-{
-  "pickup_address": "...",
-  "delivery_address": "...",
-  "recipient_name": "...",
-  "recipient_phone": "+55...",
-  "item_description": "...",
-  "item_size": "small"
-}
-```
 
 ---
 
@@ -216,15 +181,11 @@ Lista ou cria pedido de entrega.
 ### GET | POST /api/v1/driver/documents
 Lista ou envia documentos do motorista.
 
-**POST:** `multipart/form-data` com `type` (cnh, crlv, antecedentes) e `file`.
-
 ### GET /api/v1/driver/earnings
 Ganhos do motorista. **Query:** `period` (today, week, month)
 
 ### POST /api/v1/driver/location
 Atualiza localizacao do motorista.
-
-**Body:**
 ```json
 { "lat": -23.5505, "lng": -46.6333, "heading": 90 }
 ```
@@ -257,11 +218,6 @@ Zonas com alta demanda.
 ### GET | POST /api/v1/offers
 Lista ou cria oferta de preco.
 
-**POST Body:**
-```json
-{ "ride_request_id": "uuid", "price": 30.00 }
-```
-
 ### POST /api/v1/offers/{id}/accept
 Passageiro aceita oferta.
 
@@ -278,11 +234,6 @@ Passageiro faz contra-oferta. **Body:** `{ "price": 25.00 }`
 ### GET /api/v1/wallet
 Saldo e dados da carteira.
 
-**Response:**
-```json
-{ "balance": 150.00, "pending": 25.00 }
-```
-
 ### GET /api/v1/wallet/transactions
 Historico de transacoes da carteira.
 
@@ -291,8 +242,6 @@ Historico de pagamentos.
 
 ### POST /api/v1/payments/pix
 Gera codigo PIX para pagamento.
-
-**Body:**
 ```json
 { "ride_id": "uuid", "amount": 25.50 }
 ```
@@ -334,10 +283,10 @@ Lista notificacoes do usuario.
 Marca todas como lidas.
 
 ### POST /api/v1/notifications/send
-Envia notificacao (admin). **Body:** `{ "user_id": "uuid", "title": "...", "body": "..." }`
+Envia notificacao (admin).
 
 ### POST /api/v1/push/fcm-register
-Registra token FCM. **Body:** `{ "token": "fcm_token_here", "platform": "android" }`
+Registra token FCM.
 
 ### POST /api/v1/push/send
 Envia push notification (admin).
@@ -355,11 +304,6 @@ Subscreve para topico de push.
 ### GET | POST /api/v1/social/posts
 Lista ou cria post no feed.
 
-**POST Body:**
-```json
-{ "content": "Texto do post", "image_url": "https://..." }
-```
-
 ### POST /api/v1/social/posts/{id}/like
 Curtir post.
 
@@ -367,7 +311,7 @@ Curtir post.
 Lista ou adiciona comentario.
 
 ### GET | POST /api/v1/social/follows
-Lista follows ou segue usuario. **POST Body:** `{ "user_id": "uuid" }`
+Lista follows ou segue usuario.
 
 ### GET /api/v1/leaderboard
 Ranking de usuarios/motoristas.
@@ -388,15 +332,6 @@ Lista notas do usuario.
 ### GET | POST /api/v1/support
 Lista tickets ou cria novo ticket.
 
-**POST Body:**
-```json
-{
-  "subject": "Problema com corrida",
-  "message": "Descricao...",
-  "ride_id": "uuid"
-}
-```
-
 ### GET | POST /api/v1/support/messages
 Lista ou envia mensagens de suporte.
 
@@ -415,8 +350,6 @@ Botao SOS — emergencia critica.
 
 ### GET /api/v1/admin/stats
 Estatisticas do sistema.
-
-**Response:**
 ```json
 {
   "total_users": 15000,
@@ -455,13 +388,13 @@ Autocomplete Google Places. **Query:** `input`
 Detalhes de lugar. **Query:** `place_id`
 
 ### GET /api/v1/distance
-Distancia entre pontos. **Query:** `origin_lat`, `origin_lng`, `dest_lat`, `dest_lng`
+Distancia entre pontos.
 
 ### GET /api/v1/routes/alternatives
 Rotas alternativas.
 
 ### POST /api/v1/recordings/upload
-Upload de gravacao de seguranca. **Body:** `multipart/form-data`
+Upload de gravacao de seguranca.
 
 ### GET /api/v1/stats
 Estatisticas publicas do app.
@@ -475,8 +408,6 @@ Registra erro do cliente.
 
 ### GET | POST /api/v1/webhooks
 Lista ou registra webhook.
-
-**POST Body:**
 ```json
 {
   "url": "https://meusite.com/webhook",
@@ -493,10 +424,10 @@ Processa evento de webhook recebido.
 ## 15. SMS
 
 ### POST /api/v1/sms/send
-Envia SMS. **Body:** `{ "phone": "+55...", "message": "...", "type": "otp" }`
+Envia SMS.
 
 ### GET /api/v1/sms/status
-Status de entrega de SMS. **Query:** `message_id`
+Status de entrega de SMS.
 
 ---
 
@@ -523,8 +454,6 @@ Lista ou cria avaliacao.
 
 ### POST /api/v1/reviews/enhanced
 Avaliacao detalhada por categorias.
-
-**Body:**
 ```json
 {
   "ride_id": "uuid",
@@ -543,7 +472,7 @@ Avaliacoes especificas do motorista.
 ## 18. PIX e Pagamentos Externos
 
 ### POST /api/pix/webhook
-Webhook do gateway PIX (Paradise/EfiPay) — notificacao de pagamento.
+Webhook do gateway PIX (Paradise/EfiPay).
 
 ### GET /api/pix/status
 Status de transacao PIX. **Query:** `transaction_id`
@@ -553,7 +482,7 @@ Status de transacao PIX. **Query:** `transaction_id`
 ## 19. Sistema
 
 ### GET /api/v1/health
-Health check da API com status das integracoes.
+Health check da API.
 
 ### GET /api/health
 Health check geral.
@@ -576,8 +505,6 @@ Todas as rotas (exceto auth, health e webhooks externos) requerem:
 ```
 Authorization: Bearer <access_token>
 ```
-
-O token e obtido apos autenticacao via `/api/v1/auth/email-otp/verify`.
 
 ---
 
@@ -613,4 +540,4 @@ Codigos HTTP:
 
 ## Versionamento
 
-URL: `/api/v1/...` — Versao atual: **v1**
+URL base: `/api/v1/...` — Versao atual: **v1**

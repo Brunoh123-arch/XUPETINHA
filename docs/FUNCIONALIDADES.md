@@ -1,6 +1,6 @@
 # FUNCIONALIDADES DO APP UPPI
 
-> Ultima atualizacao: 16/03/2026
+> Ultima atualizacao: 16/03/2026 — Versao 30.0
 
 ## VISAO GERAL
 
@@ -60,7 +60,11 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Dar gorjeta ao motorista (/ride/[id]/payment)
 - [x] Ver recibo detalhado (/ride/[id]/receipt)
 - [x] Ver detalhes da corrida (/ride/[id]/details)
-- [x] Reportar problema
+- [x] Dividir corrida entre amigos (/ride/[id]/split) — NOVO
+- [x] Abrir disputa sobre a corrida (/ride/[id]/dispute) — NOVO
+- [x] Solicitar reembolso (/ride/[id]/refund) — NOVO
+- [x] Denunciar motorista (/ride/[id]/report) — NOVO
+- [x] Contratar seguro de viagem (/ride/[id]/insurance) — NOVO
 
 ### Pagamentos
 - [x] Pagar com PIX (QR Code + copia-e-cola)
@@ -75,15 +79,26 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Ver extrato de transacoes
 - [x] Cashback automatico
 
+### Pontos e Recompensas — NOVO
+- [x] Ver saldo de pontos e historico (/uppi/points)
+- [x] Ver cashback ganho por corrida
+- [x] Colecionar emblemas (badges)
+- [x] Clube de fidelidade com niveis (/uppi/club)
+- [x] Conquistas desbloqueadas (/uppi/achievements)
+- [x] Leaderboard (/uppi/leaderboard)
+
 ### Perfil e Configuracoes
 - [x] Editar nome, foto, telefone (/uppi/profile)
 - [x] Gerenciar enderecos favoritos (/uppi/favorites, /uppi/favorites/add)
 - [x] Motoristas favoritos (/uppi/favorites/drivers)
 - [x] Contatos de emergencia (/uppi/emergency-contacts, /uppi/settings/emergency)
 - [x] Gerenciar membros da familia (/uppi/family)
+- [x] Preferencias de viagem (/uppi/settings/preferences) — NOVO
 - [x] Preferencias de notificacao
 - [x] Preferencias de SMS (/uppi/settings/sms)
 - [x] Preferencias de gravacao (/uppi/settings/recording)
+- [x] Sessoes e dispositivos ativos (/uppi/settings/security) — NOVO
+- [x] Usuarios bloqueados (/uppi/settings/blocked) — NOVO
 - [x] Ativar/desativar 2FA (/uppi/settings/2fa)
 - [x] Alterar senha (/uppi/settings/password)
 - [x] Alterar idioma (/uppi/settings/language)
@@ -96,7 +111,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Curtir e comentar
 - [x] Seguir outros usuarios
 - [x] Ver leaderboard (/uppi/leaderboard)
-- [x] Conquistas e badges (/uppi/achievements)
+- [x] Conquistas e badges (/uppi/achievements, /uppi/points)
 - [x] Programa de indicacao (/uppi/referral, /uppi/referrals)
 - [x] Club de fidelidade (/uppi/club)
 - [x] Trust Score (/uppi/trust-score)
@@ -105,6 +120,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Chat com suporte (/uppi/suporte/chat)
 - [x] FAQ (/uppi/help)
 - [x] Abrir ticket (/uppi/suporte, /uppi/support)
+- [x] Enviar feedback sobre o app (/uppi/feedback) — NOVO
 - [x] Politica de privacidade (/uppi/privacy, /uppi/legal/privacy)
 - [x] Termos de uso (/uppi/terms, /uppi/legal/terms)
 
@@ -126,6 +142,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 ### Cadastro e Verificacao
 - [x] Cadastro como motorista (/uppi/driver/register)
 - [x] Upload de documentos (CNH, CRLV, foto) (/uppi/driver/documents)
+- [x] Cadastro do veiculo (/uppi/driver/vehicle) — NOVO
 - [x] Verificacao de antecedentes
 - [x] Aprovacao pelo admin (/uppi/driver/verify)
 
@@ -140,17 +157,30 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Finalizar corrida (/uppi/driver/ride/[id]/summary)
 - [x] Home do motorista (/uppi/driver/home)
 
-### Ganhos
+### Ganhos e Financeiro
 - [x] Ver ganhos do dia/semana/mes (/uppi/driver/earnings)
 - [x] Ver detalhamento por corrida
 - [x] Solicitar saque PIX (/uppi/driver/wallet)
 - [x] Ver historico de saques
+- [x] Ver incentivos ativos (/uppi/driver/incentives) — NOVO
+- [x] Relatorio fiscal / declaracao IR (/uppi/driver/tax) — NOVO
+
+### Performance e Niveis — NOVO
+- [x] Ver score de desempenho (/uppi/driver/performance)
+- [x] Ver nivel atual (Bronze/Prata/Ouro/Diamante)
+- [x] Progresso para proximo nivel
+- [x] Metricas: taxa de aceitacao, conclusao, pontualidade
+- [x] Historico de turnos
+
+### Preferencias e Configuracoes — NOVO
+- [x] Preferencias de corridas (pets, malas, silencio) (/uppi/driver/preferences)
+- [x] Zonas de trabalho preferidas
+- [x] Preferencias de tipos de corrida
 
 ### Avaliacoes
 - [x] Ver media de avaliacao (/uppi/driver/ratings)
 - [x] Ver comentarios recebidos
 - [x] Avaliar passageiros
-- [x] Sistema de niveis e performance
 
 ### Ferramentas
 - [x] Mapa de zonas quentes (/uppi/driver/hot-zones)
@@ -158,10 +188,11 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Agenda de turnos (/uppi/driver/schedule)
 - [x] Configuracoes do motorista (/uppi/driver/settings)
 - [x] Perfil do motorista (/uppi/driver/profile)
+- [x] Treinamentos obrigatorios e opcionais (/uppi/driver/training) — NOVO
 
 ---
 
-## FUNCIONALIDADES DO ADMIN (42 paginas)
+## FUNCIONALIDADES DO ADMIN (50 paginas)
 
 ### Dashboard
 - [x] Metricas em tempo real (/admin)
@@ -174,6 +205,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Ver, editar, banir usuarios
 - [x] Gestao de motoristas (/admin/drivers)
 - [x] Ganhos dos motoristas (/admin/drivers/earnings, /admin/driver-earnings)
+- [x] Verificacao de documentos dos motoristas (/admin/verifications) — NOVO
 
 ### Gestao de Corridas
 - [x] Todas as corridas (/admin/rides)
@@ -189,11 +221,16 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Financeiro completo (/admin/financeiro)
 - [x] Saques pendentes (/admin/withdrawals)
 - [x] Assinaturas (/admin/subscriptions)
+- [x] Reembolsos — aprovar/rejeitar (/admin/refunds) — NOVO
+- [x] Disputas de corridas (/admin/disputes) — NOVO
+- [x] Incentivos e bonus para motoristas (/admin/incentives) — NOVO
+- [x] Regras de cashback (/admin/cashback) — NOVO
 
 ### Marketing
 - [x] Promocoes (/admin/promotions)
 - [x] Cupons (/admin/cupons)
 - [x] Indicacoes (/admin/referrals)
+- [x] Feature Flags — ativar/desativar features (/admin/feature-flags) — NOVO
 
 ### Avaliacoes e Social
 - [x] Avaliacoes (/admin/reviews)
@@ -208,6 +245,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] SMS (/admin/sms)
 - [x] Webhooks (/admin/webhooks)
 - [x] Integracoes (/admin/integrations)
+- [x] Comunicacoes — templates, anuncios, banners (/admin/communications) — NOVO
 
 ### Suporte
 - [x] Tickets de suporte (/admin/suporte)
@@ -217,7 +255,9 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Contatos de emergencia (/admin/emergency-contacts)
 - [x] Gravacoes (/admin/recordings)
 
-### Sistema
+### Sistema e Equipe — NOVO
+- [x] Equipe admin com roles e permissoes (/admin/team)
+- [x] Feature Flags por percentual de rollout (/admin/feature-flags)
 - [x] Logs do sistema (/admin/logs)
 - [x] Precificacao dinamica (surge) (/admin/surge)
 - [x] Zonas de atendimento (/admin/zones)
@@ -228,14 +268,15 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 ## FUNCIONALIDADES TECNICAS
 
 ### Seguranca
-- [x] RLS em 275 tabelas (100%)
+- [x] RLS em 192 tabelas (100%)
 - [x] Criptografia AES-256-GCM para dados sensiveis
 - [x] Rate limiting nas APIs
 - [x] Validacao com Zod em todas as rotas
 - [x] HTTPS obrigatorio
+- [x] 88 tabelas duplicadas removidas
 
 ### Performance
-- [x] 702+ indices otimizados no banco
+- [x] 508 indices otimizados no banco
 - [x] Lazy loading de componentes
 - [x] Capacitor para acesso nativo
 
@@ -253,7 +294,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] PIX — Paradise/EfiPay
 - [x] Capacitor 8 (Android nativo)
 
-### APIs (100 rotas)
+### APIs (98 rotas)
 - [x] Auth (OTP email, OTP SMS, 2FA, JWT verify)
 - [x] Perfil e configuracoes
 - [x] Corridas completo (CRUD + fluxo inteiro)
@@ -276,11 +317,11 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 
 | Categoria | Quantidade |
 |-----------|------------|
-| Passageiro | 75+ |
-| Motorista | 25+ |
-| Admin (42 paginas) | 42 |
+| Passageiro | 85+ |
+| Motorista | 35+ |
+| Admin (50 paginas) | 50+ |
 | Tecnico | 20+ |
-| **TOTAL** | **160+ funcionalidades** |
+| **TOTAL** | **190+ funcionalidades** |
 
 ---
 
@@ -288,10 +329,10 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 
 | Categoria | Quantidade |
 |-----------|------------|
-| /uppi (passageiro + motorista) | 85 |
-| /admin | 42 |
+| /uppi (passageiro + motorista) | 103 |
+| /admin | 50 |
 | /auth | 8 |
-| **Total** | **135** |
+| **Total** | **161+** |
 
 ---
 
@@ -302,3 +343,5 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [ ] Aluguel de veiculos
 - [ ] Apple Pay / Google Pay
 - [ ] App para iOS (App Store)
+- [ ] Conta corporativa (/uppi/corporate)
+- [ ] Live Activities iOS (tela de bloqueio)

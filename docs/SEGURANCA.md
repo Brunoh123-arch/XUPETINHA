@@ -27,12 +27,18 @@ O UPPI implementa multiplas camadas de seguranca para proteger dados de usuarios
 - Opcional para usuarios, obrigatorio para admins
 - Secret criptografado com AES-256-GCM no banco
 
+### Sessoes e Dispositivos
+- Tabela `user_sessions` rastreia sessoes ativas
+- Tabela `user_devices` registra dispositivos conhecidos
+- Tabela `user_login_history` guarda historico de logins com IP
+- Usuario pode encerrar sessoes remotas via /settings/security
+
 ---
 
 ## 2. AUTORIZACAO (RLS)
 
-### Row Level Security — 275 tabelas, 100%
-Todas as 275 tabelas tem RLS habilitado.
+### Row Level Security — 192 tabelas, 100%
+Todas as 192 tabelas tem RLS habilitado — **302 politicas configuradas**.
 
 **Exemplo — Tabela `profiles`:**
 ```sql
@@ -102,14 +108,14 @@ Adicionar como `ENCRYPTION_KEY` nas variaveis de ambiente do Vercel.
 ## 4. VALIDACAO DE ENTRADA
 
 ### APIs — Zod
-Todas as 100 rotas de API validam entrada com Zod:
+Todas as 98 rotas de API validam entrada com Zod:
 
 ```typescript
 const schema = z.object({
   email: z.string().email(),
   amount: z.number().positive().max(10000),
   phone: z.string().regex(/^\+55\d{10,11}$/),
-  vehicle_type: z.enum(['standard', 'premium', 'electric', 'moto']),
+  vehicle_type: z.enum(['economy', 'comfort', 'exec', 'moto', 'van']),
 });
 ```
 
@@ -146,17 +152,30 @@ ALTER TABLE reviews ADD CONSTRAINT valid_rating CHECK (rating BETWEEN 1 AND 5);
 
 ### Rate Limiting
 ```typescript
-// Implementado em cada rota critica
 const LIMITS = {
-  auth: { limit: 10, window: 60000 },      // 10 req/min
-  public: { limit: 100, window: 60000 },   // 100 req/min
+  auth: { limit: 10, window: 60000 },           // 10 req/min
+  public: { limit: 100, window: 60000 },        // 100 req/min
   authenticated: { limit: 1000, window: 60000 }, // 1000 req/min
 };
 ```
 
 ---
 
-## 6. SEGURANCA DO MOTORISTA
+## 6. SEGURANCA DO BANCO
+
+### Limpeza de Duplicatas
+- 88 tabelas duplicadas removidas em 16/03/2026
+- Banco passou de ~280 para 192 tabelas unicas
+- Reducao de superficie de ataque e complexidade desnecessaria
+
+### Indices
+- 508 indices configurados
+- Todas as FKs indexadas (0 FKs sem indice)
+- Performance e seguranca nos queries
+
+---
+
+## 7. SEGURANCA DO MOTORISTA
 
 ### Verificacao de Documentos
 - CNH valida e vigente
@@ -165,13 +184,19 @@ const LIMITS = {
 - Verificacao de antecedentes criminais
 
 ### Aprovacao Manual
-- Admin revisa todos os documentos via `/admin/drivers`
+- Admin revisa todos os documentos via `/admin/verifications`
 - Checklist de aprovacao com historico
+- Tabela `driver_verifications` rastreia cada etapa
 - Motorista so pode operar apos aprovacao completa
+
+### Performance e Penalidades
+- Tabela `driver_performance` monitora taxa de aceitacao/cancelamento
+- Tabela `driver_penalties` registra punicoes com motivo e duracao
+- Niveis Bronze/Prata/Ouro/Diamante incentivam bom comportamento
 
 ---
 
-## 7. SEGURANCA DO PASSAGEIRO
+## 8. SEGURANCA DO PASSAGEIRO
 
 ### Compartilhamento de Corrida
 - Link em tempo real para contatos de emergencia
@@ -194,15 +219,26 @@ const LIMITS = {
 - Baseado em: avaliacoes, tempo de uso, comportamento
 - Visivel para o usuario em `/uppi/trust-score`
 
+### Disputas e Reembolsos
+- Passageiro pode abrir disputa via `/ride/[id]/dispute`
+- Tabela `ride_disputes` rastreia status e resolucao
+- Solicitacoes de reembolso via `/ride/[id]/refund`
+- Admin analisa e aprova/rejeita via `/admin/disputes` e `/admin/refunds`
+
 ---
 
-## 8. SEGURANCA FINANCEIRA
+## 9. SEGURANCA FINANCEIRA
 
 ### Transacoes
-- Todas logadas em `wallet_transactions` e `pix_transactions`
+- Todas logadas em `wallet_transactions`
 - Valores validados (sem negativos por CHECK constraint)
 - Saldo verificado antes de qualquer debito
 - Audit trail completo imutavel
+
+### Divisao de Pagamento
+- Tabela `payment_splits` com status por membro
+- Cada participante em `payment_split_members`
+- Expirar splits nao concluidos automaticamente
 
 ### Saques
 - Verificacao de identidade obrigatoria
@@ -212,7 +248,21 @@ const LIMITS = {
 
 ---
 
-## 9. STORAGE
+## 10. CONTROLE DE ACESSO ADMIN
+
+### Roles e Permissoes
+- Tabela `admin_roles` define papeis (super, financeiro, suporte, ops)
+- Tabela `admin_permissions` define permissoes granulares por role
+- Tabela `admin_users` usuarios admin separados do `profiles`
+- Tabela `admin_actions` registra todas as acoes administrativas
+
+### Auditoria
+- Cada acao admin e registrada com timestamp, IP e dados modificados
+- Visivel em `/admin/team` na aba de auditoria
+
+---
+
+## 11. STORAGE
 
 ### Buckets e Permissoes
 
@@ -226,7 +276,6 @@ const LIMITS = {
 
 ### Politicas de Storage
 ```sql
--- Usuarios so acessam seus proprios documentos
 CREATE POLICY "driver_documents_policy" ON storage.objects
   FOR ALL USING (
     bucket_id = 'driver-documents' AND
@@ -236,27 +285,21 @@ CREATE POLICY "driver_documents_policy" ON storage.objects
 
 ---
 
-## 10. LOGS E AUDITORIA
+## 12. LOGS E AUDITORIA
 
 ### Tabelas de Log
 - `error_logs` — Erros do sistema
-- `admin_logs` — Acoes de admin
+- `admin_actions` — Acoes de admins
+- `audit_logs` — Auditoria geral
 - `webhook_deliveries` — Chamadas de webhook
 - `sms_logs` + `sms_deliveries` — SMS enviados
 - `push_log` — Push notifications
 - `user_activity_log` — Atividades do usuario
-
-### Informacoes Logadas
-- Timestamp exato
-- ID do usuario
-- Tipo de acao
-- IP de origem
-- User Agent
-- Dados da acao
+- `user_login_history` — Historico de logins com IP
 
 ---
 
-## 11. VARIAVEIS DE AMBIENTE CRITICAS
+## 13. VARIAVEIS DE AMBIENTE CRITICAS
 
 | Variavel | Descricao | Obrigatorio |
 |----------|-----------|-------------|
@@ -270,12 +313,13 @@ CREATE POLICY "driver_documents_policy" ON storage.objects
 
 ---
 
-## 12. CHECKLIST DE SEGURANCA
+## 14. CHECKLIST DE SEGURANCA
 
 ### Implementado
-- [x] RLS em 275/275 tabelas (100%)
+- [x] RLS em 192/192 tabelas (100%)
+- [x] 302 politicas de seguranca configuradas
 - [x] Criptografia AES-256-GCM para dados sensiveis
-- [x] Validacao com Zod em todas as 100 APIs
+- [x] Validacao com Zod em todas as 98 APIs
 - [x] Rate limiting por IP e por usuario
 - [x] HTTPS obrigatorio (Vercel)
 - [x] Logs de auditoria ativos
@@ -283,6 +327,10 @@ CREATE POLICY "driver_documents_policy" ON storage.objects
 - [x] Politicas de storage configuradas
 - [x] CHECK constraints em valores financeiros
 - [x] Nenhuma FK sem indice no banco
+- [x] 88 tabelas duplicadas removidas
+- [x] Sessoes e dispositivos rastreados
+- [x] Disputas e reembolsos com workflow de aprovacao
+- [x] Roles e permissoes granulares para admins
 
 ### Periodicamente
 - [ ] Rotacionar ENCRYPTION_KEY a cada 6 meses

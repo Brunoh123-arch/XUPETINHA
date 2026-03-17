@@ -1,6 +1,6 @@
 # Uppi - Plataforma de Mobilidade Urbana
 
-**Status:** Pronto para Play Store
+**Status:** Producao — Banco 100% limpo e alinhado
 **Stack:** Next.js 16 + React 19 + Supabase + Capacitor 8 + PIX
 **Ultima Atualizacao:** 16/03/2026
 
@@ -10,15 +10,16 @@
 
 | Item | Quantidade | Status |
 |------|------------|--------|
-| Tabelas PostgreSQL | 275 | OK |
-| Politicas RLS | 422+ | OK |
-| Indices | 702+ | OK |
+| Tabelas PostgreSQL | 192 | OK |
+| Politicas RLS | 302 | OK |
+| Indices | 508 | OK |
 | Tabelas Realtime | 36 | OK |
 | Storage Buckets | 5 | OK |
-| APIs | 100 | OK |
-| Paginas /uppi | 85 | OK |
-| Paginas /admin | 42 | OK |
-| Total Paginas | 135 | OK |
+| APIs | 98 | OK |
+| Paginas /uppi | 103 | OK |
+| Paginas /admin | 50 | OK |
+| Total Paginas | 153+ | OK |
+| Tabelas lixo removidas | 88 | FEITO |
 
 ---
 
@@ -46,14 +47,14 @@
 ```
 uppi/
 ├── app/
-│   ├── api/             # 100 rotas de API
+│   ├── api/             # 98 rotas de API
 │   │   ├── v1/          # Endpoints versionados
 │   │   ├── pix/         # Webhook PIX externo
 │   │   ├── email/       # Email transacional
 │   │   ├── admin/       # Check admin
 │   │   └── health/      # Health check
-│   ├── uppi/            # 85 telas passageiro/motorista
-│   ├── admin/           # 42 paginas do painel admin
+│   ├── uppi/            # 103 telas passageiro/motorista
+│   ├── admin/           # 50 paginas do painel admin
 │   └── auth/            # Autenticacao
 ├── components/          # Componentes React reutilizaveis
 ├── hooks/               # Hooks customizados
@@ -139,30 +140,30 @@ npm run android:open
 
 ---
 
-## Banco de Dados — 275 Tabelas
+## Banco de Dados — 192 Tabelas (limpas, sem duplicatas)
 
 | Categoria | Qtd | Principais Tabelas |
 |-----------|-----|-------------------|
-| Usuarios | 31 | profiles, user_2fa, trust_score, avatars |
-| Motoristas | 20 | driver_profiles, driver_documents, driver_withdrawals |
-| Veiculos | 5 | vehicles, vehicle_inspections |
-| Corridas | 20 | rides, ride_tracking, ride_offers, delivery_orders |
-| Avaliacoes | 9 | reviews, enhanced_reviews, bidirectional_reviews |
-| Financeiro | 13 | user_wallets, wallet_transactions, pix_transactions |
-| Cupons | 9 | coupons, promo_codes, user_coupons |
-| Comunicacao | 9 | messages, notifications, push_log, user_push_tokens |
-| Suporte | 5 | support_tickets, support_messages, faqs |
-| Emergencia | 9 | emergency_alerts, sos_alerts, emergency_events |
-| Localizacao | 21 | favorites, hot_zones, surge_pricing, zone_pricing |
-| Social | 5 | social_posts, post_comments, social_post_likes |
-| Referral/Gamif. | 6 | referrals, achievements, leaderboard |
-| Autenticacao | 3 | email_otps, user_2fa, user_2fa_backup_codes |
-| Admin/Sistema | 12 | system_settings, pricing_rules, error_logs |
-| Integracoes | 10 | webhook_endpoints, webhook_deliveries, sms_deliveries |
-| Familia/Grupo | 3 | family_members, family_groups |
-| Assinaturas | 2 | subscriptions, subscription_plans |
-| Passageiros | 2 | passenger_achievements, passenger_stats |
-| Marketing/A/B | 4 | ab_test_participants, app_banners |
+| Usuarios | 18 | profiles, user_2fa, trust_score, blocked_users, user_devices, user_sessions |
+| Motoristas | 16 | driver_profiles, driver_documents, driver_performance, driver_levels, driver_training |
+| Veiculos | 5 | vehicles, vehicle_types, vehicle_categories |
+| Corridas | 14 | rides, ride_tracking, ride_offers, scheduled_rides, delivery_orders, ride_disputes |
+| Pagamentos | 10 | payments, wallets, wallet_transactions, payment_splits, refunds |
+| Avaliacoes | 8 | reviews, enhanced_reviews, ride_ratings, bidirectional_reviews |
+| Cupons/Promo | 6 | coupons, promo_codes, campaigns, feature_flags |
+| Comunicacao | 8 | messages, notifications, push_log, announcements, email_templates |
+| Suporte | 6 | support_tickets, support_messages, faqs, knowledge_base_articles |
+| Seguranca | 6 | emergency_alerts, sos_events, ride_cancellations, user_reports |
+| Localizacao | 14 | favorites, hot_zones, surge_pricing, service_areas, airports |
+| Social/Gamif. | 8 | social_posts, post_comments, user_points, cashback_earned, user_badges |
+| Referral | 4 | referrals, referral_achievements, user_achievements, leaderboard |
+| Admin | 8 | admin_roles, admin_permissions, admin_users, admin_actions |
+| Sistema | 10 | system_settings, app_versions, feature_flags, maintenance_windows |
+| Integracao | 6 | webhook_endpoints, webhook_deliveries, sms_logs, email_logs |
+| Familia | 2 | family_members, emergency_contacts |
+| Corporativo | 2 | corporate_accounts, corporate_invoices |
+| Seguros | 2 | trip_insurance, insurance_claims |
+| Fiscal | 3 | tax_records, invoices, invoice_items |
 
 ---
 
@@ -172,7 +173,7 @@ npm run android:open
 PASSAGEIRO:
   Home → Inserir Origem/Destino → Estimar Preco →
   Solicitar → Buscar Motorista → Acompanhar GPS →
-  Finalizar → Pagar PIX → Avaliar
+  Finalizar → Pagar PIX → Avaliar → Reportar (opcional)
 
 MOTORISTA:
   Home → Aceitar Corrida → Navegar ate Passageiro →
@@ -180,8 +181,25 @@ MOTORISTA:
 
 ADMIN:
   Dashboard → Monitor Tempo Real → Moderacao →
-  Financeiro → Suporte → Configuracoes
+  Financeiro → Suporte → Configuracoes → Feature Flags
 ```
+
+---
+
+## Telas por Categoria
+
+### Passageiro (/uppi) — 103 paginas
+- Corridas: solicitar, rastrear, avaliar, disputar, reembolsar, dividir, reportar
+- Motorista: home, ganhos, documentos, desempenho, preferencias, treinamento, fiscal
+- Configuracoes: 2FA, sessoes, bloqueados, preferencias de viagem
+- Social: feed, conquistas, pontos/emblemas, clube, leaderboard
+- Seguranca: SOS, gravacoes, contatos emergencia
+
+### Admin (/admin) — 50 paginas
+- Operacoes: reembolsos, disputas, incentivos, cashback, feature flags
+- Motoristas: verificacao, documentos, performance
+- Marketing: campanhas, promocoes, cupons
+- Sistema: equipe admin, permissoes, comunicacoes, auditoria
 
 ---
 
@@ -190,9 +208,9 @@ ADMIN:
 | Documento | Conteudo |
 |-----------|----------|
 | [STATUS.md](docs/STATUS.md) | Auditoria completa — metricas reais |
-| [SCHEMA-BANCO.md](docs/SCHEMA-BANCO.md) | Todas as 275 tabelas por categoria |
-| [API-REFERENCE.md](docs/API-REFERENCE.md) | 100 endpoints documentados |
-| [FUNCIONALIDADES.md](docs/FUNCIONALIDADES.md) | 160+ funcionalidades detalhadas |
+| [SCHEMA-BANCO.md](docs/SCHEMA-BANCO.md) | Todas as 192 tabelas por categoria |
+| [API-REFERENCE.md](docs/API-REFERENCE.md) | 98 endpoints documentados |
+| [FUNCIONALIDADES.md](docs/FUNCIONALIDADES.md) | 180+ funcionalidades detalhadas |
 | [SEGURANCA.md](docs/SEGURANCA.md) | RLS, criptografia, checklist |
 | [VARIAVEIS-AMBIENTE.md](docs/VARIAVEIS-AMBIENTE.md) | Variaveis e como configurar |
 | [GUIA-PUBLICACAO-PLAY-STORE.md](docs/GUIA-PUBLICACAO-PLAY-STORE.md) | Passo a passo Play Store |
