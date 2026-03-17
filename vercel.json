@@ -1,5 +1,6 @@
 {
-  "installCommand": "pnpm install --no-optional",
+  "installCommand": "npm install --legacy-peer-deps --ignore-scripts",
+  "buildCommand": "npx next build",
   "crons": [
     {
       "path": "/api/v1/webhooks/process",

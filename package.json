@@ -2,6 +2,10 @@
   "name": "uppi",
   "version": "0.1.1",
   "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -74,32 +78,7 @@
     "vaul": "^1.1.2",
     "zod": "^3.24.1"
   },
-  "optionalDependencies": {
-    "@capacitor-community/background-geolocation": "^1.2.26",
-    "@capacitor-community/keep-awake": "^8.0.0",
-    "@capacitor-community/biometric-auth": "^8.0.0",
-    "@capacitor-community/microphone": "^8.0.0",
-    "@capacitor-community/text-to-speech": "^8.0.0",
-    "@capacitor/android": "^8.2.0",
-    "@capacitor/app": "^8.0.0",
-    "@capacitor/app-launcher": "^8.0.0",
-    "@capacitor/browser": "^8.0.0",
-    "@capacitor/camera": "^8.0.2",
-    "@capacitor/cli": "^8.2.0",
-    "@capacitor/clipboard": "^8.0.0",
-    "@capacitor/core": "^8.2.0",
-    "@capacitor/device": "^8.0.0",
-    "@capacitor/geolocation": "^8.0.0",
-    "@capacitor/google-maps": "^8.0.0",
-    "@capacitor/haptics": "^8.0.1",
-    "@capacitor/local-notifications": "^8.0.0",
-    "@capacitor/network": "^8.0.0",
-    "@capacitor/preferences": "^8.0.1",
-    "@capacitor/push-notifications": "^8.0.2",
-    "@capacitor/share": "^8.0.1",
-    "@capacitor/splash-screen": "^8.0.0",
-    "@capacitor/status-bar": "^8.0.0"
-  },
+
   "devDependencies": {
     "@types/canvas-confetti": "^1.6.4",
     "@types/node": "^22",
