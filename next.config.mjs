@@ -1,8 +1,42 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 
 // Quando BUILD_TARGET=android, gera output estatico para o Capacitor
 // Em producao Vercel, BUILD_TARGET nao e definido e o app roda normalmente
 const isAndroidBuild = process.env.BUILD_TARGET === 'android'
+
+// Pacotes Capacitor que devem ser substituidos por mocks no build web
+const CAPACITOR_PACKAGES = [
+  '@capacitor/core',
+  '@capacitor/geolocation',
+  '@capacitor/preferences',
+  '@capacitor/push-notifications',
+  '@capacitor/local-notifications',
+  '@capacitor/haptics',
+  '@capacitor/network',
+  '@capacitor/device',
+  '@capacitor/camera',
+  '@capacitor/share',
+  '@capacitor/clipboard',
+  '@capacitor/browser',
+  '@capacitor/app',
+  '@capacitor/app-launcher',
+  '@capacitor/status-bar',
+  '@capacitor/splash-screen',
+  '@capacitor/keyboard',
+  '@capacitor/google-maps',
+  '@capacitor-community/keep-awake',
+  '@capacitor-community/background-geolocation',
+  '@capacitor-community/text-to-speech',
+  '@capacitor-community/biometric-auth',
+  '@capacitor-community/microphone',
+]
+
+const capacitorMockPath = path.resolve(__dirname, 'lib/capacitor-mock.js')
 
 const nextConfig = {
   // Static export apenas para build Android (Capacitor usa /out como webDir)
@@ -22,6 +56,17 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   reactStrictMode: true,
+  webpack(config) {
+    // No build web, substitui todos os pacotes @capacitor/* por mocks locais.
+    // No build Android (BUILD_TARGET=android), os pacotes reais sao instalados
+    // e o alias nao e necessario (os imports resolvem normalmente).
+    if (!isAndroidBuild) {
+      CAPACITOR_PACKAGES.forEach((pkg) => {
+        config.resolve.alias[pkg] = capacitorMockPath
+      })
+    }
+    return config
+  },
   images: {
     // Necessario para static export — imagens nao podem usar o Image Optimizer
     unoptimized: true,
