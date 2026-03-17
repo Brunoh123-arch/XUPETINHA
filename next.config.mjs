@@ -55,9 +55,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   reactStrictMode: true,
   webpack(config) {
     // No build web, substitui todos os pacotes @capacitor/* por mocks locais.
