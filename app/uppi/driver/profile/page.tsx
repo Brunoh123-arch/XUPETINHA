@@ -277,6 +277,10 @@ export default function DriverProfilePage() {
             { label: 'Histórico de corridas', route: '/uppi/driver/history' },
             { label: 'Minhas avaliações', route: '/uppi/driver/ratings' },
             { label: 'Documentos', route: '/uppi/driver/documents' },
+            { label: 'Meu Desempenho', route: '/uppi/driver/performance' },
+            { label: 'Preferências de Corrida', route: '/uppi/driver/preferences' },
+            { label: 'Treinamentos', route: '/uppi/driver/training' },
+            { label: 'Relatório Fiscal', route: '/uppi/driver/tax' },
           ].map((item, i) => (
             <button
               key={item.route}

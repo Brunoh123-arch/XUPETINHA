@@ -128,6 +128,13 @@ const navGroups = [
       { href: '/admin/settings', icon: Settings, label: 'Configuracoes' },
     ],
   },
+  {
+    label: 'Equipe',
+    items: [
+      { href: '/admin/team', icon: Users2, label: 'Equipe Admin' },
+      { href: '/admin/communications', icon: Megaphone, label: 'Comunicacoes' },
+    ],
+  },
 ]
 
 export function AdminSidebar() {
