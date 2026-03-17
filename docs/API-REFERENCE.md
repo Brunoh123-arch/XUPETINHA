@@ -1,543 +1,499 @@
-# UPPI - Documentacao das APIs
+# API Reference — Uppi
 
-> Atualizado em: 16/03/2026
-> Total: **98 endpoints**
+> Versao 31.0 — 98 endpoints documentados — 16/03/2026
 
----
+Base URL: `https://uppi.app` (web) ou `http://localhost:3000` (dev)
 
-## Indice
-
-1. [Autenticacao](#1-autenticacao)
-2. [Perfil e Configuracoes](#2-perfil-e-configuracoes)
-3. [Corridas](#3-corridas)
-4. [Corridas Especiais](#4-corridas-especiais)
-5. [Motorista](#5-motorista)
-6. [Ofertas e Negociacao](#6-ofertas-e-negociacao)
-7. [Pagamentos e Carteira](#7-pagamentos-e-carteira)
-8. [Cupons](#8-cupons)
-9. [Notificacoes e Push](#9-notificacoes-e-push)
-10. [Social e Gamificacao](#10-social-e-gamificacao)
-11. [Suporte e Emergencia](#11-suporte-e-emergencia)
-12. [Admin](#12-admin)
-13. [Integracao e Utilidades](#13-integracao-e-utilidades)
-14. [Webhooks](#14-webhooks)
-15. [SMS](#15-sms)
-16. [Familia, Favoritos, Assinaturas](#16-familia-favoritos-assinaturas)
-17. [Avaliacoes](#17-avaliacoes)
-18. [PIX e Pagamentos Externos](#18-pix-e-pagamentos-externos)
-19. [Sistema](#19-sistema)
+Autenticacao: Bearer token via Supabase Auth no header `Authorization`.
 
 ---
 
-## 1. Autenticacao
+## Sumario de Endpoints
 
-### POST /api/v1/auth/email-otp/send
-Envia codigo OTP por email.
+| Grupo | Qtd | Prefixo |
+|-------|-----|---------|
+| Corridas | 14 | /api/v1/rides |
+| Ofertas de Preco | 4 | /api/v1/offers |
+| Pagamentos | 3 | /api/v1/payments |
+| Motoristas | 9 | /api/v1/driver, /api/v1/drivers |
+| Avaliacoes | 3 | /api/v1/reviews, /api/v1/ratings |
+| Notificacoes / Push | 4 | /api/v1/notifications, /api/v1/push |
+| Social | 4 | /api/v1/social |
+| Mapas / Localização | 4 | /api/v1/geocode, /api/v1/places, /api/v1/distance |
+| Cupons | 3 | /api/v1/coupons |
+| Carteira | 3 | /api/v1/wallet |
+| Suporte | 3 | /api/v1/support |
+| Autenticacao | 3 | /api/v1/auth |
+| Corridas Especiais | 8 | /api/v1/intercity, /api/v1/group-rides, /api/v1/scheduled-rides, /api/v1/delivery |
+| Seguranca | 3 | /api/v1/sos, /api/v1/emergency, /api/v1/recordings |
+| Admin | 6 | /api/v1/admin, /api/admin |
+| Outros | 13 | notifications, social, favorites, webhooks, etc |
 
-**Body:**
+---
+
+## Corridas
+
+### POST /api/v1/rides
+Cria nova solicitacao de corrida.
 ```json
-{ "email": "usuario@email.com" }
+{ "origin_lat": -23.5, "origin_lng": -46.6, "destination_lat": -23.6, "destination_lng": -46.7, "ride_type": "standard" }
 ```
-
----
-
-### POST /api/v1/auth/email-otp/verify
-Verifica OTP e autentica o usuario.
-
-**Body:**
-```json
-{ "email": "usuario@email.com", "code": "123456" }
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "user": { "id": "uuid", "email": "..." },
-  "session": { "access_token": "...", "refresh_token": "..." }
-}
-```
-
----
-
-### GET /api/v1/auth/verify
-Verifica se o token JWT e valido.
-
-**Headers:** `Authorization: Bearer <token>`
-
----
-
-## 2. Perfil e Configuracoes
-
-### GET | PATCH /api/v1/profile
-Retorna ou atualiza o perfil do usuario autenticado.
-
-### DELETE /api/v1/profile/delete
-Deleta a conta do usuario (LGPD).
-
-### GET | PATCH /api/v1/settings
-Retorna ou atualiza configuracoes do usuario.
-
----
-
-## 3. Corridas
-
-### GET | POST /api/v1/rides
-Lista corridas do usuario ou cria nova solicitacao.
-
-**POST Body:**
-```json
-{
-  "pickup_address": "Rua A, 123",
-  "pickup_lat": -23.5505,
-  "pickup_lng": -46.6333,
-  "dropoff_address": "Rua B, 456",
-  "dropoff_lat": -23.5605,
-  "dropoff_lng": -46.6433,
-  "vehicle_type": "economy",
-  "payment_method": "pix"
-}
-```
-
----
 
 ### GET /api/v1/rides/estimate
-Estima preco e tempo.
+Estima preco antes de confirmar a corrida.
+Params: `origin_lat`, `origin_lng`, `destination_lat`, `destination_lng`, `ride_type`
 
-**Query:** `pickup_lat`, `pickup_lng`, `dropoff_lat`, `dropoff_lng`, `vehicle_type`
+### GET /api/v1/rides/[id]/status
+Retorna status em tempo real da corrida.
 
-**Response:**
-```json
-{
-  "estimates": [
-    { "vehicle_type": "economy", "price": 18.50, "duration": 15 },
-    { "vehicle_type": "comfort", "price": 25.00, "duration": 15 },
-    { "vehicle_type": "exec", "price": 40.00, "duration": 15 }
-  ]
-}
-```
-
----
-
-### POST /api/v1/rides/{id}/accept
+### POST /api/v1/rides/[id]/accept
 Motorista aceita a corrida.
 
-### POST /api/v1/rides/{id}/start
-Motorista inicia a corrida.
+### POST /api/v1/rides/[id]/start
+Motorista inicia a corrida (passageiro embarcou).
 
-### POST /api/v1/rides/{id}/complete
-Motorista finaliza a corrida.
+### POST /api/v1/rides/[id]/complete
+Finaliza a corrida.
 
-### POST /api/v1/rides/{id}/cancel
-Cancela a corrida. **Body:** `{ "reason": "motivo" }`
-
-### POST /api/v1/rides/{id}/rate
-Avalia a corrida. **Body:** `{ "rating": 5, "comment": "Otimo!" }`
-
-### GET /api/v1/rides/{id}/status
-Status atual da corrida (polling).
-
-### GET /api/v1/rides/{id}/receipt
-Recibo da corrida.
-
-### POST /api/v1/rides/{id}/tip
-Gorjeta ao motorista. **Body:** `{ "amount": 5.00 }`
-
-### POST /api/v1/rides/{id}/report
-Reportar problema. **Body:** `{ "type": "safety", "description": "..." }`
-
-### POST /api/v1/rides/{id}/retry-drivers
-Re-busca motoristas para corrida pendente.
-
----
-
-## 4. Corridas Especiais
-
-### GET | POST /api/v1/scheduled-rides
-Lista ou agenda corridas futuras.
-
-### GET | POST /api/v1/group-rides
-Lista ou cria corrida em grupo.
-
-### POST /api/v1/group-rides/join
-Entrar em corrida de grupo.
-
-### POST /api/v1/group-rides/{id}/leave
-Sair de corrida de grupo.
-
-### GET /api/v1/intercity
-Lista rotas intermunicipais disponiveis.
-
-### POST /api/v1/intercity/book
-Reservar assento em viagem intermunicipal.
-
-### GET | POST /api/v1/delivery
-Lista ou cria pedido de entrega.
-
----
-
-## 5. Motorista
-
-### GET | POST /api/v1/driver/documents
-Lista ou envia documentos do motorista.
-
-### GET /api/v1/driver/earnings
-Ganhos do motorista. **Query:** `period` (today, week, month)
-
-### POST /api/v1/driver/location
-Atualiza localizacao do motorista.
+### POST /api/v1/rides/[id]/cancel
+Cancela a corrida com motivo.
 ```json
-{ "lat": -23.5505, "lng": -46.6333, "heading": 90 }
+{ "reason": "motorista_nao_chegou" }
 ```
 
-### POST /api/v1/driver/mode
-Alterna modo online/offline. **Body:** `{ "online": true }`
+### POST /api/v1/rides/[id]/rate
+Avalia a corrida.
+```json
+{ "rating": 5, "comment": "Excelente motorista" }
+```
 
-### POST /api/v1/driver/shift
-Inicia/finaliza turno.
+### GET /api/v1/rides/[id]/receipt
+Retorna recibo detalhado da corrida (PDF-ready).
 
-### GET /api/v1/driver/verifications
-Status das verificacoes do motorista.
+### POST /api/v1/rides/[id]/report
+Reporta problema com a corrida.
+```json
+{ "type": "comportamento", "description": "..." }
+```
 
-### POST /api/v1/driver/verify
-Envia para verificacao admin.
+### POST /api/v1/rides/[id]/tip
+Adiciona gorjeta ao motorista.
+```json
+{ "amount": 5.00 }
+```
 
-### POST /api/v1/driver/withdraw
-Solicita saque. **Body:** `{ "amount": 500.00, "pix_key": "email@..." }`
+### POST /api/v1/rides/[id]/retry-drivers
+Reemite a corrida para novos motoristas quando ninguem aceita.
 
-### GET /api/v1/drivers/nearby
-Motoristas proximos. **Query:** `lat`, `lng`, `radius`
-
-### GET /api/v1/drivers/hot-zones
-Zonas com alta demanda.
-
----
-
-## 6. Ofertas e Negociacao
-
-### GET | POST /api/v1/offers
-Lista ou cria oferta de preco.
-
-### POST /api/v1/offers/{id}/accept
-Passageiro aceita oferta.
-
-### POST /api/v1/offers/{id}/reject
-Passageiro rejeita oferta.
-
-### POST /api/v1/offers/{id}/counter
-Passageiro faz contra-oferta. **Body:** `{ "price": 25.00 }`
+### GET /api/v1/routes/alternatives
+Retorna rotas alternativas para o destino.
+Params: `origin_lat`, `origin_lng`, `destination_lat`, `destination_lng`
 
 ---
 
-## 7. Pagamentos e Carteira
+## Ofertas de Preco
 
-### GET /api/v1/wallet
-Saldo e dados da carteira.
+### POST /api/v1/offers
+Passageiro cria oferta de preco customizado.
+```json
+{ "ride_id": "uuid", "amount": 25.00 }
+```
 
-### GET /api/v1/wallet/transactions
-Historico de transacoes da carteira.
+### POST /api/v1/offers/[id]/accept
+Motorista aceita a oferta de preco.
+
+### POST /api/v1/offers/[id]/reject
+Motorista rejeita a oferta.
+
+### POST /api/v1/offers/[id]/counter
+Motorista faz contra-oferta.
+```json
+{ "amount": 30.00 }
+```
+
+---
+
+## Pagamentos
 
 ### GET /api/v1/payments/history
-Historico de pagamentos.
+Historico de pagamentos do usuario.
 
 ### POST /api/v1/payments/pix
-Gera codigo PIX para pagamento.
+Gera cobranca PIX para uma corrida.
 ```json
-{ "ride_id": "uuid", "amount": 25.50 }
-```
-
-**Response:**
-```json
-{
-  "qr_code": "00020126...",
-  "qr_code_base64": "data:image/png;base64,...",
-  "pix_key": "...",
-  "expiration": "2026-03-16T12:00:00Z"
-}
+{ "ride_id": "uuid", "amount": 25.00 }
 ```
 
 ### POST /api/v1/payments/refund
-Solicita reembolso. **Body:** `{ "payment_id": "uuid", "reason": "..." }`
+Solicita reembolso de uma corrida.
+```json
+{ "ride_id": "uuid", "reason": "corrida_cancelada", "amount": 25.00 }
+```
+
+### POST /api/pix/webhook
+Webhook do gateway PIX (Paradise/EfiPay). Uso interno.
+
+### GET /api/pix/status
+Verifica status de um pagamento PIX.
 
 ---
 
-## 8. Cupons
+## Motoristas
 
-### GET /api/v1/coupons
-Lista todos os cupons ativos.
+### POST /api/v1/driver/mode
+Ativa ou desativa modo online do motorista.
+```json
+{ "online": true, "lat": -23.5, "lng": -46.6 }
+```
 
-### GET /api/v1/coupons/available
-Cupons disponiveis para o usuario autenticado.
+### POST /api/v1/driver/location
+Atualiza posicao GPS do motorista (polling a cada 3s).
+```json
+{ "lat": -23.5, "lng": -46.6, "heading": 180 }
+```
 
-### POST /api/v1/coupons/apply
-Aplica cupom. **Body:** `{ "code": "PROMO10", "ride_id": "uuid" }`
+### GET /api/v1/driver/earnings
+Retorna ganhos do motorista por periodo.
+Params: `period` (day|week|month)
+
+### POST /api/v1/driver/withdraw
+Solicita saque PIX.
+```json
+{ "amount": 100.00, "pix_key": "cpf|email|celular|chave" }
+```
+
+### POST /api/v1/driver/documents
+Upload de documento do motorista.
+Multipart: `type` (cnh|crlv|foto), `file`
+
+### POST /api/v1/driver/verify
+Envia documentos para verificacao pelo admin.
+
+### POST /api/v1/driver/verifications
+Retorna status de verificacao dos documentos.
+
+### POST /api/v1/driver/shift
+Registra inicio/fim de turno do motorista.
+```json
+{ "action": "start" | "end" }
+```
+
+### GET /api/v1/drivers/nearby
+Retorna motoristas proximos (uso interno do match).
+Params: `lat`, `lng`, `radius_km`
+
+### GET /api/v1/drivers/hot-zones
+Retorna zonas com maior demanda no momento.
 
 ---
 
-## 9. Notificacoes e Push
+## Avaliacoes e Reviews
+
+### POST /api/v1/reviews
+Cria review de uma corrida.
+```json
+{ "ride_id": "uuid", "rating": 5, "comment": "..." }
+```
+
+### POST /api/v1/reviews/driver
+Review especifico do motorista (categorias detalhadas).
+
+### POST /api/v1/reviews/enhanced
+Review avancado com tags e categorias multiplas.
+
+### POST /api/v1/ratings
+Avaliacao numerica simples.
+
+---
+
+## Notificacoes
 
 ### GET /api/v1/notifications
 Lista notificacoes do usuario.
 
 ### POST /api/v1/notifications/read-all
-Marca todas como lidas.
+Marca todas as notificacoes como lidas.
 
 ### POST /api/v1/notifications/send
-Envia notificacao (admin).
-
-### POST /api/v1/push/fcm-register
-Registra token FCM.
+Envia notificacao (uso admin/interno).
+```json
+{ "user_id": "uuid", "title": "...", "body": "..." }
+```
 
 ### POST /api/v1/push/send
-Envia push notification (admin).
+Envia push notification via FCM.
 
 ### POST /api/v1/push/broadcast
-Envia push para todos usuarios (admin).
+Broadcast para grupo de usuarios.
+
+### POST /api/v1/push/fcm-register
+Registra token FCM do dispositivo.
+```json
+{ "token": "fcm_token", "platform": "android" }
+```
 
 ### POST /api/v1/push/subscribe
-Subscreve para topico de push.
+Inscreve em topico de push.
 
 ---
 
-## 10. Social e Gamificacao
+## Social
 
-### GET | POST /api/v1/social/posts
-Lista ou cria post no feed.
+### GET/POST /api/v1/social/posts
+Lista ou cria post no feed social.
 
-### POST /api/v1/social/posts/{id}/like
-Curtir post.
+### POST /api/v1/social/posts/[id]/like
+Curte ou descurte um post.
 
-### GET | POST /api/v1/social/posts/{id}/comments
-Lista ou adiciona comentario.
+### GET/POST /api/v1/social/posts/[id]/comments
+Lista ou adiciona comentario em post.
 
-### GET | POST /api/v1/social/follows
-Lista follows ou segue usuario.
-
-### GET /api/v1/leaderboard
-Ranking de usuarios/motoristas.
-
-### GET /api/v1/achievements
-Lista conquistas do usuario.
-
-### GET /api/v1/referrals
-Dados do programa de indicacao.
-
-### GET /api/v1/ratings
-Lista notas do usuario.
+### POST/DELETE /api/v1/social/follows
+Seguir ou deixar de seguir usuario.
 
 ---
 
-## 11. Suporte e Emergencia
-
-### GET | POST /api/v1/support
-Lista tickets ou cria novo ticket.
-
-### GET | POST /api/v1/support/messages
-Lista ou envia mensagens de suporte.
-
-### GET | POST /api/v1/support/tickets
-Lista ou cria tickets.
-
-### POST /api/v1/emergency
-Dispara alerta de emergencia.
-
-### POST /api/v1/sos
-Botao SOS — emergencia critica.
-
----
-
-## 12. Admin
-
-### GET /api/v1/admin/stats
-Estatisticas do sistema.
-```json
-{
-  "total_users": 15000,
-  "total_drivers": 3000,
-  "total_rides": 50000,
-  "revenue_today": 25000.00
-}
-```
-
-### GET /api/v1/admin/users
-Lista usuarios (paginado).
-
-### GET | POST /api/v1/admin/withdrawals
-Lista ou aprova/rejeita saques.
-
-### POST /api/v1/admin/create-first
-Cria primeiro admin do sistema.
-
-### POST /api/v1/admin/setup
-Executa setup inicial da plataforma.
-
-### POST /api/v1/admin/migrate-encryption
-Executa migracao de criptografia.
-
----
-
-## 13. Integracao e Utilidades
+## Mapas e Localizacao
 
 ### GET /api/v1/geocode
-Geocodificacao. **Query:** `address`
+Converte endereco em coordenadas.
+Params: `address`
 
 ### GET /api/v1/places/autocomplete
-Autocomplete Google Places. **Query:** `input`
+Autocomplete de enderecos via Google Places.
+Params: `input`, `lat`, `lng`
 
 ### GET /api/v1/places/details
-Detalhes de lugar. **Query:** `place_id`
+Detalhes de um local pelo place_id.
+Params: `place_id`
 
 ### GET /api/v1/distance
-Distancia entre pontos.
-
-### GET /api/v1/routes/alternatives
-Rotas alternativas.
-
-### POST /api/v1/recordings/upload
-Upload de gravacao de seguranca.
-
-### GET /api/v1/stats
-Estatisticas publicas do app.
-
-### POST /api/v1/logs/error
-Registra erro do cliente.
+Distancia entre dois pontos.
+Params: `origin_lat`, `origin_lng`, `dest_lat`, `dest_lng`
 
 ---
 
-## 14. Webhooks
+## Cupons
 
-### GET | POST /api/v1/webhooks
-Lista ou registra webhook.
+### GET /api/v1/coupons
+Lista cupons disponiveis para o usuario.
+
+### GET /api/v1/coupons/available
+Cupons aplicaveis a uma corrida especifica.
+
+### POST /api/v1/coupons/apply
+Aplica cupom numa corrida.
 ```json
-{
-  "url": "https://meusite.com/webhook",
-  "events": ["ride.completed", "payment.received"],
-  "secret": "meu_secret"
-}
+{ "ride_id": "uuid", "code": "PROMO10" }
 ```
 
-### POST /api/v1/webhooks/process
-Processa evento de webhook recebido.
+---
+
+## Carteira Digital
+
+### GET /api/v1/wallet
+Saldo e informacoes da carteira.
+
+### GET /api/v1/wallet/transactions
+Extrato de transacoes.
+
+### POST /api/v1/wallet
+Adiciona creditos via PIX.
 
 ---
 
-## 15. SMS
+## Suporte
 
-### POST /api/v1/sms/send
-Envia SMS.
+### GET/POST /api/v1/support
+Lista ou cria ticket de suporte.
 
-### GET /api/v1/sms/status
-Status de entrega de SMS.
-
----
-
-## 16. Familia, Favoritos, Assinaturas
-
-### GET | POST /api/v1/family
-Lista ou adiciona membro da familia.
-
-### GET | POST /api/v1/favorites
-Lista ou adiciona favorito.
-
-### GET | POST /api/v1/messages
-Lista mensagens de chat.
-
-### GET | POST /api/v1/subscriptions
-Lista ou cria assinatura.
-
----
-
-## 17. Avaliacoes
-
-### GET | POST /api/v1/reviews
-Lista ou cria avaliacao.
-
-### POST /api/v1/reviews/enhanced
-Avaliacao detalhada por categorias.
+### POST /api/v1/support/tickets
+Cria ticket detalhado.
 ```json
-{
-  "ride_id": "uuid",
-  "overall_rating": 5,
-  "category_scores": { "seguranca": 5, "pontualidade": 4, "limpeza": 5 },
-  "comment": "...",
-  "tags": ["pontual", "simpatico"]
-}
+{ "subject": "...", "description": "...", "category": "corrida" }
 ```
 
-### GET | POST /api/v1/reviews/driver
-Avaliacoes especificas do motorista.
-
----
-
-## 18. PIX e Pagamentos Externos
-
-### POST /api/pix/webhook
-Webhook do gateway PIX (Paradise/EfiPay).
-
-### GET /api/pix/status
-Status de transacao PIX. **Query:** `transaction_id`
-
----
-
-## 19. Sistema
-
-### GET /api/v1/health
-Health check da API.
-
-### GET /api/health
-Health check geral.
-
-### GET /api/admin/check
-Verifica se usuario atual e admin.
-
-### POST /api/email/auth
-Envia email de autenticacao.
-
-### POST /api/email/test
-Testa envio de email (dev only).
+### POST /api/v1/support/messages
+Envia mensagem em ticket existente.
 
 ---
 
 ## Autenticacao
 
-Todas as rotas (exceto auth, health e webhooks externos) requerem:
-
-```
-Authorization: Bearer <access_token>
-```
-
----
-
-## Formato de Erros
-
+### POST /api/v1/auth/email-otp/send
+Envia OTP por email.
 ```json
-{
-  "error": "Mensagem de erro",
-  "code": "ERROR_CODE",
-  "details": {}
-}
+{ "email": "user@example.com" }
 ```
 
-Codigos HTTP:
-- `200` — Sucesso
-- `201` — Criado
-- `400` — Requisicao invalida
-- `401` — Nao autenticado
-- `403` — Sem permissao
-- `404` — Nao encontrado
-- `429` — Rate limit excedido
-- `500` — Erro interno
+### POST /api/v1/auth/email-otp/verify
+Verifica OTP e autentica.
+```json
+{ "email": "user@example.com", "token": "123456" }
+```
+
+### POST /api/v1/auth/verify
+Verifica token de sessao.
 
 ---
 
-## Rate Limiting
+## Corridas Especiais
 
-- 100 requests/minuto por IP (rotas publicas)
-- 1000 requests/minuto por usuario autenticado
-- 10 requests/minuto para rotas de auth
+### GET/POST /api/v1/intercity
+Lista ou cria rotas intermunicipais.
+
+### POST /api/v1/intercity/book
+Reserva assento em corrida intermunicipal.
+
+### GET/POST /api/v1/group-rides
+Lista ou cria corrida em grupo.
+
+### POST /api/v1/group-rides/join
+Entra em corrida em grupo existente.
+
+### POST /api/v1/group-rides/[id]/leave
+Sai de corrida em grupo.
+
+### GET/POST /api/v1/scheduled-rides
+Lista ou agenda corrida futura.
+
+### POST /api/v1/delivery
+Cria pedido de entrega.
 
 ---
 
-## Versionamento
+## Seguranca
 
-URL base: `/api/v1/...` — Versao atual: **v1**
+### POST /api/v1/sos
+Dispara alerta SOS de emergencia.
+```json
+{ "lat": -23.5, "lng": -46.6, "ride_id": "uuid" }
+```
+
+### POST /api/v1/emergency
+Cria contato ou alerta de emergencia.
+
+### POST /api/v1/recordings/upload
+Faz upload de gravacao de corrida (audio).
+
+---
+
+## Perfil e Configuracoes
+
+### GET/PATCH /api/v1/profile
+Lê ou atualiza perfil do usuario.
+
+### DELETE /api/v1/profile/delete
+Deleta conta (LGPD — direito ao esquecimento).
+
+### GET/PATCH /api/v1/settings
+Configuracoes do usuario (notificacoes, privacidade).
+
+---
+
+## Outros
+
+### GET/POST /api/v1/favorites
+Enderecos e motoristas favoritos.
+
+### GET /api/v1/leaderboard
+Ranking de pontos.
+
+### GET /api/v1/achievements
+Conquistas do usuario.
+
+### GET/POST /api/v1/referrals
+Codigo de indicacao e historico.
+
+### GET/POST /api/v1/messages
+Mensagens diretas entre usuario e motorista.
+
+### GET/POST /api/v1/subscriptions
+Assinatura do Clube Uppi.
+
+### POST /api/v1/sms/send
+Envia SMS (uso interno).
+
+### GET /api/v1/sms/status
+Status de entrega do SMS.
+
+### GET/POST /api/v1/family
+Membros da conta familia.
+
+### GET /api/v1/stats
+Estatisticas pessoais do usuario.
+
+### POST /api/v1/logs/error
+Registra erro do app (uso do frontend).
+
+### GET/POST /api/v1/webhooks
+Gerencia webhooks externos.
+
+### POST /api/v1/webhooks/process
+Processa payload de webhook recebido.
+
+---
+
+## Admin
+
+### GET /api/v1/admin/stats
+Estatisticas gerais do sistema.
+
+### GET/POST /api/v1/admin/users
+Lista ou gerencia usuarios (admin only).
+
+### GET/POST /api/v1/admin/withdrawals
+Lista ou aprova/rejeita saques (admin only).
+
+### POST /api/v1/admin/setup
+Setup inicial do sistema.
+
+### POST /api/v1/admin/create-first
+Cria primeiro admin.
+
+### POST /api/v1/admin/migrate-encryption
+Migra dados para criptografia AES-256.
+
+### GET /api/admin/check
+Verifica se usuario e admin.
+
+---
+
+## Infraestrutura
+
+### GET /api/health
+Health check geral do sistema.
+
+### GET /api/v1/health
+Health check versionado.
+
+### POST /api/email/auth
+Envia email de autenticacao.
+
+### POST /api/email/test
+Testa envio de email.
+
+---
+
+## Codigos de Erro
+
+| Codigo | Significado |
+|--------|-------------|
+| 400 | Dados invalidos na requisicao |
+| 401 | Nao autenticado |
+| 403 | Sem permissao (nao e admin) |
+| 404 | Recurso nao encontrado |
+| 409 | Conflito (corrida ja aceita, etc) |
+| 422 | Entidade nao processavel |
+| 429 | Rate limit excedido |
+| 500 | Erro interno do servidor |
+
+---
+
+## Notas de Seguranca
+
+- Todos os endpoints de escrita exigem autenticacao Supabase Auth
+- CPF e dados sensiveis sao criptografados em AES-256-GCM antes de salvar
+- RLS ativo em 100% das tabelas — usuarios so acessam seus proprios dados
+- Admin endpoints verificam `is_admin = true` no perfil
+- Rate limiting aplicado em endpoints de autenticacao e pagamento

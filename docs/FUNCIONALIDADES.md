@@ -65,6 +65,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Solicitar reembolso (/ride/[id]/refund) — NOVO
 - [x] Denunciar motorista (/ride/[id]/report) — NOVO
 - [x] Contratar seguro de viagem (/ride/[id]/insurance) — NOVO
+- [x] Avaliar experiencia de viagem (/ride/[id]/experience) — NOVO
 
 ### Pagamentos
 - [x] Pagar com PIX (QR Code + copia-e-cola)
@@ -115,6 +116,12 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Programa de indicacao (/uppi/referral, /uppi/referrals)
 - [x] Club de fidelidade (/uppi/club)
 - [x] Trust Score (/uppi/trust-score)
+
+### Corporativo — NOVO
+- [x] Ver conta corporativa da empresa (/uppi/corporate)
+- [x] Acompanhar limite mensal de corridas
+- [x] Ver funcionarios cadastrados
+- [x] Ver faturas mensais da empresa
 
 ### Suporte e Legal
 - [x] Chat com suporte (/uppi/suporte/chat)
@@ -192,7 +199,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 
 ---
 
-## FUNCIONALIDADES DO ADMIN (50 paginas)
+## FUNCIONALIDADES DO ADMIN (59 paginas)
 
 ### Dashboard
 - [x] Metricas em tempo real (/admin)
@@ -206,6 +213,7 @@ O UPPI e um app de mobilidade urbana completo com 3 perfis de usuario:
 - [x] Gestao de motoristas (/admin/drivers)
 - [x] Ganhos dos motoristas (/admin/drivers/earnings, /admin/driver-earnings)
 - [x] Verificacao de documentos dos motoristas (/admin/verifications) — NOVO
+- [x] Performance individual do motorista (/admin/drivers/[id]/performance) — NOVO
 
 ### Gestao de Corridas
 - [x] Todas as corridas (/admin/rides)

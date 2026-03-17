@@ -16,9 +16,9 @@
 | Tabelas Realtime | 36 | OK |
 | Storage Buckets | 5 | OK |
 | APIs | 98 | OK |
-| Paginas /uppi | 103 | OK |
-| Paginas /admin | 50 | OK |
-| Total Paginas | 153+ | OK |
+| Paginas /uppi | 102 | OK |
+| Paginas /admin | 59 | OK |
+| Total Paginas | 161+ | OK |
 | Tabelas lixo removidas | 88 | FEITO |
 
 ---
@@ -188,18 +188,21 @@ ADMIN:
 
 ## Telas por Categoria
 
-### Passageiro (/uppi) — 103 paginas
-- Corridas: solicitar, rastrear, avaliar, disputar, reembolsar, dividir, reportar
+### Passageiro (/uppi) — 102 paginas
+- Corridas: solicitar, rastrear, avaliar, disputar, reembolsar, dividir, reportar, experiencia
 - Motorista: home, ganhos, documentos, desempenho, preferencias, treinamento, fiscal
 - Configuracoes: 2FA, sessoes, bloqueados, preferencias de viagem
 - Social: feed, conquistas, pontos/emblemas, clube, leaderboard
 - Seguranca: SOS, gravacoes, contatos emergencia
+- Corporativo: conta empresa, funcionarios, faturas mensais
 
-### Admin (/admin) — 50 paginas
-- Operacoes: reembolsos, disputas, incentivos, cashback, feature flags
-- Motoristas: verificacao, documentos, performance
-- Marketing: campanhas, promocoes, cupons
-- Sistema: equipe admin, permissoes, comunicacoes, auditoria
+### Admin (/admin) — 59 paginas
+- Operacoes: reembolsos, disputas, incentivos, cashback, feature flags, faturas, experimentos
+- Motoristas: verificacao, documentos, performance individual
+- Marketing: campanhas, promocoes, cupons, experiments A/B
+- Parceiros: corporativo, hoteis, lista de espera
+- Sistema: equipe admin, permissoes, comunicacoes, auditoria, versoes app, aeroportos
+- Conhecimento: base de ajuda, templates push/email, banners in-app
 
 ---
 
