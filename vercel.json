@@ -1,6 +1,5 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npx next build",
   "crons": [
     {
       "path": "/api/v1/webhooks/process",
