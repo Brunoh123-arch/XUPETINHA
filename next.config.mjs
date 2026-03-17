@@ -9,8 +9,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Em producao Vercel, BUILD_TARGET nao e definido e o app roda normalmente
 const isAndroidBuild = process.env.BUILD_TARGET === 'android'
 
-// Pacotes Capacitor que devem ser substituidos por mocks no build web
-const CAPACITOR_PACKAGES = [
+// Pacotes nativos/opcionais que devem ser substituidos por mocks no build web
+const NATIVE_PACKAGES = [
   '@capacitor/core',
   '@capacitor/geolocation',
   '@capacitor/preferences',
@@ -34,6 +34,9 @@ const CAPACITOR_PACKAGES = [
   '@capacitor-community/text-to-speech',
   '@capacitor-community/biometric-auth',
   '@capacitor-community/microphone',
+  // Google Maps packages (only needed at runtime when API key is set)
+  '@vis.gl/react-google-maps',
+  'google-maps',
 ]
 
 const capacitorMockPath = path.resolve(__dirname, 'lib/capacitor-mock.js')
@@ -61,7 +64,7 @@ const nextConfig = {
     // No build Android (BUILD_TARGET=android), os pacotes reais sao instalados
     // e o alias nao e necessario (os imports resolvem normalmente).
     if (!isAndroidBuild) {
-      CAPACITOR_PACKAGES.forEach((pkg) => {
+      NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
