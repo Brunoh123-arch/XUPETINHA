@@ -143,17 +143,17 @@ export default function DriverProfilePage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[16px] font-bold text-[color:var(--foreground)]">
-                  {driverProfile.vehicle_brand} {driverProfile.vehicle_model}
+                  {driverProfile.brand || driverProfile.vehicle_brand} {driverProfile.model || driverProfile.vehicle_model}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  {driverProfile.vehicle_color && (
-                    <span className="text-[13px] text-[color:var(--muted-foreground)] capitalize">{driverProfile.vehicle_color}</span>
+                  {(driverProfile.color || driverProfile.vehicle_color) && (
+                    <span className="text-[13px] text-[color:var(--muted-foreground)] capitalize">{driverProfile.color || driverProfile.vehicle_color}</span>
                   )}
-                  {driverProfile.vehicle_plate && (
+                  {(driverProfile.plate || driverProfile.vehicle_plate) && (
                     <>
                       <span className="text-[color:var(--muted-foreground)]/30">·</span>
                       <span className="text-[13px] font-mono font-bold text-[color:var(--muted-foreground)] tracking-widest uppercase bg-[color:var(--muted)] px-2 py-0.5 rounded-md">
-                        {driverProfile.vehicle_plate}
+                        {driverProfile.plate || driverProfile.vehicle_plate}
                       </span>
                     </>
                   )}

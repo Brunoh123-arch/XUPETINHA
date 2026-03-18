@@ -61,7 +61,7 @@ export default function RateRidePage() {
           id, driver_id, pickup_address, dropoff_address, completed_at,
           final_price, estimated_price,
           driver:profiles!rides_driver_id_fkey(full_name, avatar_url, rating),
-          dp:driver_profiles!driver_profiles_user_id_fkey(vehicle_brand, vehicle_model)
+          vehicle:vehicles!vehicles_driver_id_fkey(brand, model)
         `)
         .eq('id', rideId)
         .single()
@@ -72,11 +72,11 @@ export default function RateRidePage() {
         return
       }
 
-      const dp = (rideData as any).dp
+      const v = (rideData as any).vehicle
       setRide({
         ...rideData,
         driver: Array.isArray((rideData as any).driver) ? (rideData as any).driver[0] : (rideData as any).driver,
-        driver_vehicle: dp ? `${(Array.isArray(dp) ? dp[0] : dp)?.vehicle_brand || ''} ${(Array.isArray(dp) ? dp[0] : dp)?.vehicle_model || ''}`.trim() : undefined,
+        driver_vehicle: v ? `${(Array.isArray(v) ? v[0] : v)?.brand || ''} ${(Array.isArray(v) ? v[0] : v)?.model || ''}`.trim() : undefined,
       } as RideInfo)
     } catch (err) {
       console.error('[rate] load error', err)

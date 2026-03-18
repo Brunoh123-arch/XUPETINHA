@@ -16,13 +16,13 @@ interface Ride {
   driver_id: string | null
   pickup_address: string
   dropoff_address: string
-  pickup_lat: number
-  pickup_lng: number
-  dropoff_lat: number
-  dropoff_lng: number
-  distance_km: number
-  estimated_duration_minutes: number
-  passenger_price_offer: number
+  pickup_latitude: number
+  pickup_longitude: number
+  dropoff_latitude: number
+  dropoff_longitude: number
+  estimated_distance: number
+  estimated_duration: number
+  estimated_price: number
   final_price: number
   status: string
   payment_method: string
@@ -218,9 +218,9 @@ export default function RidesPage() {
                   <div className="border-t border-[hsl(var(--admin-border))] bg-[hsl(var(--admin-bg))]/60 p-4 space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {[
-                        { label: 'Distancia', value: ride.distance_km ? `${Number(ride.distance_km).toFixed(1)} km` : 'N/A' },
+                        { label: 'Distancia', value: ride.estimated_distance ? `${Number(ride.estimated_distance).toFixed(1)} km` : 'N/A' },
                         { label: 'Duracao Est.', value: ride.estimated_duration_minutes ? `${ride.estimated_duration_minutes} min` : 'N/A' },
-                        { label: 'Oferta Pass.', value: ride.passenger_price_offer ? `R$ ${Number(ride.passenger_price_offer).toFixed(2)}` : 'N/A' },
+                        { label: 'Preco Est.', value: ride.estimated_price ? `R$ ${Number(ride.estimated_price).toFixed(2)}` : 'N/A' },
                         { label: 'Valor Final', value: ride.final_price ? `R$ ${Number(ride.final_price).toFixed(2)}` : 'N/A', green: true },
                       ].map(f => (
                         <div key={f.label} className="bg-[hsl(var(--admin-surface))] rounded-xl p-3 border border-[hsl(var(--admin-border))]">
