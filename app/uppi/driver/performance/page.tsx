@@ -30,7 +30,7 @@ interface ShiftLog {
   id: string
   started_at: string
   ended_at: string
-  total_rides: number
+  total_trips: number
   total_earnings: number
   online_minutes: number
 }
@@ -201,7 +201,7 @@ export default function DriverPerformancePage() {
                   <div key={s.id} className="p-3 flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-foreground">{formatDate(s.started_at)}</p>
-                      <p className="text-xs text-muted-foreground">{formatMinutes(s.online_minutes)} online · {s.total_rides} corridas</p>
+                      <p className="text-xs text-muted-foreground">{formatMinutes(s.online_minutes)} online · {s.total_trips} corridas</p>
                     </div>
                     <p className="text-sm font-bold text-green-600">R$ {Number(s.total_earnings).toFixed(2)}</p>
                   </div>

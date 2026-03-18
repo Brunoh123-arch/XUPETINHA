@@ -14,7 +14,7 @@ interface UserAchievementSummary {
   full_name: string
   phone: string
   avatar_url: string | null
-  total_rides: number
+  total_trips: number
   rating: number
   total_saved: number
   created_at: string
@@ -27,7 +27,7 @@ interface LeaderboardEntry {
   full_name: string
   points: number
   rank: number
-  total_rides: number
+  total_trips: number
   rating: number
   avatar_url: string | null
 }
@@ -49,15 +49,15 @@ export default function AdminAchievementsPage() {
     // Leaderboard
     const { data: lbData } = await supabase
       .from('leaderboard')
-      .select('user_id, points, rank, profile:profiles!leaderboard_user_id_fkey(full_name, avatar_url, total_rides, rating)')
+      .select('user_id, points, rank, profile:profiles!leaderboard_user_id_fkey(full_name, avatar_url, total_trips, rating)')
       .order('rank', { ascending: true })
       .limit(50)
 
     // User achievement stats
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, full_name, phone, avatar_url, total_rides, rating, created_at')
-      .order('total_rides', { ascending: false })
+.select('id, full_name, phone, avatar_url, total_trips, rating, created_at')
+        .order('total_trips', { ascending: false })
       .limit(50)
 
     if (lbData) {
@@ -66,7 +66,7 @@ export default function AdminAchievementsPage() {
         full_name: entry.profile?.full_name || 'Desconhecido',
         points: entry.points || 0,
         rank: entry.rank || 0,
-        total_rides: entry.profile?.total_rides || 0,
+          total_trips: entry.profile?.total_trips || 0,
         rating: entry.profile?.rating || 0,
         avatar_url: entry.profile?.avatar_url || null,
       })))
@@ -78,11 +78,11 @@ export default function AdminAchievementsPage() {
         full_name: p.full_name || 'Desconhecido',
         phone: p.phone || '',
         avatar_url: p.avatar_url,
-        total_rides: p.total_rides || 0,
+          total_trips: p.total_trips || 0,
         rating: p.rating || 5,
         total_saved: 0,
         created_at: p.created_at,
-        unlocked_count: computeUnlocked(p.total_rides || 0, p.rating || 5),
+          unlocked_count: computeUnlocked(p.total_trips || 0, p.rating || 5),
         streak: 0,
       })))
     }
@@ -278,7 +278,7 @@ export default function AdminAchievementsPage() {
                           {entry.full_name}
                         </p>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="text-[11px] text-slate-500">{entry.total_rides} corridas</span>
+                          <span className="text-[11px] text-slate-500">{entry.total_trips} corridas</span>
                           <span className="flex items-center gap-0.5 text-[11px] text-amber-500/80">
                             <Star className="w-3 h-3 fill-amber-500/50" />
                             {entry.rating.toFixed(1)}
@@ -337,7 +337,7 @@ export default function AdminAchievementsPage() {
 
                       {/* Rides */}
                       <div className="text-center">
-                        <span className="text-[13px] font-bold text-blue-400 tabular-nums">{user.total_rides}</span>
+                        <span className="text-[13px] font-bold text-blue-400 tabular-nums">{user.total_trips}</span>
                       </div>
 
                       {/* Rating */}
@@ -382,7 +382,7 @@ export default function AdminAchievementsPage() {
                 { id: 'streak-30', title: 'Fiel', desc: '30 dias seguidos', category: 'loyalty', threshold: 30, color: 'red' },
               ].map(achievement => {
                 const usersUnlocked = userStats.filter(u => {
-                  if (achievement.category === 'rides') return u.total_rides >= achievement.threshold
+                  if (achievement.category === 'rides') return u.total_trips >= achievement.threshold
                   if (achievement.category === 'social' && achievement.id === 'rating-high') return u.rating >= achievement.threshold
                   return false
                 }).length

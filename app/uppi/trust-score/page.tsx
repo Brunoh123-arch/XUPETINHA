@@ -10,7 +10,7 @@ interface TrustData {
   avatar_url: string | null
   trust_score: number
   trust_level: string
-  total_rides: number
+  total_trips: number
   rating: number
   cancellation_count: number
   punctuality_rate: number
@@ -72,7 +72,7 @@ export default function TrustScorePage() {
 
       const [{ data: profile }, { data: dp }] = await Promise.all([
         supabase.from('profiles').select('full_name, avatar_url, trust_score, trust_level, user_type, created_at').eq('id', id).single(),
-        supabase.from('driver_profiles').select('rating, total_rides, cancellation_count, punctuality_rate, trust_score').eq('id', id).single(),
+        supabase.from('driver_profiles').select('rating, total_trips, cancellation_count, punctuality_rate, trust_score').eq('user_id', id).single(),
       ])
 
       if (profile) {
@@ -82,7 +82,7 @@ export default function TrustScorePage() {
           avatar_url: profile.avatar_url,
           trust_score: (isDriver ? dp?.trust_score : profile.trust_score) ?? 50,
           trust_level: profile.trust_level || 'iniciante',
-          total_rides: dp?.total_rides ?? 0,
+          total_trips: dp?.total_trips ?? 0,
           rating: dp?.rating ?? 5,
           cancellation_count: dp?.cancellation_count ?? 0,
           punctuality_rate: dp?.punctuality_rate ?? 100,
@@ -105,14 +105,14 @@ export default function TrustScorePage() {
 
   const metrics = [
     { label: 'Avaliacao media', value: data.rating.toFixed(1), icon: '★', color: '#f59e0b', show: data.is_driver },
-    { label: 'Corridas realizadas', value: data.total_rides.toString(), icon: '🚗', color: '#3b82f6', show: true },
+    { label: 'Corridas realizadas', value: data.total_trips.toString(), icon: '🚗', color: '#3b82f6', show: true },
     { label: 'Cancelamentos', value: data.cancellation_count.toString(), icon: '✕', color: data.cancellation_count > 5 ? '#ef4444' : '#22c55e', show: data.is_driver },
     { label: 'Pontualidade', value: `${data.punctuality_rate.toFixed(0)}%`, icon: '⏱', color: data.punctuality_rate >= 90 ? '#22c55e' : '#f59e0b', show: data.is_driver },
   ].filter(m => m.show)
 
   const factors = [
     { label: 'Avaliacao positiva dos usuarios', value: Math.min(data.rating * 10, 40), max: 40, color: '#22c55e' },
-    { label: 'Corridas sem incidentes', value: Math.min(data.total_rides * 0.5, 30), max: 30, color: '#3b82f6' },
+    { label: 'Corridas sem incidentes', value: Math.min(data.total_trips * 0.5, 30), max: 30, color: '#3b82f6' },
     { label: 'Pontualidade', value: data.is_driver ? data.punctuality_rate * 0.2 : 20, max: 20, color: '#f59e0b' },
     { label: 'Sem cancelamentos', value: Math.max(0, 10 - data.cancellation_count), max: 10, color: '#8b5cf6' },
   ]
@@ -199,7 +199,7 @@ export default function TrustScorePage() {
             <p className="text-[13px] font-bold text-muted-foreground uppercase tracking-wide mb-3">Como subir de nivel</p>
             <div className="flex flex-col gap-2">
               {[
-                { text: 'Complete mais corridas sem cancelamento', done: data.total_rides >= 10 },
+                { text: 'Complete mais corridas sem cancelamento', done: data.total_trips >= 10 },
                 { text: 'Mantenha avaliacao acima de 4.5', done: data.rating >= 4.5 },
                 { text: 'Verifique sua identidade em Configuracoes', done: data.trust_level !== 'iniciante' },
               ].map(item => (

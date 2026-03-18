@@ -149,21 +149,21 @@ export default function AchievementsPage() {
       // 2. Busca stats do perfil e corridas para calcular progresso local
       const { data: profile } = await supabase
         .from('profiles')
-        .select('rating, total_rides')
+        .select('rating, total_trips')
         .eq('id', user.id)
         .single()
 
       const { data: rides } = await supabase
         .from('rides')
-        .select('final_price, passenger_price_offer, created_at, status')
+        .select('final_price, estimated_price, created_at, status')
         .eq('passenger_id', user.id)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(500)
 
-      const totalRides = profile?.total_rides || rides?.length || 0
+      const totalRides = profile?.total_trips || rides?.length || 0
       const totalSaved = (rides || []).reduce((sum, r) => {
-        const saved = (r.passenger_price_offer || 0) - (r.final_price || 0)
+        const saved = (r.estimated_price || 0) - (r.final_price || 0)
         return sum + (saved > 0 ? saved : 0)
       }, 0)
       const totalSpent = (rides || []).reduce((sum, r) => sum + (r.final_price || 0), 0)

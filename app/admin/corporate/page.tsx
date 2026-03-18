@@ -50,7 +50,7 @@ interface CorporateInvoice {
   company_id: string
   month: number
   year: number
-  total_rides: number
+  total_trips: number
   total_amount: number
   discount: number
   net_amount: number
@@ -251,7 +251,7 @@ export default function AdminCorporatePage() {
             <div key={inv.id} className="bg-card border rounded-xl p-4 flex items-center justify-between gap-4">
               <div>
                 <p className="font-medium text-foreground">{companies.find(c => c.id === inv.company_id)?.name || "Empresa"}</p>
-                <p className="text-xs text-muted-foreground">{MESES[inv.month - 1]}/{inv.year} · {inv.total_rides} corridas</p>
+                <p className="text-xs text-muted-foreground">{MESES[inv.month - 1]}/{inv.year} · {inv.total_trips} corridas</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">

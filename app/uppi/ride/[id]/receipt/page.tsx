@@ -94,7 +94,7 @@ export default function RideReceiptPage() {
         `Data: ${formatDateTime(ride.completed_at || ride.created_at)}`,
         `De: ${ride.pickup_address}`,
         `Para: ${ride.dropoff_address}`,
-        ride.distance_km ? `Distância: ${ride.distance_km} km` : null,
+        (ride.estimated_distance || ride.distance_km) ? `Distância: ${ride.estimated_distance || ride.distance_km} km` : null,
         `Valor: R$ ${(ride.final_price || 0).toFixed(2)}`,
         `Pagamento: ${paymentLabel(ride.payment_method)}`,
         driver ? `Motorista: ${driver.full_name}` : null,
@@ -199,7 +199,7 @@ export default function RideReceiptPage() {
             {[
               { label: 'Subtotal', value: `R$ ${subtotal.toFixed(2)}` },
               { label: 'Taxa de serviço (5%)', value: `R$ ${serviceFee.toFixed(2)}` },
-              ride.distance_km ? { label: 'Distância', value: `${ride.distance_km} km` } : null,
+              (ride.estimated_distance || ride.distance_km) ? { label: 'Distância', value: `${ride.estimated_distance || ride.distance_km} km` } : null,
               ride.estimated_duration_minutes
                 ? { label: 'Duração estimada', value: `${ride.estimated_duration_minutes} min` }
                 : null,

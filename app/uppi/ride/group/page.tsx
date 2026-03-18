@@ -51,11 +51,11 @@ export default function GroupRidePage() {
         body: JSON.stringify({
           max_passengers: maxPassengers,
           split_method: splitMethod,
-          pickup_lat: route.origin.lat,
-          pickup_lng: route.origin.lng,
+          pickup_latitude: route.origin.lat,
+          pickup_longitude: route.origin.lng,
           pickup_address: route.origin.address,
-          dropoff_lat: route.destination.lat,
-          dropoff_lng: route.destination.lng,
+          dropoff_latitude: route.destination.lat,
+          dropoff_longitude: route.destination.lng,
           dropoff_address: route.destination.address,
         }),
       })
@@ -103,11 +103,11 @@ export default function GroupRidePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           invite_code: inviteCode,
-          pickup_lat: route.origin.lat,
-          pickup_lng: route.origin.lng,
+          pickup_latitude: route.origin.lat,
+          pickup_longitude: route.origin.lng,
           pickup_address: route.origin.address,
-          dropoff_lat: route.destination.lat,
-          dropoff_lng: route.destination.lng,
+          dropoff_latitude: route.destination.lat,
+          dropoff_longitude: route.destination.lng,
           dropoff_address: route.destination.address,
         }),
       })

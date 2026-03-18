@@ -256,9 +256,9 @@ function OfferCard({
 }) {
   const driver = offer.driver
   const dp = driver?.driver_profile?.[0]
-  const priceDiff = (offer.offered_price || 0) - (ride?.passenger_price_offer || 0)
-  const savingsPercent = ride?.passenger_price_offer
-    ? Math.round(((ride.passenger_price_offer - offer.offered_price) / ride.passenger_price_offer) * 100)
+  const priceDiff = (offer.offered_price || 0) - (ride?.estimated_price || 0)
+  const savingsPercent = ride?.estimated_price
+    ? Math.round(((ride.estimated_price - offer.offered_price) / ride.estimated_price) * 100)
     : 0
 
   return (
@@ -502,9 +502,9 @@ export default function RideOffersPage() {
     }).filter(o => o.timeRemaining > 0)
 
     // Calculate savings and best offer
-    if (offersWithTime.length > 0 && rd?.passenger_price_offer) {
+    if (offersWithTime.length > 0 && rd?.estimated_price) {
       const savings = offersWithTime
-        .map(o => rd.passenger_price_offer! - o.offered_price)
+        .map(o => rd.estimated_price! - o.offered_price)
         .filter(s => s > 0)
 
       if (savings.length > 0) {
@@ -754,7 +754,7 @@ export default function RideOffersPage() {
             <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full">
               <VehicleIcon type={ride?.vehicle_type || 'economy'} className="w-4 h-4 text-blue-600" />
               <span className="text-[13px] font-bold text-blue-700">
-                R$ {ride?.passenger_price_offer?.toFixed(2)}
+                R$ {ride?.estimated_price?.toFixed(2)}
               </span>
             </div>
           </div>
