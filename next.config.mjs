@@ -55,10 +55,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
-  generateBuildId: async () => `build-${Date.now()}`,
-  // Campo experimental vazio para limpar cache de versoes anteriores
-  // que tinham chaves invalidas (transitionIndicator, browserDebugInfoInTerminal)
-  experimental: {},
 
   // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
   webpack(config, { isServer }) {
