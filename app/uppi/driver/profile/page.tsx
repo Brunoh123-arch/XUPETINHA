@@ -115,7 +115,7 @@ export default function DriverProfilePage() {
           vehicle_color: vehicleColor,
           vehicle_plate: vehiclePlate.toUpperCase(),
           vehicle_year: vehicleYear ? parseInt(vehicleYear) : null,
-        }).eq('id', profile.id),
+        }).eq('user_id', profile.id),
       ])
       await loadProfile()
     } finally {
@@ -191,7 +191,7 @@ export default function DriverProfilePage() {
                 <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
               </svg>
               <span className="text-[14px] font-bold text-amber-700">{driverProfile.rating.toFixed(1)}</span>
-              <span className="text-[12px] text-amber-600">({driverProfile.total_rides || 0} corridas)</span>
+                <span className="text-[12px] text-amber-600">({driverProfile.total_trips || 0} corridas)</span>
             </div>
           )}
         </div>

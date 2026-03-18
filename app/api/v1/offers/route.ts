@@ -21,11 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ride_id e offered_price são obrigatórios' }, { status: 400 })
     }
 
-    // Verificar se o usuário é motorista ativo
+    // Verificar se o usuário é motorista ativo — FK é user_id, não id
     const { data: driver } = await supabase
       .from('driver_profiles')
-      .select('id, is_verified, is_available, vehicle_type, vehicle_brand, vehicle_model, vehicle_plate')
-      .eq('id', user.id)
+      .select('id, is_verified, is_available')
+      .eq('user_id', user.id)
       .single()
 
     if (!driver) {

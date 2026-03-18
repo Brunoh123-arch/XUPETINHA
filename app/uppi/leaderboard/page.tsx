@@ -12,17 +12,17 @@ interface LeaderboardEntry {
   id: string
   full_name: string
   avatar_url: string | null
-  total_rides: number
+  total_trips: number
   rating: number
   total_savings: number
   achievements_count: number
   rank: number
 }
 
-type Category = 'total_rides' | 'savings' | 'rating' | 'achievements'
+type Category = 'total_trips' | 'savings' | 'rating' | 'achievements'
 
 export default function LeaderboardPage() {
-  const [category, setCategory] = useState<Category>('total_rides')
+  const [category, setCategory] = useState<Category>('total_trips')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [userRank, setUserRank] = useState<LeaderboardEntry | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,7 +52,7 @@ export default function LeaderboardPage() {
   }
 
   const categories = [
-    { id: 'total_rides' as Category, label: 'Corridas', icon: Trophy },
+    { id: 'total_trips' as Category, label: 'Corridas', icon: Trophy },
     { id: 'savings' as Category, label: 'Economia', icon: TrendingUp },
     { id: 'rating' as Category, label: 'Avaliação', icon: Star },
     { id: 'achievements' as Category, label: 'Conquistas', icon: Award },
@@ -124,7 +124,7 @@ export default function LeaderboardPage() {
               <div>
                 <p className="text-white font-bold text-[17px]">Sua Posição</p>
                 <p className="text-white/80 text-[13px]">
-                  {category === 'total_rides' && `${userRank.total_rides} corridas`}
+                  {category === 'total_trips' && `${userRank.total_trips} corridas`}
                   {category === 'savings' && `R$ ${userRank.total_savings.toFixed(2)} economizados`}
                   {category === 'rating' && `${userRank.rating.toFixed(1)} ⭐`}
                   {category === 'achievements' && `${userRank.achievements_count} conquistas`}
@@ -201,9 +201,9 @@ export default function LeaderboardPage() {
                       )}
                     </p>
                     <p className="text-[13px] text-muted-foreground">
-                      {category === 'total_rides' && `${entry.total_rides} corridas`}
-                      {category === 'savings' && `R$ ${entry.total_savings.toFixed(2)} economizados`}
-                      {category === 'rating' && `${entry.rating.toFixed(1)} ⭐ • ${entry.total_rides} corridas`}
+                  {category === 'total_trips' && `${entry.total_trips} corridas`}
+                  {category === 'savings' && `R$ ${entry.total_savings.toFixed(2)}`}
+                  {category === 'rating' && `${entry.rating.toFixed(1)} • ${entry.total_trips} corridas`}
                       {category === 'achievements' && `${entry.achievements_count} conquistas`}
                     </p>
                   </div>
@@ -212,7 +212,7 @@ export default function LeaderboardPage() {
                   {isTopThree && (
                     <div className="text-right">
                       <p className="text-[18px] font-bold text-foreground">
-                        {category === 'total_rides' && entry.total_rides}
+                        {category === 'total_trips' && entry.total_trips}
                         {category === 'savings' && `R$ ${entry.total_savings.toFixed(0)}`}
                         {category === 'rating' && entry.rating.toFixed(1)}
                         {category === 'achievements' && entry.achievements_count}
