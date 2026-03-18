@@ -1,12 +1,13 @@
 {
   "name": "uppi",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "preinstall": "npx npm-check-updates -u react-day-picker 2>/dev/null || true"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
@@ -54,7 +55,7 @@
     "next-themes": "^0.4.4",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
-    "react-day-picker": "^9.6.4",
+    "react-day-picker": "9.14.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.0",
@@ -69,7 +70,7 @@
     "zod": "^3.24.1"
   },
   "overrides": {
-    "react-day-picker": "^9.6.4"
+    "react-day-picker": "9.14.0"
   },
   "devDependencies": {
     "@types/canvas-confetti": "^1.6.4",
