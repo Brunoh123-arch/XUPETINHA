@@ -65,20 +65,28 @@ const nextConfig = {
       })
     }
 
-    // Evita que strings grandes (ex: database.types.ts ~140kiB) sejam serializadas
-    // no cache do Webpack, melhorando a performance de desserializacao
+    // Otimiza IDs de modulos para cache mais estavel
     config.optimization = {
       ...config.optimization,
       moduleIds: 'deterministic',
     }
 
-    // Trata arquivos de tipos puros como assets externos para nao inflar o cache
+    // Marca database.types.ts como sem efeitos colaterais para tree-shaking
+    // e exclui do cache serializado do Webpack (resolve big strings warning)
     config.module = config.module || {}
     config.module.rules = config.module.rules || []
     config.module.rules.push({
       test: /database\.types\.ts$/,
       sideEffects: false,
+      issuerLayer: { not: ['api'] },
     })
+
+    // Limita geracoes de cache em memoria para reduzir serializacao de strings grandes
+    config.cache = {
+      ...config.cache,
+      maxMemoryGenerations: 1,
+      type: 'filesystem',
+    }
 
     return config
   },
