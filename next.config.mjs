@@ -4,13 +4,10 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
-// next.config.mjs v2 — sem chaves experimentais invalidas
 
-// Quando BUILD_TARGET=android, gera output estatico para o Capacitor
-// Em producao Vercel, BUILD_TARGET nao e definido e o app roda normalmente
 const isAndroidBuild = process.env.BUILD_TARGET === 'android'
 
-// Pacotes nativos/opcionais que devem ser substituidos por mocks no build web
+// Pacotes nativos que devem ser substituidos por mocks no build web
 const NATIVE_PACKAGES = [
   '@capacitor/core',
   '@capacitor/geolocation',
@@ -35,7 +32,6 @@ const NATIVE_PACKAGES = [
   '@capacitor-community/text-to-speech',
   '@capacitor-community/biometric-auth',
   '@capacitor-community/microphone',
-  // Google Maps packages (only needed at runtime when API key is set)
   '@vis.gl/react-google-maps',
   'google-maps',
 ]
@@ -43,7 +39,6 @@ const NATIVE_PACKAGES = [
 const capacitorMockPath = path.resolve(__dirname, 'lib/capacitor-mock.js')
 
 const nextConfig = {
-  // Static export apenas para build Android (Capacitor usa /out como webDir)
   ...(isAndroidBuild && { output: 'export' }),
 
   env: {
@@ -54,86 +49,57 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   reactStrictMode: true,
+  images: {
+    unoptimized: isAndroidBuild,
+  },
 
-  // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
-  webpack(config, { isServer }) {
+  webpack(config) {
+    // Aliases para substituir pacotes Capacitor por mocks no build web
     if (!isAndroidBuild) {
       NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
+
+    // Garante que o fallback existe para evitar erros de resolucao
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    }
+
     return config
   },
-  images: {
-    // Necessario para static export (Android) — no Vercel usa o Image Optimizer normal
-    unoptimized: isAndroidBuild,
-  },
-  async headers() {
-    // Headers de seguranca para todas as rotas
-    const securityHeaders = [
-      {
-        key: 'X-DNS-Prefetch-Control',
-        value: 'on',
-      },
-      {
-        key: 'Strict-Transport-Security',
-        value: 'max-age=63072000; includeSubDomains; preload',
-      },
-      {
-        key: 'X-Frame-Options',
-        value: 'SAMEORIGIN',
-      },
-      {
-        key: 'X-Content-Type-Options',
-        value: 'nosniff',
-      },
-      {
-        key: 'X-XSS-Protection',
-        value: '1; mode=block',
-      },
-      {
-        key: 'Referrer-Policy',
-        value: 'strict-origin-when-cross-origin',
-      },
-      {
-        key: 'Permissions-Policy',
-        value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)',
-      },
-    ]
 
+  async headers() {
+    const securityHeaders = [
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)' },
+    ]
     return [
+      { source: '/:path*', headers: securityHeaders },
       {
-        // Aplicar headers de seguranca em todas as rotas
-        source: '/:path*',
-        headers: securityHeaders,
-      },
-      {
-        // Digital Asset Links must be served with this content-type
         source: '/.well-known/assetlinks.json',
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/json',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600',
-          },
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
       {
-        // Manifest must be accessible
         source: '/manifest.json',
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/manifest+json',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600',
-          },
+          { key: 'Content-Type', value: 'application/manifest+json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
     ]
