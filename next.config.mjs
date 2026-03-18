@@ -7,7 +7,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const isAndroidBuild = process.env.BUILD_TARGET === 'android'
 
-// Pacotes nativos que devem ser substituidos por mocks no build web
 const NATIVE_PACKAGES = [
   '@capacitor/core',
   '@capacitor/geolocation',
@@ -45,35 +44,23 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  serverExternalPackages: ['resend', 'web-push'],
+  serverExternalPackages: ['resend', 'web-push', ...NATIVE_PACKAGES],
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   reactStrictMode: true,
-  images: {
-    unoptimized: isAndroidBuild,
-  },
 
-  webpack(config) {
-    // Aliases para substituir pacotes Capacitor por mocks no build web
-    if (!isAndroidBuild) {
-      NATIVE_PACKAGES.forEach((pkg) => {
+  webpack: function webpackConfig(config, options) {
+    if (!isAndroidBuild && !options.isServer) {
+      NATIVE_PACKAGES.forEach(function setAlias(pkg) {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
-
-    // Garante que o fallback existe para evitar erros de resolucao
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    }
-
     return config
+  },
+
+  images: {
+    unoptimized: isAndroidBuild,
   },
 
   async headers() {
@@ -86,8 +73,12 @@ const nextConfig = {
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)' },
     ]
+
     return [
-      { source: '/:path*', headers: securityHeaders },
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
       {
         source: '/.well-known/assetlinks.json',
         headers: [
