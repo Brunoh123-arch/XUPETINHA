@@ -66,8 +66,8 @@ const nextConfig = {
     return config
   },
   images: {
-    // Necessario para static export — imagens nao podem usar o Image Optimizer
-    unoptimized: true,
+    // Necessario para static export (Android) — no Vercel usa o Image Optimizer normal
+    unoptimized: isAndroidBuild,
   },
   async headers() {
     // Headers de seguranca para todas as rotas
