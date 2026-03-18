@@ -50,14 +50,43 @@ export default function DriverRegisterPage() {
 
       const { error } = await supabase
         .from('driver_profiles')
-        .insert({
-          id: user.id,
-          ...formData,
-          status: 'pending',
-          vehicle_year: parseInt(formData.vehicle_year)
-        })
+        .upsert({
+          user_id: user.id,
+          license_number: formData.license_number,
+          license_category: formData.license_category,
+          verification_status: 'pending',
+          documents_status: 'pending',
+          background_check_status: 'pending',
+          is_verified: false,
+          is_available: false,
+          is_online: false,
+          rating: 5.0,
+          total_trips: 0,
+          total_earnings: 0,
+          acceptance_rate: 100,
+          cancellation_rate: 0,
+          commission_rate: 0.20,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' })
 
       if (error) throw error
+
+      // Criar veículo vinculado ao driver
+      await supabase
+        .from('vehicles')
+        .insert({
+          driver_id: user.id,
+          brand: formData.vehicle_brand,
+          model: formData.vehicle_model,
+          color: formData.vehicle_color,
+          plate: formData.vehicle_plate.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+          year: parseInt(formData.vehicle_year),
+          is_primary: true,
+          is_active: true,
+          is_verified: false,
+          verification_status: 'pending',
+          created_at: new Date().toISOString(),
+        })
 
       // Update user type in profiles
       await supabase
@@ -66,7 +95,7 @@ export default function DriverRegisterPage() {
         .eq('id', user.id)
 
       iosToast.success('Cadastro enviado! Aguarde aprovacao')
-      setTimeout(() => router.push('/uppi/driver'), 1000)
+      setTimeout(() => router.push('/uppi/home'), 1000)
     } catch (error) {
       console.error('Driver registration error:', error)
       iosToast.error('Erro ao enviar cadastro')

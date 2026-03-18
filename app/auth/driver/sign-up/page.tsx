@@ -38,7 +38,7 @@ export default function DriverSignUpPage() {
       }
 
       if (data.user) {
-        // Criar/atualizar perfil como motorista imediatamente
+        // Criar perfil como motorista
         await supabase
           .from('profiles')
           .upsert({
@@ -49,6 +49,26 @@ export default function DriverSignUpPage() {
             user_type: 'driver',
             created_at: new Date().toISOString(),
           })
+
+        // Criar driver_profile inicial (pendente de verificação)
+        await supabase
+          .from('driver_profiles')
+          .upsert({
+            user_id: data.user.id,
+            is_verified: false,
+            is_available: false,
+            is_online: false,
+            verification_status: 'pending',
+            documents_status: 'pending',
+            background_check_status: 'pending',
+            rating: 5.0,
+            total_trips: 0,
+            total_earnings: 0,
+            acceptance_rate: 100,
+            cancellation_rate: 0,
+            commission_rate: 0.20,
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' })
 
         iosToast.success('Conta criada! Complete seu cadastro.')
         router.push('/uppi/driver/register')
