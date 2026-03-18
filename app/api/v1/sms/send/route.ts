@@ -24,45 +24,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const { data: preferences } = await supabase
-      .from('user_sms_preferences')
-      .select('*')
+    // user_sms_preferences não existe — verifica user_settings
+    const { data: settings } = await supabase
+      .from('user_settings')
+      .select('sms_notifications')
       .eq('user_id', user.id)
-      .eq('enabled', true)
-      .eq('phone_verified', true)
       .single()
 
-    if (!preferences) {
-      return NextResponse.json({ error: 'SMS not enabled or phone not verified' }, { status: 403 })
+    if (!settings?.sms_notifications) {
+      return NextResponse.json({ error: 'SMS not enabled for this user' }, { status: 403 })
     }
 
-    const segments = Math.ceil(message.length / 160)
-
+    // sms_deliveries tem schema diferente — usa sms_logs em vez disso
     const { data: delivery, error: insertError } = await supabase
-      .from('sms_deliveries')
+      .from('sms_logs')
       .insert({
-        user_id: user.id,
-        phone_number,
+        phone: phone_number,
         message,
-        notification_id,
-        segments,
         status: 'pending',
+        provider: 'not_configured',
       })
       .select()
       .single()
 
     if (insertError) {
-      return NextResponse.json({ error: 'Failed to create SMS delivery' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to create SMS log' }, { status: 500 })
     }
 
     // SMS provider not configured — mark as failed
     await supabase
-      .from('sms_deliveries')
-      .update({
-        status: 'failed',
-        error_message: 'SMS provider not configured',
-        failed_at: new Date().toISOString(),
-      })
+      .from('sms_logs')
+      .update({ status: 'failed' })
       .eq('id', delivery.id)
 
     return NextResponse.json(
