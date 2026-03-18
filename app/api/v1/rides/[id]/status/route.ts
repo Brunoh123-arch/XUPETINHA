@@ -67,21 +67,21 @@ export async function PATCH(
 
     if (error) throw error
 
-    // Notificar ambas as partes conforme o status
-    const notifications: { user_id: string; title: string; message: string }[] = []
+    // Notificar ambas as partes conforme o status — campo real é "body" não "message"
+    const notifications: { user_id: string; title: string; body: string }[] = []
 
     if (status === 'driver_arrived' && ride.passenger_id) {
       notifications.push({
         user_id: ride.passenger_id,
         title: 'Motorista chegou',
-        message: 'Seu motorista chegou ao ponto de embarque.',
+        body: 'Seu motorista chegou ao ponto de embarque.',
       })
     }
     if (status === 'in_progress' && ride.passenger_id) {
       notifications.push({
         user_id: ride.passenger_id,
         title: 'Corrida iniciada',
-        message: 'Sua corrida foi iniciada. Boa viagem!',
+        body: 'Sua corrida foi iniciada. Boa viagem!',
       })
     }
     if (status === 'completed') {
@@ -89,14 +89,14 @@ export async function PATCH(
         notifications.push({
           user_id: ride.passenger_id,
           title: 'Corrida finalizada',
-          message: 'Chegamos! Avalie sua experiência.',
+          body: 'Chegamos! Avalie sua experiência.',
         })
       }
       if (ride.driver_id) {
         notifications.push({
           user_id: ride.driver_id,
           title: 'Corrida concluída',
-          message: `Corrida para ${ride.dropoff_address} finalizada. Ganho registrado!`,
+          body: `Corrida para ${ride.dropoff_address} finalizada. Ganho registrado!`,
         })
       }
     }
@@ -106,7 +106,7 @@ export async function PATCH(
         notifications.push({
           user_id: other,
           title: 'Corrida cancelada',
-          message: cancellation_reason || 'A corrida foi cancelada.',
+          body: cancellation_reason || 'A corrida foi cancelada.',
         })
       }
     }
@@ -116,12 +116,11 @@ export async function PATCH(
         user_id: notif.user_id,
         type: 'ride',
         title: notif.title,
-        message: notif.message,
+        body: notif.body,
         data: { ride_id: id, status },
         is_read: false,
       })
-      // Disparar push FCM em paralelo (nao bloqueia a resposta)
-      pushToUser(supabase, notif.user_id, notif.title, notif.message, {
+      pushToUser(supabase, notif.user_id, notif.title, notif.body, {
         ride_id: id,
         status,
         type: 'ride_update',
@@ -146,13 +145,13 @@ export async function PATCH(
         const { data: fullRide } = await supabase
           .from('rides')
           .select(`
-            id, pickup_address, dropoff_address, distance_km,
-            estimated_duration_minutes, final_price, payment_method,
+            id, pickup_address, dropoff_address, estimated_distance,
+            estimated_duration, final_price, payment_method,
             started_at, completed_at,
             passenger:profiles!passenger_id(full_name, email),
             driver:profiles!driver_id(
               full_name,
-              driver_profile:driver_profiles!id(vehicle_brand, vehicle_model, vehicle_plate, vehicle_color)
+              driver_profile:driver_profiles!driver_profiles_user_id_fkey(license_number, license_category)
             )
           `)
           .eq('id', id)
@@ -173,14 +172,16 @@ export async function PATCH(
               passengerName: passenger.full_name || 'Passageiro',
               passengerEmail: passenger.email,
               driverName: driver?.full_name || 'Motorista',
-              vehicleBrand: dp?.vehicle_brand || 'Veículo',
-              vehicleModel: dp?.vehicle_model || '',
-              vehiclePlate: dp?.vehicle_plate || '—',
-              vehicleColor: dp?.vehicle_color || '',
+              vehicleBrand: 'Veículo',
+              vehicleModel: '',
+              vehiclePlate: '—',
+              vehicleColor: '',
               pickupAddress: fullRide.pickup_address,
               dropoffAddress: fullRide.dropoff_address,
-              distanceKm: fullRide.distance_km || 0,
-              durationMinutes,
+              distanceKm: fullRide.estimated_distance || 0,
+              durationMinutes: fullRide.started_at && fullRide.completed_at
+                ? Math.round((new Date(fullRide.completed_at).getTime() - new Date(fullRide.started_at).getTime()) / 60000)
+                : fullRide.estimated_duration || 0,
               finalPrice: fullRide.final_price || 0,
               paymentMethod: fullRide.payment_method || 'pix',
               startedAt: fullRide.started_at || fullRide.completed_at || new Date().toISOString(),

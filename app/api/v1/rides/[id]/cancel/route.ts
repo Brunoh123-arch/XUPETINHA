@@ -145,7 +145,7 @@ export async function POST(
         user_id: otherUserId,
         type: 'ride',
         title: 'Corrida cancelada',
-        message: `A corrida foi cancelada. Motivo: ${reason || 'Cancelado pelo usuário'}`,
+        body: `A corrida foi cancelada. Motivo: ${reason || 'Cancelado pelo usuário'}`,
         data: { ride_id: id },
         is_read: false,
       })
@@ -157,7 +157,7 @@ export async function POST(
         user_id: ride.passenger_id,
         type: 'payment',
         title: 'Reembolso creditado',
-        message: `R$ ${refundAmount.toFixed(2)} foram creditados na sua carteira Uppi.${cancellationFee > 0 ? ` Taxa de cancelamento de R$ ${cancellationFee.toFixed(2)} descontada.` : ''}`,
+        body: `R$ ${refundAmount.toFixed(2)} foram creditados na sua carteira Uppi.${cancellationFee > 0 ? ` Taxa de cancelamento de R$ ${cancellationFee.toFixed(2)} descontada.` : ''}`,
         data: { ride_id: id, refund_amount: refundAmount },
         is_read: false,
       })
@@ -166,7 +166,7 @@ export async function POST(
         user_id: ride.passenger_id,
         type: 'payment',
         title: 'Reembolso em processamento',
-        message: 'Seu reembolso PIX está sendo processado e será creditado em breve.',
+        body: 'Seu reembolso PIX está sendo processado e será creditado em breve.',
         data: { ride_id: id },
         is_read: false,
       })

@@ -106,7 +106,7 @@ export async function GET(request: Request) {
         *,
         passenger:profiles!passenger_id(id, full_name, avatar_url, phone),
         driver:profiles!driver_id(id, full_name, avatar_url, phone),
-        driver_profile:driver_profiles!driver_id(rating, total_rides, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type)
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips, is_verified, is_available)
       `)
       .eq('passenger_id', user.id)
       .order('created_at', { ascending: false })

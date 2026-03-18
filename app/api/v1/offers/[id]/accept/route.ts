@@ -14,9 +14,9 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Buscar a oferta com dados da corrida
+    // Buscar a oferta — tabela real: ride_offers
     const { data: offer, error: offerError } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select('*, ride:rides(id, passenger_id, driver_id, status)')
       .eq('id', offerId)
       .single()
@@ -45,9 +45,9 @@ export async function POST(
       return NextResponse.json({ error: 'Sem permissão para aceitar esta oferta' }, { status: 403 })
     }
 
-    // Atualizar esta oferta para aceita
+    // Atualizar esta oferta para aceita — ride_offers
     const { error: acceptError } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .update({ status: 'accepted', updated_at: new Date().toISOString() })
       .eq('id', offerId)
 
@@ -57,7 +57,7 @@ export async function POST(
 
     // Rejeitar todas as outras ofertas da mesma corrida
     await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .update({ status: 'rejected', updated_at: new Date().toISOString() })
       .eq('ride_id', offer.ride_id)
       .neq('id', offerId)
@@ -89,7 +89,9 @@ export async function POST(
         user_id: notifyUserId,
         type: 'offer',
         title,
-        message,
+        body: isPassenger
+          ? `Sua oferta de R$ ${Number(offer.offered_price).toFixed(2)} foi aceita. Dirija-se ao passageiro.`
+          : `O passageiro confirmou. Dirija-se ao local de embarque.`,
         data: { ride_id: offer.ride_id, offer_id: offerId },
         is_read: false,
       })

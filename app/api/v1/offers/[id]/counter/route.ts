@@ -30,10 +30,10 @@ export async function POST(
       return NextResponse.json({ error: 'counter_price invalido' }, { status: 400 })
     }
 
-    // Buscar oferta e verificar que pertence ao motorista autenticado
+    // Buscar oferta — tabela real: ride_offers
     const { data: offer, error: offerError } = await supabase
-      .from('price_offers')
-      .select('*, rides(id, passenger_id, status, passenger_price_offer)')
+      .from('ride_offers')
+      .select('*, rides(id, passenger_id, status, estimated_price)')
       .eq('id', offerId)
       .single()
 
@@ -58,10 +58,10 @@ export async function POST(
     expiresAt.setMinutes(expiresAt.getMinutes() + 3) // 3 min para passageiro responder
 
     const { data: updatedOffer, error: updateError } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .update({
         offered_price: counter_price,
-        message: message || offer.message,
+        notes: message || offer.notes,
         status: 'pending',
         expires_at: expiresAt.toISOString(),
         counter_count: (offer.counter_count || 0) + 1,
@@ -85,7 +85,7 @@ export async function POST(
         user_id: ride.passenger_id,
         type: 'ride',
         title: 'Nova contra-oferta!',
-        message: `O motorista ofereceu R$ ${counter_price.toFixed(2)} para sua corrida.`,
+        body: `O motorista ofereceu R$ ${counter_price.toFixed(2)} para sua corrida.`,
         data: {
           ride_id: ride.id,
           offer_id: offerId,

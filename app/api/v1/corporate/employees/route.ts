@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         user_id: profile.id,
         type: 'system',
         title: 'Você foi adicionado a uma conta corporativa',
-        message: 'Você agora pode solicitar corridas corporativas.',
+        body: 'Você agora pode solicitar corridas corporativas.',
         data: { corporate_account_id: account.id },
         is_read: false,
       })

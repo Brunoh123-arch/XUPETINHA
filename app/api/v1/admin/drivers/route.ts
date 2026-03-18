@@ -25,14 +25,14 @@ export async function GET(request: Request) {
     let query = supabase
       .from('driver_profiles')
       .select(`
-        id, status, rating, total_rides, total_earnings, is_verified, created_at,
+        id, user_id, rating, total_trips, total_earnings, is_verified, verification_status, created_at,
         user:profiles!driver_profiles_user_id_fkey(id, full_name, phone, email, avatar_url),
-        vehicle:vehicles(make, model, year, plate, category)
+        vehicle:vehicles!vehicles_driver_id_fkey(brand, model, year, plate)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
-    if (status) query = query.eq('status', status)
+    if (status) query = query.eq('verification_status', status)
 
     const { data: drivers, error, count } = await query
     if (error) throw error
