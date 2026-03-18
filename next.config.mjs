@@ -63,6 +63,22 @@ const nextConfig = {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
+
+    // Evita que strings grandes (ex: database.types.ts ~140kiB) sejam serializadas
+    // no cache do Webpack, melhorando a performance de desserializacao
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+    }
+
+    // Trata arquivos de tipos puros como assets externos para nao inflar o cache
+    config.module = config.module || {}
+    config.module.rules = config.module.rules || []
+    config.module.rules.push({
+      test: /database\.types\.ts$/,
+      sideEffects: false,
+    })
+
     return config
   },
   images: {
