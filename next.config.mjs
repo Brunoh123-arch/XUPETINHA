@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
+// next.config.mjs v2 — sem chaves experimentais invalidas
 
 // Quando BUILD_TARGET=android, gera output estatico para o Capacitor
 // Em producao Vercel, BUILD_TARGET nao e definido e o app roda normalmente
@@ -56,11 +57,18 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
-  webpack(config, { isServer }) {
+  webpack(config, { isServer, dev }) {
     if (!isAndroidBuild) {
       NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
       })
+    }
+    // Garante que o MiniCssExtractPlugin nao e conflitado no modo dev
+    if (dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: false,
+      }
     }
     return config
   },
