@@ -72,7 +72,7 @@ export default function DriverRegisterPage() {
       if (error) throw error
 
       // Criar veículo vinculado ao driver
-      await supabase
+      const { error: vehicleError } = await supabase
         .from('vehicles')
         .insert({
           driver_id: user.id,
@@ -87,6 +87,11 @@ export default function DriverRegisterPage() {
           verification_status: 'pending',
           created_at: new Date().toISOString(),
         })
+
+      if (vehicleError) {
+        // Não bloqueia o fluxo — veículo pode ser adicionado depois
+        console.warn('[v0] vehicles insert skipped:', vehicleError.message)
+      }
 
       // Update user type in profiles
       await supabase
