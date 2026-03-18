@@ -74,6 +74,11 @@ const nextConfig = {
       moduleIds: 'deterministic',
     }
 
+    // Suprime avisos de cache do webpack (PackFileCacheStrategy)
+    config.infrastructureLogging = {
+      level: 'error',
+    }
+
     return config
   },
   images: {
