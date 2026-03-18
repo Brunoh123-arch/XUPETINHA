@@ -12,16 +12,15 @@ export async function GET(
     const { id: rideId } = await params
     const supabase = await createClient()
 
-    // Buscar a corrida
+    // Colunas reais: pickup_address/dropoff_address, estimated_price, estimated_distance, estimated_duration
     const { data: ride, error: rideError } = await supabase
       .from('rides')
       .select(`
-        id, status, final_price, passenger_price, driver_earnings, platform_fee,
-        payment_method, payment_status, origin_address, destination_address,
-        distance_km, duration_minutes, started_at, completed_at, created_at,
+        id, status, final_price, estimated_price, driver_commission, platform_fee,
+        payment_method, payment_status, pickup_address, dropoff_address,
+        estimated_distance, estimated_duration, started_at, completed_at, created_at,
         passenger:profiles!passenger_id(id, full_name, avatar_url),
-        driver:profiles!driver_id(id, full_name, avatar_url),
-        driver_profile:driver_profiles!driver_id(vehicle_brand, vehicle_model, vehicle_plate, vehicle_color)
+        driver:profiles!driver_id(id, full_name, avatar_url)
       `)
       .eq('id', rideId)
       .single()
@@ -52,31 +51,33 @@ export async function GET(
       .eq('ride_id', rideId)
       .single()
 
-    // Buscar gorjeta se houver
-    const { data: tip } = await supabase
-      .from('tip_transactions')
-      .select('amount')
+    // Buscar gorjeta via driver_earnings (tip_transactions não existe)
+    const { data: tipData } = await supabase
+      .from('driver_earnings')
+      .select('tip_amount')
       .eq('ride_id', rideId)
-      .single()
+      .not('tip_amount', 'is', null)
+      .maybeSingle()
+
+    const tipAmount = tipData?.tip_amount ?? 0
 
     return successResponse({
       ride_id: rideId,
       receipt,
       summary: {
-        fare: ride.final_price ?? ride.passenger_price,
-        tip_amount: tip?.amount ?? 0,
-        total: (ride.passenger_price ?? 0) + (tip?.amount ?? 0),
+        fare: ride.final_price ?? ride.estimated_price,
+        tip_amount: tipAmount,
+        total: (ride.final_price ?? ride.estimated_price ?? 0) + tipAmount,
         payment_method: ride.payment_method,
         payment_status: ride.payment_status,
-        distance_km: ride.distance_km,
-        duration_minutes: ride.duration_minutes,
-        origin: ride.origin_address,
-        destination: ride.destination_address,
+        distance_km: ride.estimated_distance,
+        duration_minutes: ride.estimated_duration,
+        origin: ride.pickup_address,
+        destination: ride.dropoff_address,
         started_at: ride.started_at,
         completed_at: ride.completed_at,
         passenger: ride.passenger,
         driver: ride.driver,
-        vehicle: ride.driver_profile,
       },
     })
   } catch (error) {

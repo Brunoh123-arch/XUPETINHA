@@ -27,16 +27,16 @@ export async function POST(request: Request) {
       .insert({
         passenger_id: user.id,
         pickup_address: data.pickup_address,
-        pickup_lat: data.pickup_lat,
-        pickup_lng: data.pickup_lng,
+        pickup_latitude: data.pickup_lat,
+        pickup_longitude: data.pickup_lng,
         dropoff_address: data.dropoff_address,
-        dropoff_lat: data.dropoff_lat,
-        dropoff_lng: data.dropoff_lng,
+        dropoff_latitude: data.dropoff_lat,
+        dropoff_longitude: data.dropoff_lng,
         status: 'pending',
         payment_method: data.payment_method || 'pix',
-        passenger_price_offer: data.passenger_price_offer,
+        estimated_price: data.passenger_price_offer,
         notes: data.notes || null,
-        vehicle_type: data.vehicle_type || 'economy',
+        category_id: data.vehicle_type || null,
       })
       .select(`
         *,

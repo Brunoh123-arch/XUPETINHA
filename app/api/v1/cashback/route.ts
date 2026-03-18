@@ -81,8 +81,15 @@ export async function POST(request: Request) {
       remaining -= toDeduct
     }
 
-    // Creditar na carteira
+    // wallet_transactions precisa do wallet_id — busca primeiro
+    const { data: walletData } = await supabase
+      .from('wallet')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
     await supabase.from('wallet_transactions').insert({
+      wallet_id: walletData?.id,
       user_id: user.id,
       amount: Number(amount),
       type: 'credit',
@@ -90,11 +97,12 @@ export async function POST(request: Request) {
       status: 'completed',
     })
 
+    // body (não message) é o campo real em notifications
     await supabase.from('notifications').insert({
       user_id: user.id,
       type: 'system',
       title: 'Cashback resgatado!',
-      message: `R$ ${Number(amount).toFixed(2)} de cashback foi adicionado à sua carteira.`,
+      body: `R$ ${Number(amount).toFixed(2)} de cashback foi adicionado à sua carteira.`,
       data: { amount },
       is_read: false,
     })
