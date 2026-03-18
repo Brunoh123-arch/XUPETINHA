@@ -44,8 +44,6 @@ const capacitorMockPath = path.resolve(__dirname, 'lib/capacitor-mock.js')
 const nextConfig = {
   // Static export apenas para build Android (Capacitor usa /out como webDir)
   ...(isAndroidBuild && { output: 'export' }),
-  // Next.js 16: usar proxy.ts em vez de middleware.ts
-  // O export default em proxy.ts é suficiente; sem config adicional necessário
 
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -55,12 +53,18 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
   reactStrictMode: true,
+
+  // Turbopack aliases (Next.js 16 usa Turbopack por padrao)
+  // resolveAlias mapeia cada pacote nativo para o mock local
+  turbopack: !isAndroidBuild ? {
+    resolveAlias: Object.fromEntries(
+      NATIVE_PACKAGES.map((pkg) => [pkg, capacitorMockPath])
+    ),
+  } : {},
+
+  // Manter webpack config para compatibilidade com builds Android e edge cases
   webpack(config) {
-    // No build web, substitui todos os pacotes @capacitor/* por mocks locais.
-    // No build Android (BUILD_TARGET=android), os pacotes reais sao instalados
-    // e o alias nao e necessario (os imports resolvem normalmente).
     if (!isAndroidBuild) {
       NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
