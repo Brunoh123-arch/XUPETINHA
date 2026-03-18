@@ -70,11 +70,12 @@ const nextConfig = {
       moduleIds: 'deterministic',
     }
 
-    // Redireciona database.types.ts para um modulo vazio no bundle
-    // pois tipos TypeScript nao existem em runtime — elimina big strings warning
+    // Substitui database.types.ts por modulo vazio via alias direto no resolver —
+    // tipos TypeScript nao existem em runtime, elimina big strings warning do Webpack
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@/lib/supabase/database.types': false,
+      [path.resolve(__dirname, 'lib/supabase/database.types.ts')]:
+        path.resolve(__dirname, 'lib/supabase/database.types.empty.ts'),
     }
 
     // Limita geracoes de cache em memoria
