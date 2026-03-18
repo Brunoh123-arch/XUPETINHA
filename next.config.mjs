@@ -55,16 +55,8 @@ const nextConfig = {
   },
   reactStrictMode: true,
 
-  // Turbopack aliases (Next.js 16 usa Turbopack por padrao)
-  // resolveAlias mapeia cada pacote nativo para o mock local
-  turbopack: !isAndroidBuild ? {
-    resolveAlias: Object.fromEntries(
-      NATIVE_PACKAGES.map((pkg) => [pkg, capacitorMockPath])
-    ),
-  } : {},
-
-  // Manter webpack config para compatibilidade com builds Android e edge cases
-  webpack(config) {
+  // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
+  webpack(config, { isServer }) {
     if (!isAndroidBuild) {
       NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
