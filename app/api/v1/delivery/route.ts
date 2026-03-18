@@ -43,20 +43,25 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const {
-      pickup_address, pickup_lat, pickup_lng,
-      dropoff_address, dropoff_lat, dropoff_lng,
+      pickup_address, pickup_lat, pickup_lng, pickup_latitude, pickup_longitude,
+      dropoff_address, dropoff_lat, dropoff_lng, dropoff_latitude, dropoff_longitude,
       recipient_name, recipient_phone,
       package_description, package_size, package_weight_kg,
       is_fragile, requires_signature, notes,
     } = body
+    // Aceita ambos formatos de coordenadas
+    const pLat = pickup_latitude ?? pickup_lat
+    const pLng = pickup_longitude ?? pickup_lng
+    const dLat = dropoff_latitude ?? dropoff_lat
+    const dLng = dropoff_longitude ?? dropoff_lng
 
     if (!pickup_address || !dropoff_address) {
       return NextResponse.json({ error: 'Enderecos obrigatorios' }, { status: 400 })
     }
 
-    // Calcular preço estimado baseado na distância
-    const distKm = pickup_lat && dropoff_lat
-      ? Math.sqrt(Math.pow((dropoff_lat - pickup_lat) * 111, 2) + Math.pow((dropoff_lng - pickup_lng) * 111 * Math.cos(pickup_lat * Math.PI / 180), 2))
+    // Calcular preço estimado baseado na distância — usa variáveis normalizadas
+    const distKm = pLat && dLat
+      ? Math.sqrt(Math.pow((dLat - pLat) * 111, 2) + Math.pow((dLng - pLng) * 111 * Math.cos(pLat * Math.PI / 180), 2))
       : 5
 
     const sizeMultiplier: Record<string, number> = { small: 1, medium: 1.5, large: 2, extra_large: 3 }
@@ -67,8 +72,8 @@ export async function POST(request: Request) {
       .from('delivery_orders')
       .insert({
         user_id: user.id,
-        pickup_address, pickup_lat, pickup_lng,
-        dropoff_address, dropoff_lat, dropoff_lng,
+        pickup_address, pickup_latitude: pLat, pickup_longitude: pLng,
+        dropoff_address, dropoff_latitude: dLat, dropoff_longitude: dLng,
         recipient_name, recipient_phone,
         package_description, package_size: package_size || 'small',
         package_weight_kg, is_fragile: is_fragile || false,

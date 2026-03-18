@@ -243,6 +243,7 @@ function RequestRideContent() {
         finalDurMin = optimizedRoute.duration
       }
 
+      // Colunas reais: pickup_latitude/longitude, estimated_distance, estimated_price
       const ridePayload = {
         pickup_address: pickupAddress,
         pickup_lat: pickupCoords.lat,
@@ -250,7 +251,7 @@ function RequestRideContent() {
         dropoff_address: dropoffAddress,
         dropoff_lat: dropoffCoords.lat,
         dropoff_lng: dropoffCoords.lng,
-        distance_km: finalDistKm,
+        estimated_distance: finalDistKm,
         estimated_duration_minutes: finalDurMin,
         passenger_price_offer: parseFloat(priceOffer),
         payment_method: paymentMethod,

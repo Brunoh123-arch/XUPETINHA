@@ -35,9 +35,10 @@ export default function AnalyticsPage() {
       const oneYearAgo = new Date()
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
 
+      // Colunas reais: estimated_price (não passenger_price_offer), estimated_distance (não distance_km)
       const { data: rides } = await supabase
         .from('rides')
-        .select('id, passenger_id, driver_id, final_price, passenger_price_offer, status, created_at, completed_at, distance_km')
+        .select('id, passenger_id, driver_id, final_price, estimated_price, status, created_at, completed_at, estimated_distance')
         .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)
         .eq('status', 'completed')
         .gte('created_at', oneYearAgo.toISOString())
@@ -65,7 +66,7 @@ export default function AnalyticsPage() {
     return rides
       .filter(ride => type === 'passenger' ? ride.passenger_id === userId : ride.driver_id === userId)
       .reduce((sum, ride) => {
-        const price = Number(ride.final_price) || Number(ride.passenger_price_offer) || 0
+        const price = Number(ride.final_price) || Number(ride.estimated_price) || 0
         // motorista recebe 85% do valor
         return sum + (type === 'driver' ? price * 0.85 : price)
       }, 0)
