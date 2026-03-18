@@ -59,7 +59,7 @@ export default function RideReceiptPage() {
           ? supabase.from('profiles').select('*').eq('id', rideData.driver_id).single()
           : Promise.resolve({ data: null }),
         rideData.driver_id
-          ? supabase.from('driver_profiles').select('*').eq('id', rideData.driver_id).single()
+          ? supabase.from('driver_profiles').select('*').eq('user_id', rideData.driver_id).single()
           : Promise.resolve({ data: null }),
       ])
 

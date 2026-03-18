@@ -110,7 +110,7 @@ export default function UsersPage() {
     const supabase = createClient()
     const current = drivers[driverId]
     if (!current) return
-    await supabase.from('driver_profiles').update({ is_verified: !current.is_verified }).eq('id', driverId)
+    await supabase.from('driver_profiles').update({ is_verified: !current.is_verified }).eq('user_id', driverId)
     fetchUsers()
   }
 

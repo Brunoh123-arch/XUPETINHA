@@ -144,7 +144,7 @@ export default function DriverHomePage() {
 
       const [profileRes, statsRes, earningsRes, activeRideRes] = await Promise.all([
         supabase.from('profiles').select('id,full_name,avatar_url,rating,total_trips,trust_score,trust_level').eq('id', user.id).single(),
-        supabase.from('driver_profiles').select('*').eq('id', user.id).single(),
+        supabase.from('driver_profiles').select('*').eq('user_id', user.id).single(),
         supabase.from('rides')
           .select('id,final_price,estimated_price,created_at,started_at,completed_at')
           .eq('driver_id', user.id)

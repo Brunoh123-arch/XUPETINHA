@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         is_read: false,
       })
 
-      await supabase.from('driver_profiles').update({ status: 'suspended' }).eq('id', driver.id)
+      await supabase.from('driver_profiles').update({ status: 'suspended' }).eq('user_id', driver.id)
     }
 
     return NextResponse.json({ success: true, inspection }, { status: 201 })
