@@ -55,6 +55,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
+  generateBuildId: async () => `build-${Date.now()}`,
 
   // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
   webpack(config, { isServer }) {
