@@ -57,18 +57,11 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
-  webpack(config, { isServer, dev }) {
+  webpack(config, { isServer }) {
     if (!isAndroidBuild) {
       NATIVE_PACKAGES.forEach((pkg) => {
         config.resolve.alias[pkg] = capacitorMockPath
       })
-    }
-    // Garante que o MiniCssExtractPlugin nao e conflitado no modo dev
-    if (dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: false,
-      }
     }
     return config
   },
