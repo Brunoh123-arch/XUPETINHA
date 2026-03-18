@@ -50,9 +50,9 @@ const nextConfig = {
   },
   reactStrictMode: true,
 
-  webpack: function webpackConfig(config, options) {
-    if (!isAndroidBuild && !options.isServer) {
-      NATIVE_PACKAGES.forEach(function setAlias(pkg) {
+  webpack: function webpackConfig(config) {
+    if (!isAndroidBuild) {
+      NATIVE_PACKAGES.forEach(function addAlias(pkg) {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
