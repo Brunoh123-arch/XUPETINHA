@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint .",
-    "preinstall": "npx npm-check-updates -u react-day-picker 2>/dev/null || true"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
