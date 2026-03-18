@@ -69,8 +69,8 @@ export default function PaymentPage() {
     }
   }
 
-  /** Valor final da corrida — usa final_price se existir, senão passenger_price_offer */
-  const rideAmount = (ride?.final_price ?? ride?.passenger_price_offer) || 0
+  /** Valor final da corrida — usa final_price se existir, senão estimated_price */
+  const rideAmount = (ride?.final_price ?? ride?.estimated_price) || 0
 
   const handlePixPayment = async () => {
     if (!ride) return

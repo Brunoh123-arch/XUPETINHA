@@ -179,7 +179,7 @@ export default function ProfilePage() {
             </div>
             <div className="w-[0.5px] bg-black/[0.08] dark:bg-white/[0.1]" />
             <div>
-              <div className="text-[32px] font-bold text-[#007AFF] tracking-[-0.8px] tabular-nums">{profile?.total_rides || 0}</div>
+              <div className="text-[32px] font-bold text-[#007AFF] tracking-[-0.8px] tabular-nums">{profile?.total_trips || profile?.total_rides || 0}</div>
               <div className="text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">Corridas</div>
             </div>
           </div>

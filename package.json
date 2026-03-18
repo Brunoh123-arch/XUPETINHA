@@ -9,7 +9,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.0",
+    "@capacitor/app": "^8.0.1",
+    "@capacitor/core": "^8.2.0",
     "@capacitor/geolocation": "^8.1.0",
+    "@capacitor/share": "^8.0.1",
     "@googlemaps/js-api-loader": "^1.16.8",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "^1.2.0",

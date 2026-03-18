@@ -61,7 +61,7 @@ export default function DriverProfilePage() {
 
       const [{ data: prof }, { data: drvProf }, { data: revs }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', driverId).single(),
-        supabase.from('driver_profiles').select('*').eq('id', driverId).single(),
+        supabase.from('driver_profiles').select('*').eq('user_id', driverId).single(),
         supabase.from('driver_reviews')
           .select('id, rating, comment, tags, created_at')
           .eq('driver_id', driverId)
@@ -124,7 +124,7 @@ export default function DriverProfilePage() {
                 <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
               </svg>
               <span className="text-[16px] font-bold text-white">{avgRating.toFixed(1)}</span>
-              <span className="text-[13px] text-white/70">· {driverProfile?.total_rides || 0} corridas</span>
+                <span className="text-[13px] text-white/70">· {driverProfile?.total_trips || driverProfile?.total_rides || 0} corridas</span>
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function DriverProfilePage() {
         <div className="grid grid-cols-3 gap-3 animate-ios-fade-up" style={{ animationDelay: '60ms' }}>
           {[
             { label: 'Avaliação', value: avgRating.toFixed(1), sub: 'média' },
-            { label: 'Corridas', value: String(driverProfile?.total_rides || 0), sub: 'total' },
+            { label: 'Corridas', value: String(driverProfile?.total_trips || driverProfile?.total_rides || 0), sub: 'total' },
             { label: 'Aceitação', value: '95%', sub: 'taxa' },
           ].map(s => (
             <div key={s.label} className="bg-[color:var(--card)] rounded-[20px] p-4 text-center border border-[color:var(--border)]">

@@ -47,7 +47,7 @@ export default function RideDetailsPage() {
           *,
           passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url, phone),
           driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, phone, rating),
-          driver_profile:driver_profiles(vehicle_model, vehicle_plate, vehicle_color)
+          driver_profile:driver_profiles!driver_profiles_user_id_fkey(vehicle_model, vehicle_plate, vehicle_color)
         `)
         .eq('id', params.id)
         .single()

@@ -210,9 +210,9 @@ export default function DriverHistoryPage() {
                     </div>
                   </div>
 
-                  {ride.distance_km && (
+                  {(ride.estimated_distance || ride.distance_km) && (
                     <p className="text-[11px] text-[color:var(--muted-foreground)] mt-2 pl-1">
-                      {ride.distance_km} km
+                      {ride.estimated_distance || ride.distance_km} km
                     </p>
                   )}
                 </div>
