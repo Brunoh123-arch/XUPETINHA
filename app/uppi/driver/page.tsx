@@ -98,7 +98,8 @@ export default function DriverPage() {
       setUserId(user.id)
 
       const [{ data: driverProfile }, { data: profile }, { data: favData }] = await Promise.all([
-        supabase.from('driver_profiles').select('vehicle_type, is_available, acceptance_rate, trust_score, is_verified').eq('id', user.id).single(),
+        // FK real é user_id (não id)
+    supabase.from('driver_profiles').select('is_available, acceptance_rate, is_verified').eq('user_id', user.id).single(),
         supabase.from('profiles').select('full_name').eq('id', user.id).single(),
         supabase.from('favorite_drivers').select('id', { count: 'exact' }).eq('driver_id', user.id),
       ])
@@ -154,7 +155,8 @@ export default function DriverPage() {
     try {
       const today = new Date(); today.setHours(0, 0, 0, 0)
       const { data: completed } = await supabase.from('rides').select('final_price').eq('driver_id', uid).eq('status', 'completed').gte('completed_at', today.toISOString())
-      const { data: allOffers } = await supabase.from('price_offers').select('status').eq('driver_id', uid).gte('created_at', today.toISOString())
+      // tabela real: ride_offers (não price_offers)
+    const { data: allOffers } = await supabase.from('ride_offers').select('status').eq('driver_id', uid).gte('created_at', today.toISOString())
       const earnings = completed?.reduce((sum, r) => sum + (r.final_price || 0), 0) || 0
       const totalOffers = allOffers?.length || 0
       const acceptedOffers = allOffers?.filter(o => o.status === 'accepted').length || 0

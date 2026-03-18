@@ -15,9 +15,8 @@ interface DriverInfo {
   full_name: string
   avatar_url: string | null
   rating: number
-  total_rides: number
+  total_trips: number
   driver_profile: {
-    vehicle_type: string
     vehicle_brand: string
     vehicle_model: string
     vehicle_color: string
@@ -339,7 +338,7 @@ function OfferCard({
               </span>
               <span className="text-neutral-200">|</span>
               <span className="text-[11px] text-neutral-400">
-                {driver?.total_rides || 0} corridas
+                  {driver?.total_trips || 0} corridas
               </span>
             </div>
           </div>
@@ -476,13 +475,14 @@ export default function RideOffersPage() {
 
   const fetchOffers = useCallback(async (rideData?: Ride | null): Promise<OfferWithDriver[]> => {
     const rd = rideData || ride
+    // tabela real: ride_offers, join correto em driver_profiles
     const { data } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select(`
         *,
         driver:profiles!driver_id (
-          id, full_name, avatar_url, rating, total_rides,
-          driver_profile:driver_profiles ( vehicle_type, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location )
+          id, full_name, avatar_url, rating, total_trips,
+          driver_profile:driver_profiles!driver_profiles_user_id_fkey ( vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location )
         )
       `)
       .eq('ride_id', params.id)
@@ -492,7 +492,7 @@ export default function RideOffersPage() {
     const offersWithTime = (data || []).map((o: any) => {
       const dp = o.driver?.driver_profile?.[0]
       const loc = dp?.current_location?.coordinates
-      const est = estimateArrivalMinutes(loc?.[1], loc?.[0], rd?.pickup_lat, rd?.pickup_lng)
+      const est = estimateArrivalMinutes(loc?.[1], loc?.[0], rd?.pickup_latitude, rd?.pickup_longitude)
       const timeRemaining = Math.max(0, Math.floor((new Date(o.expires_at).getTime() - Date.now()) / 1000))
       return {
         ...o,
