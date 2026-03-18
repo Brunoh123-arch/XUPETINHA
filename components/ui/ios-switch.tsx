@@ -65,7 +65,7 @@ export function IOSSwitch({
         relative inline-flex items-center shrink-0
         ${config.track}
         rounded-full
-        transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+        transition-all duration-300 ease-in-out
         ${disabled 
           ? 'opacity-40 cursor-not-allowed' 
           : 'cursor-pointer ios-press'
@@ -84,7 +84,7 @@ export function IOSSwitch({
           bg-white
           rounded-full
           shadow-[0_1px_3px_rgba(0,0,0,0.12),0_1px_2px_rgba(0,0,0,0.24)]
-          transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
+          transition-all duration-300 ease-in-out
           ${checked 
             ? config.translate
             : 'translate-x-[2px]'
