@@ -22,14 +22,32 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || 'total_rides'
     const limit = parseInt(searchParams.get('limit') || '100', 10)
 
-    // Get leaderboard data
-    const { data: leaderboard, error } = await supabase.rpc('get_leaderboard_full', {
+    // Tenta RPC primeiro; se falhar (função inexistente), usa query direta
+    let leaderboard: any[] = []
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_leaderboard_full', {
       limit_count: limit,
       category,
     })
 
-    if (error) {
-      return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 })
+    if (!rpcError && rpcData) {
+      leaderboard = rpcData
+    } else {
+      // Fallback: query direta em user_points + profiles
+      const { data: fallback } = await supabase
+        .from('user_points')
+        .select('user_id, points, lifetime_points, tier, profiles!user_points_user_id_fkey(full_name, avatar_url)')
+        .order('points', { ascending: false })
+        .limit(limit)
+
+      leaderboard = (fallback || []).map((row: any, idx: number) => ({
+        id: row.user_id,
+        full_name: row.profiles?.full_name || 'Usuário',
+        avatar_url: row.profiles?.avatar_url || null,
+        points: row.points || 0,
+        lifetime_points: row.lifetime_points || 0,
+        tier: row.tier || 'bronze',
+        rank: idx + 1,
+      }))
     }
 
     // Get current user's rank

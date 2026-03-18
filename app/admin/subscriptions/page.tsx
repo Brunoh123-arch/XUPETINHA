@@ -47,9 +47,10 @@ export default function SubscriptionsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    // tabela real: user_subscriptions (não subscriptions)
     const { data } = await supabase
-      .from('subscriptions')
-      .select(`id, user_id, plan, status, price, started_at, expires_at, cancelled_at, user:profiles!user_id(full_name, email, avatar_url)`)
+      .from('user_subscriptions')
+      .select(`id, user_id, plan_id, status, price, started_at, expires_at, cancelled_at, user:profiles!user_subscriptions_user_id_fkey(full_name, email, avatar_url)`)
       .order('started_at', { ascending: false })
       .limit(300)
 
@@ -71,13 +72,13 @@ export default function SubscriptionsPage() {
   // Realtime
   useEffect(() => {
     const channel = supabase.channel('admin-subscriptions')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_subscriptions' }, () => load())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [load])
 
   const cancelSub = async (id: string) => {
-    await supabase.from('subscriptions').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', id)
+    await supabase.from('user_subscriptions').update({ status: 'cancelled', cancelled_at: new Date().toISOString() }).eq('id', id)
     load()
   }
 

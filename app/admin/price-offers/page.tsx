@@ -18,12 +18,12 @@ interface PriceOffer {
   accepted_at: string | null
   rejected_at: string | null
   created_at: string
-  driver?: { full_name: string; rating: number; total_rides: number } | null
+  driver?: { full_name: string; rating: number; total_trips: number } | null
   ride?: {
     pickup_address: string
     dropoff_address: string
-    distance_km: number
-    passenger_price_offer: number
+    estimated_distance: number | null
+    estimated_price: number | null
     passenger?: { full_name: string } | null
   } | null
 }
@@ -44,14 +44,15 @@ export default function AdminPriceOffersPage() {
 
   const fetchOffers = useCallback(async () => {
     const supabase = createClient()
+    // tabela real: ride_offers (não price_offers)
     const { data } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select(`
         *,
-        driver:profiles!price_offers_driver_id_fkey(full_name, rating, total_rides),
-        ride:rides!price_offers_ride_id_fkey(
-          pickup_address, dropoff_address, distance_km, passenger_price_offer,
-          passenger:profiles!rides_passenger_id_fkey(full_name)
+        driver:profiles!driver_id(full_name, rating),
+        ride:rides!ride_id(
+          pickup_address, dropoff_address, estimated_distance, estimated_price,
+          passenger:profiles!passenger_id(full_name)
         )
       `)
       .order('created_at', { ascending: false })
@@ -68,7 +69,7 @@ export default function AdminPriceOffersPage() {
     const supabase = createClient()
     const channel = supabase
       .channel('admin-price-offers-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'price_offers' }, () => fetchOffers())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ride_offers' }, () => fetchOffers())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [fetchOffers])
@@ -186,9 +187,9 @@ export default function AdminPriceOffersPage() {
           {filtered.map((offer) => {
             const sc = statusConfig[offer.status] || statusConfig.pending
             const Icon = sc.icon
-            const diff = offer.ride?.passenger_price_offer
-              ? Number(offer.offered_price) - Number(offer.ride.passenger_price_offer)
-              : null
+  const diff = offer.ride?.estimated_price
+    ? Number(offer.offered_price) - Number(offer.ride.estimated_price)
+    : null
             return (
               <div key={offer.id} className="bg-[hsl(var(--admin-surface))] rounded-xl border border-[hsl(var(--admin-border))] p-4">
                 <div className="flex items-start gap-3">
@@ -215,21 +216,12 @@ export default function AdminPriceOffersPage() {
                         <p className="text-[10px] text-slate-500">Oferta Motorista</p>
                         <p className="text-[17px] font-bold text-slate-100 tabular-nums">R$ {Number(offer.offered_price).toFixed(2)}</p>
                       </div>
-                      {offer.ride?.passenger_price_offer && (
-                        <>
-                          <span className="text-slate-600 text-lg">vs</span>
-                          <div>
-                            <p className="text-[10px] text-slate-500">Oferta Passageiro</p>
-                            <p className="text-[17px] font-bold text-blue-400 tabular-nums">R$ {Number(offer.ride.passenger_price_offer).toFixed(2)}</p>
-                          </div>
-                          {diff !== null && (
-                            <span className={cn(
-                              'text-[12px] font-bold tabular-nums px-2 py-0.5 rounded',
-                              diff > 0 ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'
-                            )}>
-                              {diff > 0 ? '+' : ''}{diff.toFixed(2)}
-                            </span>
-                          )}
+                    {offer.ride?.estimated_price && (
+                      <div>
+                        <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-1">Preço Estimado</p>
+                        <p className="text-[17px] font-bold text-blue-400 tabular-nums">R$ {Number(offer.ride.estimated_price).toFixed(2)}</p>
+                      </div>
+                    )}
                         </>
                       )}
                     </div>
@@ -243,8 +235,8 @@ export default function AdminPriceOffersPage() {
                         <p className="truncate">
                           <span className="text-red-400 font-medium">Para:</span> {offer.ride.dropoff_address}
                         </p>
-                        {offer.ride.distance_km && (
-                          <p className="text-slate-500">{Number(offer.ride.distance_km).toFixed(1)} km</p>
+                    {offer.ride?.estimated_distance && (
+                      <p className="text-slate-500">{Number(offer.ride.estimated_distance).toFixed(1)} km</p>
                         )}
                       </div>
                     )}
