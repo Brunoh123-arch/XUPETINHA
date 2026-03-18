@@ -71,21 +71,17 @@ const nextConfig = {
       moduleIds: 'deterministic',
     }
 
-    // Marca database.types.ts como sem efeitos colaterais para tree-shaking
-    // e exclui do cache serializado do Webpack (resolve big strings warning)
-    config.module = config.module || {}
-    config.module.rules = config.module.rules || []
-    config.module.rules.push({
-      test: /database\.types\.ts$/,
-      sideEffects: false,
-      issuerLayer: { not: ['api'] },
-    })
+    // Redireciona database.types.ts para um modulo vazio no bundle
+    // pois tipos TypeScript nao existem em runtime — elimina big strings warning
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/lib/supabase/database.types': false,
+    }
 
-    // Limita geracoes de cache em memoria para reduzir serializacao de strings grandes
+    // Limita geracoes de cache em memoria
     config.cache = {
       ...config.cache,
       maxMemoryGenerations: 1,
-      type: 'filesystem',
     }
 
     return config
