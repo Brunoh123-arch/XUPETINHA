@@ -55,6 +55,10 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
+  // Suprime avisos de chaves experimentais invalidas injetadas pelo ambiente de preview
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
 
   // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
   webpack(config, { isServer }) {

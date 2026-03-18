@@ -90,21 +90,21 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Atualizar saldo na tabela user_wallets
+    // Atualizar saldo na tabela wallet (tabela real, não user_wallets)
     await supabase
-      .from('user_wallets')
+      .from('wallet')
       .upsert({
         user_id: user.id,
         balance: balanceAfter,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' })
 
-    // Notificação
+    // Notificação — usa "body" (não "message")
     await supabase.from('notifications').insert({
       user_id: user.id,
       type: 'system',
       title: delta > 0 ? 'Crédito adicionado' : 'Débito realizado',
-      message: `R$ ${Math.abs(Number(amount)).toFixed(2)} ${delta > 0 ? 'adicionado à' : 'debitado da'} sua carteira`,
+      body: `R$ ${Math.abs(Number(amount)).toFixed(2)} ${delta > 0 ? 'adicionado à' : 'debitado da'} sua carteira`,
       data: { transaction_id: transaction.id },
       is_read: false,
     })

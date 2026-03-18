@@ -14,10 +14,10 @@ export async function GET(request: Request) {
 
     const supabase = await createClient()
 
-    // Buscar wallet
+    // Buscar wallet — tabela real é "wallet" (não "wallets")
     const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('balance, bonus_balance, total_earned, total_spent')
+      .from('wallet')
+      .select('balance, bonus_balance, lifetime_earnings, lifetime_spent')
       .eq('user_id', user.id)
       .single()
 
@@ -25,11 +25,11 @@ export async function GET(request: Request) {
       return errorResponse('Carteira não encontrada', 404)
     }
 
-    // Buscar transações
+    // Buscar transações — tabela real é "wallet_transactions" (não "transactions")
     let query = supabase
-      .from('transactions')
+      .from('wallet_transactions')
       .select('*', { count: 'exact' })
-      .eq('user_id', user.id)
+      .eq('wallet_id', wallet?.id ?? '')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
