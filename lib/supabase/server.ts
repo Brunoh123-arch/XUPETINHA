@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database } from './database.types.empty'
+import type { Database } from './database.types'
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
