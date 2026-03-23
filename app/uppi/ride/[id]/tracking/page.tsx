@@ -139,7 +139,7 @@ export default function RideTrackingPage() {
       if (rideData.driver_id) {
         const [{ data: driverData }, { data: vehicleData }] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', rideData.driver_id).single(),
-          supabase.from('driver_profiles').select('*').eq('id', rideData.driver_id).single(),
+          supabase.from('driver_profiles').select('*').eq('user_id', rideData.driver_id).single(),
         ])
         setDriver(driverData)
         setDriverProfile(vehicleData)
@@ -202,20 +202,20 @@ export default function RideTrackingPage() {
     const status = currentRide?.status
     if (!status || !['accepted', 'driver_arrived'].includes(status)) {
       // Durante a viagem: ETA para o destino
-      if (status === 'in_progress' && currentRide?.dropoff_lat && currentRide?.dropoff_lng) {
-        const distKm = haversineKm(
-          location.latitude, location.longitude,
-          currentRide.dropoff_lat, currentRide.dropoff_lng
+      if (status === 'in_progress' && currentRide?.dropoff_latitude && currentRide?.dropoff_longitude) {
+        calcRoute(
+          { lat: driverLoc.latitude, lng: driverLoc.longitude },
+          currentRide.dropoff_latitude, currentRide.dropoff_longitude
         )
         setEta(Math.max(1, Math.round((distKm / 30) * 60)))
       }
       return
     }
     // Antes de iniciar: ETA até o passageiro
-    if (currentRide?.pickup_lat && currentRide?.pickup_lng) {
-      const distKm = haversineKm(
-        location.latitude, location.longitude,
-        currentRide.pickup_lat, currentRide.pickup_lng
+      if (currentRide?.pickup_latitude && currentRide?.pickup_longitude) {
+        calcRoute(
+          { lat: driverLoc.latitude, lng: driverLoc.longitude },
+          currentRide.pickup_latitude, currentRide.pickup_longitude
       )
       setEta(Math.max(1, Math.round((distKm / 30) * 60)))
     }
@@ -411,8 +411,8 @@ export default function RideTrackingPage() {
   const isActive = ['accepted', 'driver_arrived', 'in_progress'].includes(status)
   const mapCenter = driverLocation
     ? { lat: driverLocation.latitude, lng: driverLocation.longitude }
-    : ride?.pickup_lat && ride?.pickup_lng
-    ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
+    : ride?.pickup_latitude && ride?.pickup_longitude
+    ? { lat: ride.pickup_latitude, lng: ride.pickup_longitude }
     : undefined
 
   return (
@@ -482,7 +482,7 @@ export default function RideTrackingPage() {
                 <p className="text-[17px] font-bold text-[color:var(--foreground)] truncate">{driver.full_name}</p>
                 {driverProfile && (
                   <p className="text-[13px] text-[color:var(--muted-foreground)] truncate">
-                    {driverProfile.vehicle_brand} {driverProfile.vehicle_model} · {driverProfile.vehicle_plate?.toUpperCase()}
+                    {driverProfile.vehicle_brand || driverProfile.brand} {driverProfile.vehicle_model || driverProfile.model} · {(driverProfile.vehicle_plate || driverProfile.plate)?.toUpperCase()}
                   </p>
                 )}
                 <div className="flex items-center gap-1 mt-0.5">
@@ -493,7 +493,7 @@ export default function RideTrackingPage() {
                     {(driverProfile?.rating || 5).toFixed(1)}
                   </span>
                   <span className="text-[color:var(--muted-foreground)]/40">·</span>
-                  <span className="text-[13px] text-[color:var(--muted-foreground)]">{driverProfile?.total_rides || 0} corridas</span>
+                  <span className="text-[13px] text-[color:var(--muted-foreground)]">{driverProfile?.total_trips || driverProfile?.total_rides || 0} corridas</span>
                 </div>
               </div>
               {/* Botão ligar */}
@@ -534,7 +534,7 @@ export default function RideTrackingPage() {
           <div className="py-3 flex items-center justify-between border-b border-[color:var(--border)]">
             <div className="text-center">
               <p className="text-[11px] text-[color:var(--muted-foreground)] uppercase tracking-wide">Distância</p>
-              <p className="text-[16px] font-bold text-[color:var(--foreground)]">{ride?.distance_km || '—'} km</p>
+                  <p className="text-[16px] font-bold text-[color:var(--foreground)]">{ride?.estimated_distance || ride?.distance_km || '—'} km</p>
             </div>
             <div className="text-center">
               <p className="text-[11px] text-[color:var(--muted-foreground)] uppercase tracking-wide">Valor</p>

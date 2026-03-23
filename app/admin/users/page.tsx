@@ -20,7 +20,7 @@ interface Profile {
   avatar_url: string | null
   user_type: string
   rating: number
-  total_rides: number
+  total_trips: number
   is_admin: boolean
   is_banned: boolean
   ban_reason: string | null
@@ -29,13 +29,15 @@ interface Profile {
 
 interface DriverProfile {
   id: string
-  vehicle_brand: string
-  vehicle_model: string
-  vehicle_plate: string
-  vehicle_color: string
-  vehicle_type: string
   is_verified: boolean
   is_available: boolean
+}
+interface Vehicle {
+  brand: string
+  model: string
+  plate: string
+  color: string
+  vehicle_type: string
 }
 
 type Tab = 'all' | 'passenger' | 'driver'
@@ -108,7 +110,7 @@ export default function UsersPage() {
     const supabase = createClient()
     const current = drivers[driverId]
     if (!current) return
-    await supabase.from('driver_profiles').update({ is_verified: !current.is_verified }).eq('id', driverId)
+    await supabase.from('driver_profiles').update({ is_verified: !current.is_verified }).eq('user_id', driverId)
     fetchUsers()
   }
 
@@ -208,7 +210,7 @@ export default function UsersPage() {
                       {(u.rating || 5).toFixed(1)}
                     </span>
                     <span className="text-muted-foreground/30">|</span>
-                    <span className="text-[11px] text-muted-foreground">{u.total_rides || 0} corridas</span>
+                    <span className="text-[11px] text-muted-foreground">{u.total_trips || 0} corridas</span>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
@@ -252,7 +254,7 @@ export default function UsersPage() {
                   <p className="text-[11px] text-muted-foreground">Rating</p>
                 </div>
                 <div className="bg-card rounded-xl p-3 text-center border border-border/50">
-                  <p className="text-[20px] font-bold text-foreground">{selected.total_rides || 0}</p>
+                  <p className="text-[20px] font-bold text-foreground">{selected.total_trips || 0}</p>
                   <p className="text-[11px] text-muted-foreground">Corridas</p>
                 </div>
                 <div className="bg-card rounded-xl p-3 text-center border border-border/50">
@@ -292,7 +294,7 @@ export default function UsersPage() {
                     <div className="grid grid-cols-2 gap-2 text-[12px]">
                       <div>
                         <p className="text-muted-foreground">Marca/Modelo</p>
-                        <p className="text-foreground font-semibold">{drivers[selected.id].vehicle_brand} {drivers[selected.id].vehicle_model}</p>
+                        <p className="text-foreground font-semibold">{(drivers[selected.id] as any)?.brand || 'Veiculo'} {(drivers[selected.id] as any)?.model || ''}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Placa</p>

@@ -13,16 +13,18 @@ interface FavoriteDriver {
   created_at: string
   driver_profile: {
     rating: number
-    total_rides: number
-    vehicle_brand: string
-    vehicle_model: string
-    vehicle_plate: string
-    trust_score: number
+    total_trips: number
+    is_verified: boolean
     is_available: boolean
   }
   profile: {
     full_name: string
     avatar_url: string | null
+  }
+  vehicle?: {
+    brand: string
+    model: string
+    plate: string
   }
 }
 
@@ -39,12 +41,14 @@ export default function FavoriteDriversPage() {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return router.push('/login')
+      // Join correto em driver_profiles e vehicles
       const { data } = await supabase
         .from('favorite_drivers')
         .select(`
           id, driver_id, agreed_price, notes, created_at,
-          driver_profile:driver_profiles!driver_id(rating, total_rides, vehicle_brand, vehicle_model, vehicle_plate, trust_score, is_available),
-          profile:profiles!driver_id(full_name, avatar_url)
+          driver_profile:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips, is_verified, is_available),
+          profile:profiles!favorite_drivers_driver_id_fkey(full_name, avatar_url),
+          vehicle:vehicles!vehicles_driver_id_fkey(brand, model, plate)
         `)
         .eq('passenger_id', user.id)
         .order('created_at', { ascending: false })
@@ -149,10 +153,10 @@ export default function FavoriteDriversPage() {
                           </svg>
                           <span className="text-[12px] font-semibold text-foreground">{f.driver_profile?.rating?.toFixed(1)}</span>
                         </div>
-                        <span className="text-[12px] text-muted-foreground">{f.driver_profile?.total_rides} corridas</span>
+                        <span className="text-[12px] text-muted-foreground">{f.driver_profile?.total_trips || 0} corridas</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {f.driver_profile?.vehicle_brand} {f.driver_profile?.vehicle_model} • {f.driver_profile?.vehicle_plate}
+                        {f.vehicle?.brand || '—'} {f.vehicle?.model || ''} • {f.vehicle?.plate || '—'}
                       </p>
                     </div>
                     <div className="text-right">

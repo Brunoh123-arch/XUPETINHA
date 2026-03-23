@@ -31,9 +31,9 @@ export async function DELETE(
       return errorResponse('O criador não pode sair — cancele a corrida em vez disso', 400)
     }
 
-    // Verificar se o usuário é membro
+    // Verificar se o usuário é membro — tabela real: group_ride_participants
     const { data: membership, error: memberError } = await supabase
-      .from('group_ride_members')
+      .from('group_ride_participants')
       .select('id, status')
       .eq('group_ride_id', groupRideId)
       .eq('user_id', user.id)
@@ -49,8 +49,8 @@ export async function DELETE(
 
     // Marcar membro como 'left'
     const { error: leaveError } = await supabase
-      .from('group_ride_members')
-      .update({ status: 'left', updated_at: new Date().toISOString() })
+      .from('group_ride_participants')
+      .update({ status: 'left' })
       .eq('id', membership.id)
 
     if (leaveError) {

@@ -97,7 +97,7 @@ export default function DriverAvailabilityPage() {
     const next = !isOnline
     setIsOnline(next)
     const supabase = createClient()
-    await supabase.from('driver_profiles').update({ is_online: next }).eq('id', userId)
+    await supabase.from('driver_profiles').update({ is_online: next }).eq('user_id', userId)
     iosToast.success(next ? 'Voce esta online' : 'Voce esta offline')
   }
 

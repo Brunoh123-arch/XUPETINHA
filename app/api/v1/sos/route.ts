@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       user_id: user.id,
       type: 'emergency',
       title: 'SOS acionado',
-      message: 'Seu SOS foi registrado. Contatos de emergência foram notificados.',
+      body: 'Seu SOS foi registrado. Contatos de emergência foram notificados.',
       data: { sos_id: sosEvent.id, ride_id: ride_id ?? null },
       is_read: false,
     })

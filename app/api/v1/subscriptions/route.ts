@@ -11,16 +11,22 @@ export async function GET() {
     }
 
     const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select('*')
+      .from('user_subscriptions')
+      .select('*, plan:subscription_plans(*)')
       .eq('user_id', user.id)
-      .single()
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
-      throw error
-    }
+    if (error) throw error
 
-    return NextResponse.json({ subscription: subscription || null })
+    // Normaliza para o formato esperado pela club/page.tsx
+    const normalized = subscription
+      ? { ...subscription, plan: (subscription.plan as any)?.name ?? null }
+      : null
+
+    return NextResponse.json({ subscription: normalized })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -42,40 +48,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    // Calculate subscription benefits
-    const benefits = {
-      basic: { discount_rides: 5, priority_support: false, cashback_percent: 2 },
-      premium: { discount_rides: 10, priority_support: true, cashback_percent: 5 },
-      vip: { discount_rides: 20, priority_support: true, cashback_percent: 10 },
+    // Busca o plan_id correspondente
+    const { data: planData, error: planError } = await supabase
+      .from('subscription_plans')
+      .select('id')
+      .eq('name', plan)
+      .eq('is_active', true)
+      .single()
+
+    if (planError || !planData) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
-    const planBenefits = benefits[plan as keyof typeof benefits]
-    const prices = { basic: 14.90, premium: 29.90, vip: 49.90 }
+    const now = new Date()
+    const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+    // Cancela assinatura anterior se existir
+    await supabase
+      .from('user_subscriptions')
+      .update({ status: 'cancelled', cancelled_at: now.toISOString() })
+      .eq('user_id', user.id)
+      .eq('status', 'active')
 
     const { data, error } = await supabase
-      .from('subscriptions')
-      .upsert({
+      .from('user_subscriptions')
+      .insert({
         user_id: user.id,
-        plan,
+        plan_id: planData.id,
         status: 'active',
-        started_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        price: prices[plan as keyof typeof prices],
-        auto_renew: true,
-        priority_support: plan !== 'basic',
-        ...planBenefits,
-      }, { onConflict: 'user_id' })
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        cancel_at_period_end: false,
+      })
       .select()
       .single()
 
     if (error) throw error
 
-    // Notificar usuário
+    // Notificar usuario
     await supabase.from('notifications').insert({
       user_id: user.id,
       type: 'system',
       title: 'Assinatura ativada!',
-      message: `Seu plano ${plan.charAt(0).toUpperCase() + plan.slice(1)} foi ativado com sucesso.`,
+      body: `Seu plano ${plan.charAt(0).toUpperCase() + plan.slice(1)} foi ativado com sucesso.`,
       data: { plan },
       is_read: false,
     })
@@ -96,9 +111,10 @@ export async function DELETE() {
     }
 
     const { error } = await supabase
-      .from('subscriptions')
-      .update({ status: 'cancelled', auto_renew: false })
+      .from('user_subscriptions')
+      .update({ status: 'cancelled', cancel_at_period_end: true, cancelled_at: new Date().toISOString() })
       .eq('user_id', user.id)
+      .eq('status', 'active')
 
     if (error) throw error
 
@@ -108,3 +124,4 @@ export async function DELETE() {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+

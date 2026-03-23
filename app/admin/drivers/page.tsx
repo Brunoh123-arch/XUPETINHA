@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 
 interface DriverProfile {
   id: string
+  user_id: string
   vehicle_brand: string | null
   vehicle_model: string | null
   vehicle_plate: string | null
@@ -25,17 +26,28 @@ interface DriverProfile {
   is_available: boolean
   total_earnings: number
   rating: number
-  total_rides: number
+  total_trips: number
   acceptance_rate: number
-  completion_rate: number
-  cnh_expiry: string | null
-  cnh_number: string | null
+  cancellation_rate: number
+  license_number: string | null
+  license_expiry: string | null
+  license_category: string | null
+  verification_status: string | null
+  documents_status: string | null
   created_at: string
   profile?: {
     full_name: string
     phone: string
     avatar_url: string | null
     is_banned: boolean
+  } | null
+  vehicle?: {
+    brand: string | null
+    model: string | null
+    plate: string | null
+    color: string | null
+    year: number | null
+    type_id: string | null
   } | null
 }
 
@@ -60,7 +72,11 @@ export default function DriversPage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('driver_profiles')
-      .select('*, profile:profiles!driver_profiles_id_fkey(full_name, phone, avatar_url, is_banned)')
+      .select(`
+        *,
+        profile:profiles!driver_profiles_user_id_fkey(full_name, phone, avatar_url, is_banned),
+        vehicle:vehicles!vehicles_driver_id_fkey(brand, model, plate, color, year)
+      `)
       .order('created_at', { ascending: false })
     setDrivers((data as DriverProfile[]) || [])
     setLoading(false)
@@ -103,7 +119,10 @@ export default function DriversPage() {
     const supabase = createClient()
     await supabase
       .from('driver_profiles')
-      .update({ is_verified: !driver.is_verified })
+      .update({
+        is_verified: !driver.is_verified,
+        verification_status: !driver.is_verified ? 'verified' : 'pending',
+      })
       .eq('id', driver.id)
     await fetchDrivers()
     if (selected?.id === driver.id) {
@@ -124,7 +143,7 @@ export default function DriversPage() {
         ban_reason: newBanned ? 'Banido pelo admin' : null,
         banned_at: newBanned ? new Date().toISOString() : null,
       })
-      .eq('id', driver.id)
+      .eq('id', driver.user_id)
     await fetchDrivers()
     if (selected?.id === driver.id) {
       setSelected(prev =>
@@ -294,11 +313,11 @@ export default function DriversPage() {
               {/* Stats */}
               <div className="grid grid-cols-5 gap-2">
                 {[
-                  { label: 'Corridas', value: selected.total_rides || 0 },
+                  { label: 'Corridas', value: selected.total_trips || 0 },
                   { label: 'Avaliacao', value: (selected.rating || 5).toFixed(1) },
                   { label: 'Ganhos', value: `R$${(selected.total_earnings || 0).toFixed(0)}` },
                   { label: 'Aceitacao', value: `${(selected.acceptance_rate || 0).toFixed(0)}%` },
-                  { label: 'Conclusao', value: `${(selected.completion_rate || 0).toFixed(0)}%` },
+                  { label: 'Cancelam.', value: `${(selected.cancellation_rate || 0).toFixed(0)}%` },
                 ].map(s => (
                   <div key={s.label} className="bg-[hsl(var(--admin-surface))] rounded-xl p-3 text-center border border-[hsl(var(--admin-border))]">
                     <p className="text-[18px] font-bold text-slate-100 tabular-nums">{s.value}</p>
@@ -315,12 +334,12 @@ export default function DriversPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3 p-4 text-[12px]">
                   {[
-                    { label: 'Marca', value: selected.vehicle_brand },
-                    { label: 'Modelo', value: selected.vehicle_model },
-                    { label: 'Placa', value: selected.vehicle_plate, mono: true },
-                    { label: 'Cor', value: selected.vehicle_color },
-                    { label: 'Ano', value: selected.vehicle_year },
-                    { label: 'Tipo', value: selected.vehicle_type },
+                    { label: 'Marca', value: selected.vehicle?.brand },
+                    { label: 'Modelo', value: selected.vehicle?.model },
+                    { label: 'Placa', value: selected.vehicle?.plate, mono: true },
+                    { label: 'Cor', value: selected.vehicle?.color },
+                    { label: 'Ano', value: selected.vehicle?.year },
+                    { label: 'Status Docs', value: selected.documents_status },
                   ].map(f => (
                     <div key={f.label}>
                       <p className="text-slate-500 mb-0.5">{f.label}</p>
@@ -332,7 +351,7 @@ export default function DriversPage() {
                 </div>
               </div>
 
-              {/* CNH */}
+              {/* Documentação / CNH */}
               <div className="bg-[hsl(var(--admin-surface))] rounded-xl border border-[hsl(var(--admin-border))] overflow-hidden">
                 <div className="px-4 py-3 border-b border-[hsl(var(--admin-border))] flex items-center gap-2">
                   <FileText className="w-4 h-4 text-slate-400" />
@@ -340,32 +359,27 @@ export default function DriversPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3 p-4 text-[12px]">
                   <div>
-                    <p className="text-slate-500 mb-0.5">CNH</p>
-                    <p className="font-semibold text-slate-200 font-mono">{selected.cnh_number || '—'}</p>
+                    <p className="text-slate-500 mb-0.5">N° CNH</p>
+                    <p className="font-semibold text-slate-200 font-mono">{selected.license_number || '—'}</p>
                   </div>
                   <div>
                     <p className="text-slate-500 mb-0.5">Validade CNH</p>
                     <p className={cn('font-semibold',
-                      selected.cnh_expiry && new Date(selected.cnh_expiry) < new Date()
+                      selected.license_expiry && new Date(selected.license_expiry) < new Date()
                         ? 'text-red-400' : 'text-slate-200'
                     )}>
-                      {selected.cnh_expiry ? new Date(selected.cnh_expiry).toLocaleDateString('pt-BR') : '—'}
+                      {selected.license_expiry ? new Date(selected.license_expiry).toLocaleDateString('pt-BR') : '—'}
                     </p>
                   </div>
-                </div>
-                {selected.document_url && (
-                  <div className="px-4 pb-4">
-                    <a
-                      href={selected.document_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 text-blue-400 rounded-lg text-[12px] font-semibold hover:bg-blue-500/20 transition-colors w-full"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      Ver documento enviado
-                    </a>
+                  <div>
+                    <p className="text-slate-500 mb-0.5">Categoria</p>
+                    <p className="font-semibold text-slate-200">{selected.license_category || '—'}</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-slate-500 mb-0.5">Verificacao</p>
+                    <p className="font-semibold text-slate-200 capitalize">{selected.verification_status || '—'}</p>
+                  </div>
+                </div>
               </div>
 
               {/* Ações */}

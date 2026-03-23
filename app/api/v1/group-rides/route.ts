@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { ride_id, max_passengers, split_method, pickup_lat, pickup_lng, pickup_address, dropoff_lat, dropoff_lng, dropoff_address } = body
+    // Aceita pickup_lat/lng como alias para pickup_latitude/longitude
+    const { ride_id, max_passengers, split_method, pickup_lat, pickup_lng, pickup_latitude, pickup_longitude, pickup_address, dropoff_lat, dropoff_lng, dropoff_latitude, dropoff_longitude, dropoff_address } = body
 
     // Gera código de convite de 6 dígitos inline (sem dependência de RPC)
     const generateCode = () => {
@@ -46,18 +47,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: createError.message }, { status: 500 })
     }
 
-    // Add creator as first participant
+    // Add creator as first participant — usa formato correto de coordenadas
     const { error: participantError } = await supabase
       .from('group_ride_participants')
       .insert({
         group_ride_id: groupRide.id,
         user_id: user.id,
         status: 'accepted',
-        pickup_lat,
-        pickup_lng,
+        pickup_latitude: pickup_latitude ?? pickup_lat,
+        pickup_longitude: pickup_longitude ?? pickup_lng,
         pickup_address,
-        dropoff_lat,
-        dropoff_lng,
+        dropoff_latitude: dropoff_latitude ?? dropoff_lat,
+        dropoff_longitude: dropoff_longitude ?? dropoff_lng,
         dropoff_address,
       })
 

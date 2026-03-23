@@ -51,9 +51,8 @@ export async function POST(request: Request) {
         user_id,
         type,
         title,
-        message,
-        ride_id,
-        // Usa is_read para consistência com notification-service e a notifications page
+        body: message, // campo real no schema é "body", não "message"
+        data: ride_id ? { ride_id } : {},
         is_read: false,
       })
       .select()

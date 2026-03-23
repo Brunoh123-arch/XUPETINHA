@@ -115,7 +115,7 @@ export default function DriverRideSummaryPage() {
           {/* Stats row */}
           <div className="flex gap-3 mt-4 pt-4 border-t border-[color:var(--border)]">
             {[
-              { label: 'Distância', value: ride.distance_km ? `${ride.distance_km} km` : '—' },
+              { label: 'Distância', value: (ride.estimated_distance || ride.distance_km) ? `${ride.estimated_distance || ride.distance_km} km` : '—' },
               { label: 'Duração', value: duration !== null ? `${duration} min` : '—' },
               { label: 'Pagamento', value: paymentLabel(ride.payment_method) },
             ].map(s => (

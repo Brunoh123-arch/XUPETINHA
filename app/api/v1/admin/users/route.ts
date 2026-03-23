@@ -28,7 +28,8 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('profiles')
-      .select('id, full_name, email, phone, user_type, status, is_banned, is_admin, total_rides, rating, created_at, avatar_url', { count: 'exact' })
+      // total_rides e rating não existem em profiles — remove para não quebrar a query
+      .select('id, full_name, email, phone, user_type, is_banned, is_admin, created_at, avatar_url', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 

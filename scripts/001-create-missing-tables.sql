@@ -147,16 +147,6 @@ CREATE TABLE IF NOT EXISTS trust_score (
 ALTER TABLE trust_score ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users see only their trust score" ON trust_score FOR SELECT USING (auth.uid() = user_id);
 
-CREATE TABLE IF NOT EXISTS user_badges (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  badge_id UUID NOT NULL REFERENCES badge_definitions(id) ON DELETE CASCADE,
-  earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, badge_id)
-);
-ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users see only their badges" ON user_badges FOR SELECT USING (auth.uid() = user_id);
-
 CREATE TABLE IF NOT EXISTS badge_definitions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL,
@@ -168,6 +158,16 @@ CREATE TABLE IF NOT EXISTS badge_definitions (
 );
 ALTER TABLE badge_definitions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Everyone can see badges" ON badge_definitions FOR SELECT USING (TRUE);
+
+CREATE TABLE IF NOT EXISTS user_badges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  badge_id UUID NOT NULL REFERENCES badge_definitions(id) ON DELETE CASCADE,
+  earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, badge_id)
+);
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users see only their badges" ON user_badges FOR SELECT USING (auth.uid() = user_id);
 
 CREATE TABLE IF NOT EXISTS user_feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1539,6 +1539,16 @@ CREATE POLICY "Users see only their onboarding steps" ON onboarding_steps FOR AL
 
 -- ===== 22. TERMOS E FEEDBACK (5) =====
 
+CREATE TABLE IF NOT EXISTS terms_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  version_number VARCHAR(50),
+  content TEXT,
+  effective_from TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE terms_versions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Everyone can see terms versions" ON terms_versions FOR SELECT USING (TRUE);
+
 CREATE TABLE IF NOT EXISTS terms_acceptances (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -1549,16 +1559,6 @@ CREATE TABLE IF NOT EXISTS terms_acceptances (
 );
 ALTER TABLE terms_acceptances ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users see only their terms acceptances" ON terms_acceptances FOR SELECT USING (auth.uid() = user_id);
-
-CREATE TABLE IF NOT EXISTS terms_versions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  version_number VARCHAR(50),
-  content TEXT,
-  effective_from TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-ALTER TABLE terms_versions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Everyone can see terms versions" ON terms_versions FOR SELECT USING (TRUE);
 
 CREATE TABLE IF NOT EXISTS feedback_forms (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

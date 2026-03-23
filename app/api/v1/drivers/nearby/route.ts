@@ -40,9 +40,8 @@ export async function GET(request: Request) {
         speed,
         last_updated,
         driver:profiles!driver_id(id, full_name, avatar_url, phone),
-        driver_profile:driver_profiles!driver_id(
-          vehicle_brand, vehicle_model, vehicle_plate, vehicle_color, vehicle_type,
-          rating, total_rides, is_verified, is_available
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(
+          rating, total_trips, is_verified, is_available, verification_status
         )
       `)
       .eq('is_available', true)
@@ -70,7 +69,6 @@ export async function GET(request: Request) {
       })
       .filter((loc: any) => {
         if (loc.distance_km > radiusKm) return false
-        if (vehicleType && loc.driver_profile?.vehicle_type !== vehicleType) return false
         if (!loc.driver_profile?.is_verified) return false
         return true
       })

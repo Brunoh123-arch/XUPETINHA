@@ -76,7 +76,7 @@ function RideCard({ ride, formatTime, index }: {
     return parts[0].trim()
   }
 
-  const hasCoords = ride.pickup_lat && ride.pickup_lng && ride.dropoff_lat && ride.dropoff_lng
+    const hasCoords = ride.pickup_latitude && ride.pickup_longitude && ride.dropoff_latitude && ride.dropoff_longitude
 
   return (
     <motion.div
@@ -166,8 +166,8 @@ function RideCard({ ride, formatTime, index }: {
               {hasCoords && (
                 <div className="rounded-2xl overflow-hidden border border-border/40 shadow-sm">
                   <RouteMap
-                    origin={{ lat: ride.pickup_lat!, lng: ride.pickup_lng! }}
-                    destination={{ lat: ride.dropoff_lat!, lng: ride.dropoff_lng! }}
+              origin={{ lat: ride.pickup_latitude!, lng: ride.pickup_longitude! }}
+              destination={{ lat: ride.dropoff_latitude!, lng: ride.dropoff_longitude! }}
                     className="h-[170px] w-full"
                     bottomPadding={16}
                   />
@@ -229,8 +229,8 @@ function RideCard({ ride, formatTime, index }: {
                         <p className="text-[20px] font-bold text-foreground tracking-tight tabular-nums leading-none">
                           {'R$ '}{ride.final_price.toFixed(2)}
                         </p>
-                        {ride.distance_km && (
-                          <p className="text-[11px] text-muted-foreground mt-1 tabular-nums">{ride.distance_km} km</p>
+              {ride.estimated_distance && (
+                <p className="text-[11px] text-muted-foreground mt-1 tabular-nums">{ride.estimated_distance} km</p>
                         )}
                       </div>
                     )}
@@ -323,8 +323,8 @@ export default function HistoryPage() {
       .from('rides')
       .select(`
         *,
-        driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, rating, total_rides),
-        driver_profile:driver_profiles!driver_id(vehicle_type, vehicle_brand, vehicle_model, vehicle_plate, vehicle_color),
+        driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, rating, total_trips),
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(vehicle_brand, vehicle_model, vehicle_plate, vehicle_color),
         passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url)
       `, { count: 'exact' })
       .or(`passenger_id.eq.${user.id},driver_id.eq.${user.id}`)

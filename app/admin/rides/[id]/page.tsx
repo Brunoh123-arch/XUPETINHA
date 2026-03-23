@@ -18,14 +18,14 @@ interface RideDetail {
   driver_id: string | null
   pickup_address: string
   dropoff_address: string
-  pickup_lat: number | null
-  pickup_lng: number | null
-  dropoff_lat: number | null
-  dropoff_lng: number | null
-  distance_km: number | null
-  estimated_duration_minutes: number | null
+  pickup_latitude: number | null
+  pickup_longitude: number | null
+  dropoff_latitude: number | null
+  dropoff_longitude: number | null
+  estimated_distance: number | null
+  estimated_duration: number | null
   final_price: number | null
-  passenger_price_offer: number | null
+  estimated_price: number | null
   status: string
   payment_method: string
   created_at: string
@@ -294,7 +294,7 @@ export default function RideDetailPage({ params }: { params: { id: string } }) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
             {[
-              { label: 'Distancia', value: ride.distance_km ? `${ride.distance_km.toFixed(1)} km` : '—', icon: MapPin },
+              { label: 'Distancia', value: ride.estimated_distance ? `${ride.estimated_distance.toFixed(1)} km` : '—', icon: MapPin },
               { label: 'Duracao Real', value: duration(ride.started_at, ride.completed_at), icon: Clock },
               { label: 'Inicio', value: formatDate(ride.started_at), icon: Clock },
               { label: 'Termino', value: formatDate(ride.completed_at), icon: CheckCircle },
@@ -324,7 +324,7 @@ export default function RideDetailPage({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent className="p-4 space-y-2.5">
             {[
-              { label: 'Oferta do Passageiro', value: formatCurrency(ride.passenger_price_offer) },
+              { label: 'Preco Estimado', value: formatCurrency(ride.estimated_price) },
               { label: 'Valor Final', value: formatCurrency(ride.final_price), highlight: true },
               { label: 'Metodo', value: ride.payment_method || '—' },
               ...(ride.payment ? [

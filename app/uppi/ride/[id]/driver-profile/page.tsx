@@ -61,7 +61,7 @@ export default function DriverProfilePage() {
 
       const [{ data: prof }, { data: drvProf }, { data: revs }] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', driverId).single(),
-        supabase.from('driver_profiles').select('*').eq('id', driverId).single(),
+        supabase.from('driver_profiles').select('*').eq('user_id', driverId).single(),
         supabase.from('driver_reviews')
           .select('id, rating, comment, tags, created_at')
           .eq('driver_id', driverId)
@@ -124,7 +124,7 @@ export default function DriverProfilePage() {
                 <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
               </svg>
               <span className="text-[16px] font-bold text-white">{avgRating.toFixed(1)}</span>
-              <span className="text-[13px] text-white/70">· {driverProfile?.total_rides || 0} corridas</span>
+                <span className="text-[13px] text-white/70">· {driverProfile?.total_trips || driverProfile?.total_rides || 0} corridas</span>
             </div>
           </div>
         </div>
@@ -143,17 +143,17 @@ export default function DriverProfilePage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[16px] font-bold text-[color:var(--foreground)]">
-                  {driverProfile.vehicle_brand} {driverProfile.vehicle_model}
+                  {driverProfile.brand || driverProfile.vehicle_brand} {driverProfile.model || driverProfile.vehicle_model}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  {driverProfile.vehicle_color && (
-                    <span className="text-[13px] text-[color:var(--muted-foreground)] capitalize">{driverProfile.vehicle_color}</span>
+                  {(driverProfile.color || driverProfile.vehicle_color) && (
+                    <span className="text-[13px] text-[color:var(--muted-foreground)] capitalize">{driverProfile.color || driverProfile.vehicle_color}</span>
                   )}
-                  {driverProfile.vehicle_plate && (
+                  {(driverProfile.plate || driverProfile.vehicle_plate) && (
                     <>
                       <span className="text-[color:var(--muted-foreground)]/30">·</span>
                       <span className="text-[13px] font-mono font-bold text-[color:var(--muted-foreground)] tracking-widest uppercase bg-[color:var(--muted)] px-2 py-0.5 rounded-md">
-                        {driverProfile.vehicle_plate}
+                        {driverProfile.plate || driverProfile.vehicle_plate}
                       </span>
                     </>
                   )}
@@ -172,7 +172,7 @@ export default function DriverProfilePage() {
         <div className="grid grid-cols-3 gap-3 animate-ios-fade-up" style={{ animationDelay: '60ms' }}>
           {[
             { label: 'Avaliação', value: avgRating.toFixed(1), sub: 'média' },
-            { label: 'Corridas', value: String(driverProfile?.total_rides || 0), sub: 'total' },
+            { label: 'Corridas', value: String(driverProfile?.total_trips || driverProfile?.total_rides || 0), sub: 'total' },
             { label: 'Aceitação', value: '95%', sub: 'taxa' },
           ].map(s => (
             <div key={s.label} className="bg-[color:var(--card)] rounded-[20px] p-4 text-center border border-[color:var(--border)]">

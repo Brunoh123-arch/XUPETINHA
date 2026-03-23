@@ -19,8 +19,8 @@ interface IntercityRide {
   dropoff_city: string | null
   status: string
   final_price: number | null
-  passenger_price_offer: number | null
-  distance_km: number | null
+  estimated_price: number | null
+  estimated_distance: number | null
   created_at: string
   completed_at: string | null
   profile?: { full_name: string; phone: string } | null
@@ -64,7 +64,7 @@ export default function AdminCidadeACidadePage() {
       .select(`
         id, passenger_id, driver_id, pickup_address, dropoff_address,
         pickup_city, dropoff_city, ride_type, status, final_price, passenger_price_offer,
-        distance_km, created_at, completed_at,
+        estimated_distance, created_at, completed_at,
         profile:profiles!rides_passenger_id_fkey(full_name, phone),
         driver_profile:profiles!rides_driver_id_fkey(full_name, phone)
       `, { count: 'exact' })
@@ -100,8 +100,8 @@ export default function AdminCidadeACidadePage() {
     completed: rides.filter(r => r.status === 'completed').length,
     revenue: rides.filter(r => r.status === 'completed').reduce((s, r) => s + (r.final_price || 0), 0),
     avgDistance: (() => {
-      const withDist = rides.filter(r => r.distance_km)
-      return withDist.length ? withDist.reduce((s, r) => s + (r.distance_km || 0), 0) / withDist.length : 0
+    const withDist = rides.filter(r => r.estimated_distance)
+    return withDist.length ? withDist.reduce((s, r) => s + (r.estimated_distance || 0), 0) / withDist.length : 0
     })(),
   }
 
@@ -226,9 +226,9 @@ export default function AdminCidadeACidadePage() {
                               <StatusIcon className="w-2.5 h-2.5" />
                               {statusCfg.label}
                             </span>
-                            {ride.distance_km && (
-                              <span className="text-[10px] font-semibold text-slate-500 bg-slate-500/10 px-2 py-0.5 rounded ml-auto">
-                                {ride.distance_km.toFixed(0)} km
+                {ride.estimated_distance && (
+                  <span className="text-[11px] text-slate-500 ml-auto">
+                    {ride.estimated_distance.toFixed(0)} km
                               </span>
                             )}
                           </div>
@@ -281,8 +281,8 @@ export default function AdminCidadeACidadePage() {
                         <p className="text-[12px] text-slate-400">{selected.dropoff_city || selected.dropoff_address}</p>
                       </div>
                     </div>
-                    {selected.distance_km && (
-                      <p className="text-[11px] text-slate-500 mt-2 text-center">{selected.distance_km.toFixed(0)} km de distancia</p>
+              {selected.estimated_distance && (
+                <p className="text-[11px] text-slate-500 mt-2 text-center">{selected.estimated_distance.toFixed(0)} km de distancia</p>
                     )}
                   </div>
 

@@ -15,9 +15,8 @@ interface DriverInfo {
   full_name: string
   avatar_url: string | null
   rating: number
-  total_rides: number
+  total_trips: number
   driver_profile: {
-    vehicle_type: string
     vehicle_brand: string
     vehicle_model: string
     vehicle_color: string
@@ -257,9 +256,9 @@ function OfferCard({
 }) {
   const driver = offer.driver
   const dp = driver?.driver_profile?.[0]
-  const priceDiff = (offer.offered_price || 0) - (ride?.passenger_price_offer || 0)
-  const savingsPercent = ride?.passenger_price_offer
-    ? Math.round(((ride.passenger_price_offer - offer.offered_price) / ride.passenger_price_offer) * 100)
+  const priceDiff = (offer.offered_price || 0) - (ride?.estimated_price || 0)
+  const savingsPercent = ride?.estimated_price
+    ? Math.round(((ride.estimated_price - offer.offered_price) / ride.estimated_price) * 100)
     : 0
 
   return (
@@ -339,7 +338,7 @@ function OfferCard({
               </span>
               <span className="text-neutral-200">|</span>
               <span className="text-[11px] text-neutral-400">
-                {driver?.total_rides || 0} corridas
+                  {driver?.total_trips || 0} corridas
               </span>
             </div>
           </div>
@@ -476,13 +475,14 @@ export default function RideOffersPage() {
 
   const fetchOffers = useCallback(async (rideData?: Ride | null): Promise<OfferWithDriver[]> => {
     const rd = rideData || ride
+    // tabela real: ride_offers, join correto em driver_profiles
     const { data } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select(`
         *,
         driver:profiles!driver_id (
-          id, full_name, avatar_url, rating, total_rides,
-          driver_profile:driver_profiles ( vehicle_type, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location )
+          id, full_name, avatar_url, rating, total_trips,
+          driver_profile:driver_profiles!driver_profiles_user_id_fkey ( vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location )
         )
       `)
       .eq('ride_id', params.id)
@@ -492,7 +492,7 @@ export default function RideOffersPage() {
     const offersWithTime = (data || []).map((o: any) => {
       const dp = o.driver?.driver_profile?.[0]
       const loc = dp?.current_location?.coordinates
-      const est = estimateArrivalMinutes(loc?.[1], loc?.[0], rd?.pickup_lat, rd?.pickup_lng)
+      const est = estimateArrivalMinutes(loc?.[1], loc?.[0], rd?.pickup_latitude, rd?.pickup_longitude)
       const timeRemaining = Math.max(0, Math.floor((new Date(o.expires_at).getTime() - Date.now()) / 1000))
       return {
         ...o,
@@ -502,9 +502,9 @@ export default function RideOffersPage() {
     }).filter(o => o.timeRemaining > 0)
 
     // Calculate savings and best offer
-    if (offersWithTime.length > 0 && rd?.passenger_price_offer) {
+    if (offersWithTime.length > 0 && rd?.estimated_price) {
       const savings = offersWithTime
-        .map(o => rd.passenger_price_offer! - o.offered_price)
+        .map(o => rd.estimated_price! - o.offered_price)
         .filter(s => s > 0)
 
       if (savings.length > 0) {
@@ -754,7 +754,7 @@ export default function RideOffersPage() {
             <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-full">
               <VehicleIcon type={ride?.vehicle_type || 'economy'} className="w-4 h-4 text-blue-600" />
               <span className="text-[13px] font-bold text-blue-700">
-                R$ {ride?.passenger_price_offer?.toFixed(2)}
+                R$ {ride?.estimated_price?.toFixed(2)}
               </span>
             </div>
           </div>

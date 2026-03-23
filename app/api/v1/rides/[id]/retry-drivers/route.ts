@@ -21,10 +21,10 @@ export async function POST(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Buscar a corrida — apenas o passageiro dono pode retentar
+    // Buscar a corrida — colunas reais: pickup_latitude/longitude (não pickup_lat/lng)
     const { data: ride } = await supabase
       .from('rides')
-      .select('id, passenger_id, status, pickup_lat, pickup_lng, vehicle_type, passenger_price_offer, pickup_address, dropoff_address, distance_km, estimated_duration_minutes')
+      .select('id, passenger_id, status, pickup_latitude, pickup_longitude, category_id, estimated_price, pickup_address, dropoff_address, estimated_distance')
       .eq('id', rideId)
       .single()
 
@@ -36,10 +36,10 @@ export async function POST(
 
     // Buscar motoristas próximos com raio expandido (8km)
     const { data: nearbyDrivers } = await supabase.rpc('find_nearby_drivers', {
-      p_lat: ride.pickup_lat,
-      p_lng: ride.pickup_lng,
+      p_lat: ride.pickup_latitude,
+      p_lng: ride.pickup_longitude,
       p_radius_km: 8,
-      p_vehicle_type: ride.vehicle_type,
+      p_vehicle_type: ride.category_id,
     })
 
     const driverIds: string[] = (nearbyDrivers || [])
@@ -50,9 +50,9 @@ export async function POST(
       return NextResponse.json({ success: true, notified: 0, message: 'Nenhum motorista disponível na área' })
     }
 
-    // Notificar motoristas que ainda não fizeram oferta
+    // Notificar motoristas que ainda não fizeram oferta — tabela real: ride_offers
     const { data: existingOffers } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select('driver_id')
       .eq('ride_id', rideId)
 
@@ -63,12 +63,12 @@ export async function POST(
       const notifications = newDriverIds.map((driverId: string) => ({
         user_id: driverId,
         title: 'Corrida aguardando — sem ofertas',
-        message: `Corrida de ${ride.pickup_address?.split(',')[0]} para ${ride.dropoff_address?.split(',')[0]}. Oferta: R$ ${Number(ride.passenger_price_offer || 0).toFixed(2)}`,
+        body: `Corrida de ${ride.pickup_address?.split(',')[0]} para ${ride.dropoff_address?.split(',')[0]}. Distância: ${Number(ride.estimated_distance || 0).toFixed(1)}km`,
         type: 'new_ride_request',
         data: {
           ride_id: rideId,
-          passenger_offer: ride.passenger_price_offer,
-          distance_km: ride.distance_km,
+          estimated_price: ride.estimated_price,
+          distance_km: ride.estimated_distance,
           retry: true,
         },
         is_read: false,

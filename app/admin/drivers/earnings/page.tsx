@@ -13,7 +13,7 @@ interface DriverEarning {
   full_name: string
   avatar_url: string | null
   rating: number | null
-  total_rides: number
+  total_trips: number
   total_earnings: number
   earnings_today: number
   earnings_week: number
@@ -43,9 +43,9 @@ export default function AdminDriverEarningsPage() {
     ] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, rating, total_rides')
+        .select('id, full_name, avatar_url, rating, total_trips')
         .eq('user_type', 'driver')
-        .order('total_rides', { ascending: false })
+        .order('total_trips', { ascending: false })
         .limit(50),
       supabase
         .from('payments')
@@ -96,11 +96,11 @@ export default function AdminDriverEarningsPage() {
       full_name: p.full_name || 'Sem nome',
       avatar_url: p.avatar_url,
       rating: p.rating,
-      total_rides: p.total_rides || 0,
+          total_trips: p.total_trips || 0,
       total_earnings: totalMap[p.id] || 0,
       earnings_today: todayMap[p.id] || 0,
       earnings_week: weekMap[p.id] || 0,
-      avg_per_ride: (p.total_rides || 0) > 0 ? (totalMap[p.id] || 0) / (p.total_rides || 1) : 0,
+      avg_per_ride: (p.total_trips || 0) > 0 ? (totalMap[p.id] || 0) / (p.total_trips || 1) : 0,
       online: onlineMap[p.id] || false,
     }))
 
@@ -141,7 +141,7 @@ export default function AdminDriverEarningsPage() {
     if (sortBy === 'total') return b.total_earnings - a.total_earnings
     if (sortBy === 'week') return b.earnings_week - a.earnings_week
     if (sortBy === 'today') return b.earnings_today - a.earnings_today
-    return b.total_rides - a.total_rides
+    return b.total_trips - a.total_trips
   })
 
   const totals = {
@@ -268,7 +268,7 @@ export default function AdminDriverEarningsPage() {
                     </div>
                     <div className="flex justify-between text-[12px]">
                       <span className="text-slate-500">Corridas</span>
-                      <span className="text-slate-300 font-bold">{topDriver.total_rides}</span>
+                      <span className="text-slate-300 font-bold">{topDriver.total_trips}</span>
                     </div>
                     <div className="flex justify-between text-[12px]">
                       <span className="text-slate-500">Media/corrida</span>
@@ -368,7 +368,7 @@ export default function AdminDriverEarningsPage() {
                             </span>
                           ) : '—'}
                         </td>
-                        <td className="px-4 py-3 text-slate-300 font-semibold tabular-nums">{driver.total_rides}</td>
+                        <td className="px-4 py-3 text-slate-300 font-semibold tabular-nums">{driver.total_trips}</td>
                         <td className="px-4 py-3 text-slate-400 tabular-nums">
                           {driver.earnings_today > 0
                             ? <span className="text-emerald-400 font-semibold">R$ {driver.earnings_today.toFixed(2)}</span>

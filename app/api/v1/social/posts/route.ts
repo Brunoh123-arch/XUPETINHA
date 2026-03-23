@@ -60,12 +60,11 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Update user stats
-    await supabase.rpc('increment', {
-      table_name: 'user_social_stats',
-      column_name: 'posts_count',
-      row_id: user.id
-    })
+    // Incrementa posts_count diretamente — RPC genérica "increment" não existe no schema
+    await supabase
+      .from('user_social_stats')
+      .upsert({ user_id: user.id, posts_count: 1 }, { onConflict: 'user_id', ignoreDuplicates: false })
+      .select()
 
     return NextResponse.json({ post: data })
   } catch {

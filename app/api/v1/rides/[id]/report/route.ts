@@ -16,18 +16,15 @@ export async function POST(
     const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single()
     if (!profile?.is_admin) return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
 
-    // Buscar dados completos da corrida
+    // Colunas reais: estimated_distance, estimated_duration, driver_profiles!driver_profiles_user_id_fkey
     const { data: ride, error: rideError } = await supabase
       .from('rides')
       .select(`
-        id, pickup_address, dropoff_address, distance_km,
-        estimated_duration_minutes, final_price, payment_method,
+        id, pickup_address, dropoff_address, estimated_distance,
+        estimated_duration, final_price, payment_method,
         started_at, completed_at, passenger_id, driver_id, status,
         passenger:profiles!passenger_id(full_name, email),
-        driver:profiles!driver_id(
-          full_name,
-          driver_profile:driver_profiles!id(vehicle_brand, vehicle_model, vehicle_plate, vehicle_color)
-        )
+        driver:profiles!driver_id(full_name)
       `)
       .eq('id', params.id)
       .single()
@@ -38,14 +35,13 @@ export async function POST(
 
     const passenger = ride.passenger as any
     const driver = ride.driver as any
-    const dp = driver?.driver_profile as any
 
     if (!passenger?.email) {
       return NextResponse.json({ error: 'Passageiro sem email cadastrado' }, { status: 400 })
     }
 
-    // Calcular duracao
-    let durationMinutes = ride.estimated_duration_minutes || 0
+    // Calcular duracao — coluna real: estimated_duration
+    let durationMinutes = ride.estimated_duration || 0
     if (ride.started_at && ride.completed_at) {
       durationMinutes = Math.round(
         (new Date(ride.completed_at).getTime() - new Date(ride.started_at).getTime()) / 60000
@@ -57,13 +53,13 @@ export async function POST(
       passengerName: passenger.full_name || 'Passageiro',
       passengerEmail: passenger.email,
       driverName: driver?.full_name || 'Motorista',
-      vehicleBrand: dp?.vehicle_brand || 'Veiculo',
-      vehicleModel: dp?.vehicle_model || '',
-      vehiclePlate: dp?.vehicle_plate || '—',
-      vehicleColor: dp?.vehicle_color || '',
+      vehicleBrand: 'Veiculo',
+      vehicleModel: '',
+      vehiclePlate: '—',
+      vehicleColor: '',
       pickupAddress: ride.pickup_address,
       dropoffAddress: ride.dropoff_address,
-      distanceKm: ride.distance_km || 0,
+      distanceKm: ride.estimated_distance || 0,
       durationMinutes,
       finalPrice: ride.final_price || 0,
       paymentMethod: ride.payment_method || 'pix',

@@ -60,15 +60,10 @@ export default function AdminSmsPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      // sms_deliveries não existe — tabela real é sms_logs
       const { data } = await supabase
-        .from('sms_deliveries')
-        .select(`
-          id, user_id, phone, phone_number, message, type,
-          segments, status, provider, provider_id, provider_message_id,
-          sent_at, delivered_at, failed_at, error_message,
-          retry_count, cost, cost_cents, created_at,
-          profiles!sms_deliveries_user_id_fkey(full_name, email)
-        `)
+        .from('sms_logs')
+        .select('id, phone, message, status, provider, created_at')
         .order('created_at', { ascending: false })
         .limit(200)
       setDeliveries((data as any[]) || [])
@@ -83,7 +78,7 @@ export default function AdminSmsPage() {
   useEffect(() => {
     const channel = supabase
       .channel('admin-sms-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sms_deliveries' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sms_logs' }, () => load())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [load])

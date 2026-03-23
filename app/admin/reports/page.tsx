@@ -69,7 +69,7 @@ export default function AdminReportsPage() {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', newReport.period_start)
         .lte('created_at', newReport.period_end)
-      data = { total_rides: count || 0, period: `${newReport.period_start} a ${newReport.period_end}` }
+      data = { total_trips: count || 0, period: `${newReport.period_start} a ${newReport.period_end}` }
     } else if (newReport.type === 'revenue') {
       const { data: rides } = await supabase
         .from('rides')

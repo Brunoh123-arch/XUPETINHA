@@ -14,11 +14,11 @@ export async function GET(request: Request) {
 
     const supabase = await createClient()
 
-    // Verificar se é motorista
+    // Verificar se é motorista — FK real é user_id
     const { data: driverProfile } = await supabase
       .from('driver_profiles')
       .select('id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single()
 
     if (!driverProfile) {
@@ -67,10 +67,10 @@ export async function GET(request: Request) {
       { gross: 0, net: 0, tips: 0, bonuses: 0, platform_fees: 0, rides: 0 }
     ) ?? { gross: 0, net: 0, tips: 0, bonuses: 0, platform_fees: 0, rides: 0 }
 
-    // Buscar wallet do motorista
+    // Tabela real é "wallet" (não "wallets"), colunas: balance, lifetime_earnings
     const { data: wallet } = await supabase
-      .from('wallets')
-      .select('balance, total_earned')
+      .from('wallet')
+      .select('balance, lifetime_earnings')
       .eq('user_id', user.id)
       .single()
 
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       totals,
       wallet: {
         balance: wallet?.balance ?? 0,
-        total_earned: wallet?.total_earned ?? 0,
+        total_earned: wallet?.lifetime_earnings ?? 0,
       },
       earnings: earnings ?? [],
       pagination: {

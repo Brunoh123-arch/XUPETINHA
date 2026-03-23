@@ -416,8 +416,8 @@ export default function DriverActiveRidePage() {
   const getNavTarget = () => {
     // Se ainda está indo buscar o passageiro, destino é o pickup
     const isGoingToPickup = ride?.status === 'accepted'
-    const lat = isGoingToPickup ? ride?.pickup_lat : ride?.dropoff_lat
-    const lng = isGoingToPickup ? ride?.pickup_lng : ride?.dropoff_lng
+    const lat = isGoingToPickup ? ride?.pickup_latitude : ride?.dropoff_latitude
+    const lng = isGoingToPickup ? ride?.pickup_longitude : ride?.dropoff_longitude
     const address = isGoingToPickup ? ride?.pickup_address : ride?.dropoff_address
     return { lat, lng, address, isGoingToPickup }
   }
@@ -574,25 +574,15 @@ export default function DriverActiveRidePage() {
             showUserLocation
             followMode={navActive}
             showRoute={!!(
-              (ride.status === 'accepted' ? ride.pickup_lat : ride.dropoff_lat) &&
-              (ride.status === 'accepted' ? ride.pickup_lng : ride.dropoff_lng)
-            )}
-            origin={driverLocation ?? undefined}
-            destination={
-              ride.status === 'accepted'
-                ? (ride.pickup_lat && ride.pickup_lng
-                    ? { lat: ride.pickup_lat, lng: ride.pickup_lng }
-                    : undefined)
-                : (ride.dropoff_lat && ride.dropoff_lng
-                    ? { lat: ride.dropoff_lat, lng: ride.dropoff_lng }
-                    : undefined)
-            }
-            markers={[
-              ...(ride.pickup_lat && ride.pickup_lng
-                ? [{ id: 'pickup', lat: ride.pickup_lat, lng: ride.pickup_lng, title: 'Buscar passageiro' }]
-                : []),
-              ...(ride.dropoff_lat && ride.dropoff_lng && ride.status !== 'accepted'
-                ? [{ id: 'dropoff', lat: ride.dropoff_lat, lng: ride.dropoff_lng, title: 'Destino' }]
+      (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude) &&
+      (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)
+        ? { lat: (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude)!, lng: (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)! }
+        : undefined
+      ...(ride.pickup_latitude && ride.pickup_longitude
+        ? [{ id: 'pickup', lat: ride.pickup_latitude, lng: ride.pickup_longitude, title: 'Buscar passageiro' }]
+        : []),
+      ...(ride.dropoff_latitude && ride.dropoff_longitude && ride.status !== 'accepted'
+        ? [{ id: 'dropoff', lat: ride.dropoff_latitude, lng: ride.dropoff_longitude, title: 'Destino' }]
                 : []),
             ]}
             onLocationFound={(lat, lng) => {
@@ -836,8 +826,8 @@ export default function DriverActiveRidePage() {
               <p className="text-[16px] font-bold text-[color:var(--foreground)]">
                 {ride.final_price
                   ? `R$ ${ride.final_price.toFixed(2)}`
-                  : ride.passenger_price_offer
-                  ? `R$ ${ride.passenger_price_offer.toFixed(2)}`
+                  : ride.estimated_price
+                  ? `R$ ${ride.estimated_price.toFixed(2)}`
                   : '—'}
               </p>
             </div>
@@ -846,8 +836,8 @@ export default function DriverActiveRidePage() {
               <p className="text-[16px] font-bold text-emerald-500">
                 {ride.final_price
                   ? `R$ ${(ride.final_price * 0.85).toFixed(2)}`
-                  : ride.passenger_price_offer
-                  ? `R$ ${(ride.passenger_price_offer * 0.85).toFixed(2)}`
+                  : ride.estimated_price
+                  ? `R$ ${(ride.estimated_price * 0.85).toFixed(2)}`
                   : '—'}
               </p>
             </div>

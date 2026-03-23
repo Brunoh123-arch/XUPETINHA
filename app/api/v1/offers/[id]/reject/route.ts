@@ -12,9 +12,10 @@ export async function POST(
     const { id: offerId } = await params
     const supabase = await createClient()
 
+    // ride_offers é a tabela real (não price_offers)
     const { data: offer, error: offerError } = await supabase
-      .from('price_offers')
-      .select('id, ride_id, passenger_id, driver_id, status, offered_by')
+      .from('ride_offers')
+      .select('id, ride_id, driver_id, status')
       .eq('id', offerId)
       .single()
 
@@ -22,7 +23,7 @@ export async function POST(
       return errorResponse('Oferta não encontrada', 404)
     }
 
-    if (offer.passenger_id !== user.id && offer.driver_id !== user.id) {
+    if (offer.driver_id !== user.id) {
       return errorResponse('Sem permissão para rejeitar esta oferta', 403)
     }
 
@@ -31,7 +32,7 @@ export async function POST(
     }
 
     const { error: updateError } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .update({ status: 'rejected', updated_at: new Date().toISOString() })
       .eq('id', offerId)
 

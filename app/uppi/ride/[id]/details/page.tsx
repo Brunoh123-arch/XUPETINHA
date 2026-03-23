@@ -47,7 +47,7 @@ export default function RideDetailsPage() {
           *,
           passenger:profiles!rides_passenger_id_fkey(id, full_name, avatar_url, phone),
           driver:profiles!rides_driver_id_fkey(id, full_name, avatar_url, phone, rating),
-          driver_profile:driver_profiles(vehicle_model, vehicle_plate, vehicle_color)
+          vehicle:vehicles!vehicles_driver_id_fkey(model, plate, color)
         `)
         .eq('id', params.id)
         .single()
@@ -226,7 +226,7 @@ export default function RideDetailsPage() {
                 </div>
                 {ride.driver_profile && (
                   <p className="text-sm text-gray-600 mt-1">
-                    {ride.driver_profile.vehicle_color} {ride.driver_profile.vehicle_model} • {ride.driver_profile.vehicle_plate}
+                    {(ride as any).vehicle?.color} {(ride as any).vehicle?.model} • {(ride as any).vehicle?.plate}
                   </p>
                 )}
               </div>

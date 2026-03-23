@@ -48,21 +48,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Você já avaliou esta corrida' }, { status: 409 })
     }
 
-    // Criar avaliação
+    // Criar avaliação — usa apenas colunas que existem no schema real
     const { data: newRating, error } = await supabase
       .from('ratings')
       .insert({
         ride_id,
-        score: rating,
         rating,
         comment: comment || null,
         rater_id: user.id,
         rated_id: reviewed_id,
-        reviewer_id: user.id,
-        reviewed_id,
         tags: tags || [],
-        category_ratings: category_ratings || null,
-        is_anonymous: is_anonymous || false,
+        is_public: !is_anonymous,
       })
       .select()
       .single()
@@ -76,15 +72,15 @@ export async function POST(request: Request) {
     if (ride.driver_id === reviewed_id) {
       const { data: ratings } = await supabase
         .from('ratings')
-        .select('score')
+        .select('rating')
         .eq('rated_id', reviewed_id)
 
       if (ratings && ratings.length > 0) {
-        const avg = ratings.reduce((sum: number, r: any) => sum + r.score, 0) / ratings.length
+        const avg = ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratings.length
         await supabase
           .from('driver_profiles')
           .update({ rating: Number(avg.toFixed(2)) })
-          .eq('id', reviewed_id)
+          .eq('user_id', reviewed_id)
       }
     }
 
@@ -109,17 +105,17 @@ export async function GET(request: Request) {
       .from('ratings')
       .select(`
         *,
-        reviewer:profiles!reviewer_id(id, full_name, avatar_url),
+        rater:profiles!rater_id(id, full_name, avatar_url),
         ride:rides!ride_id(id, pickup_address, dropoff_address, created_at)
       `)
-      .eq('reviewed_id', userId)
+      .eq('rated_id', userId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    // Calcular média
+    // Calcular média usando coluna "rating"
     const avg = ratings && ratings.length > 0
-      ? ratings.reduce((sum: number, r: any) => sum + (r.score || r.rating || 0), 0) / ratings.length
+      ? ratings.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratings.length
       : null
 
     return NextResponse.json({

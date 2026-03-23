@@ -18,7 +18,7 @@ interface DriverEarning {
   vehicle_plate: string | null
   is_verified: boolean
   is_available: boolean
-  total_rides: number
+  total_trips: number
   rating: number
   total_earnings: number
   week_earnings: number
@@ -27,7 +27,7 @@ interface DriverEarning {
   last_ride_at: string | null
 }
 
-type SortBy = 'week_earnings' | 'total_earnings' | 'total_rides' | 'rating'
+type SortBy = 'week_earnings' | 'total_earnings' | 'total_trips' | 'rating'
 
 export default function AdminDriverEarningsPage() {
   const [drivers, setDrivers] = useState<DriverEarning[]>([])
@@ -46,7 +46,7 @@ export default function AdminDriverEarningsPage() {
       .from('driver_profiles')
       .select(`
         id, vehicle_model, vehicle_plate, is_verified, is_available,
-        total_earnings, rating, total_rides,
+        total_earnings, rating, total_trips,
         profile:profiles!driver_profiles_id_fkey(full_name, phone, avatar_url)
       `)
       .eq('is_verified', true)
@@ -93,7 +93,7 @@ export default function AdminDriverEarningsPage() {
     const result: DriverEarning[] = driverProfiles.map(d => {
       const profile = d.profile as any
       const weekData = weekMap[d.id] || { amount: 0, count: 0 }
-      const totalRides = d.total_rides || 0
+      const totalRides = d.total_trips || 0
       const totalEarnings = d.total_earnings || 0
       return {
         driver_id: d.id,
@@ -104,7 +104,7 @@ export default function AdminDriverEarningsPage() {
         vehicle_plate: d.vehicle_plate,
         is_verified: d.is_verified,
         is_available: d.is_available,
-        total_rides: totalRides,
+        total_trips: totalRides,
         rating: d.rating || 5,
         total_earnings: totalEarnings,
         week_earnings: weekData.amount,
@@ -215,7 +215,7 @@ export default function AdminDriverEarningsPage() {
               {([
                 { key: 'week_earnings', label: 'Semana' },
                 { key: 'total_earnings', label: 'Total' },
-                { key: 'total_rides', label: 'Corridas' },
+                { key: 'total_trips', label: 'Corridas' },
                 { key: 'rating', label: 'Nota' },
               ] as const).map(({ key, label }) => (
                 <button
@@ -308,7 +308,7 @@ export default function AdminDriverEarningsPage() {
 
                       {/* Total Rides */}
                       <div className="text-right">
-                        <p className="text-[13px] font-bold text-blue-400 tabular-nums">{driver.total_rides}</p>
+                        <p className="text-[13px] font-bold text-blue-400 tabular-nums">{driver.total_trips}</p>
                       </div>
 
                       {/* Avg Per Ride */}
@@ -394,7 +394,7 @@ export default function AdminDriverEarningsPage() {
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 bg-[hsl(var(--admin-bg))] rounded-xl text-center">
-                      <p className="text-[20px] font-bold text-blue-400 tabular-nums">{selected.total_rides}</p>
+                      <p className="text-[20px] font-bold text-blue-400 tabular-nums">{selected.total_trips}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">Corridas</p>
                     </div>
                     <div className="p-3 bg-[hsl(var(--admin-bg))] rounded-xl text-center">

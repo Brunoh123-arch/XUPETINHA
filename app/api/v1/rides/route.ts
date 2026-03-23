@@ -27,16 +27,16 @@ export async function POST(request: Request) {
       .insert({
         passenger_id: user.id,
         pickup_address: data.pickup_address,
-        pickup_lat: data.pickup_lat,
-        pickup_lng: data.pickup_lng,
+        pickup_latitude: data.pickup_lat,
+        pickup_longitude: data.pickup_lng,
         dropoff_address: data.dropoff_address,
-        dropoff_lat: data.dropoff_lat,
-        dropoff_lng: data.dropoff_lng,
+        dropoff_latitude: data.dropoff_lat,
+        dropoff_longitude: data.dropoff_lng,
         status: 'pending',
         payment_method: data.payment_method || 'pix',
-        passenger_price_offer: data.passenger_price_offer,
+        estimated_price: data.passenger_price_offer,
         notes: data.notes || null,
-        vehicle_type: data.vehicle_type || 'economy',
+        category_id: data.vehicle_type || null,
       })
       .select(`
         *,
@@ -106,7 +106,7 @@ export async function GET(request: Request) {
         *,
         passenger:profiles!passenger_id(id, full_name, avatar_url, phone),
         driver:profiles!driver_id(id, full_name, avatar_url, phone),
-        driver_profile:driver_profiles!driver_id(rating, total_rides, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type)
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips, is_verified, is_available)
       `)
       .eq('passenger_id', user.id)
       .order('created_at', { ascending: false })

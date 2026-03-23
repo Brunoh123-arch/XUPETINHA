@@ -21,11 +21,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ride_id e offered_price são obrigatórios' }, { status: 400 })
     }
 
-    // Verificar se o usuário é motorista ativo
+    // Verificar se o usuário é motorista ativo — FK é user_id, não id
     const { data: driver } = await supabase
       .from('driver_profiles')
-      .select('id, is_verified, is_available, vehicle_type, vehicle_brand, vehicle_model, vehicle_plate')
-      .eq('id', user.id)
+      .select('id, is_verified, is_available')
+      .eq('user_id', user.id)
       .single()
 
     if (!driver) {
@@ -51,9 +51,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Corrida não está disponível para ofertas' }, { status: 409 })
     }
 
-    // Verificar se motorista já fez oferta para essa corrida
+    // Verificar se motorista já fez oferta — tabela real: ride_offers
     const { data: existingOffer } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select('id')
       .eq('ride_id', ride_id)
       .eq('driver_id', user.id)
@@ -64,21 +64,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Você já fez uma oferta para esta corrida' }, { status: 409 })
     }
 
-    // Criar oferta em price_offers (tabela unificada)
+    // Criar oferta na tabela real: ride_offers
     const { data: offer, error } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .insert({
         ride_id,
         driver_id: user.id,
         offered_price: Number(offered_price),
         eta_minutes: estimated_arrival_minutes || 5,
-        message: message || null,
+        notes: message || null,
         status: 'pending',
       })
       .select(`
         *,
         driver:profiles!driver_id(id, full_name, avatar_url, phone),
-        driver_profile:driver_profiles!driver_id(rating, total_rides, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type)
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips, is_verified)
       `)
       .single()
 
@@ -93,13 +93,13 @@ export async function POST(request: Request) {
       .eq('id', ride_id)
       .eq('status', 'pending')
 
-    // Notificar passageiro
+    // Notificar passageiro — campo real é "body"
     try {
       await supabase.from('notifications').insert({
         user_id: ride.passenger_id,
         type: 'offer',
         title: 'Nova oferta recebida',
-        message: `Oferta de R$ ${Number(offered_price).toFixed(2)} de ${driver.vehicle_brand} ${driver.vehicle_model}`,
+        body: `Nova oferta de R$ ${Number(offered_price).toFixed(2)} para sua corrida`,
         data: { ride_id, offer_id: offer.id },
         is_read: false,
       })
@@ -130,12 +130,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'ride_id é obrigatório' }, { status: 400 })
     }
 
+    // GET — tabela real: ride_offers
     const { data: offers, error } = await supabase
-      .from('price_offers')
+      .from('ride_offers')
       .select(`
         *,
         driver:profiles!driver_id(id, full_name, avatar_url, phone),
-        driver_profile:driver_profiles!driver_id(rating, total_rides, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, vehicle_type, vehicle_year)
+        driver_profile:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips, is_verified)
       `)
       .eq('ride_id', ride_id)
       .in('status', ['pending', 'accepted'])

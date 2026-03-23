@@ -20,12 +20,13 @@ import { paymentService } from '@/lib/services/payment-service'
 
 interface Payment {
   id: string
-  amount: number
+  amount: number | string // Supabase retorna DECIMAL como string — sempre usar Number(t.amount)
   payment_method: string
   status: string
+  description?: string
   created_at: string
   ride_id?: string
-  type: 'ride' | 'topup' | 'cashback'
+  type: 'ride' | 'topup' | 'cashback' | 'credit' | 'debit' | 'refund' | 'bonus' | 'withdrawal'
 }
 
 export default function WalletPage() {

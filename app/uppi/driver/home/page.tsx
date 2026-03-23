@@ -11,7 +11,7 @@ interface DriverProfile {
   full_name: string
   avatar_url: string | null
   rating: number
-  total_rides: number
+  total_trips: number
   trust_score: number
   trust_level: string
 }
@@ -36,11 +36,11 @@ interface IncomingRide {
   id: string
   pickup_address: string
   dropoff_address: string
-  pickup_lat: number | null
-  pickup_lng: number | null
-  distance_km: number
+  pickup_latitude: number | null
+  pickup_longitude: number | null
+  estimated_distance: number
   estimated_duration_minutes: number
-  passenger_price_offer: number
+  estimated_price: number
   vehicle_type: string
   payment_method: string
   notes: string | null
@@ -49,7 +49,7 @@ interface IncomingRide {
     full_name: string
     avatar_url: string | null
     rating: number
-    total_rides: number
+    total_trips: number
   } | null
 }
 
@@ -143,10 +143,10 @@ export default function DriverHomePage() {
       if (!user) { router.push('/auth/welcome'); return }
 
       const [profileRes, statsRes, earningsRes, activeRideRes] = await Promise.all([
-        supabase.from('profiles').select('id,full_name,avatar_url,rating,total_rides,trust_score,trust_level').eq('id', user.id).single(),
-        supabase.from('driver_profiles').select('*').eq('id', user.id).single(),
+        supabase.from('profiles').select('id,full_name,avatar_url,rating,total_trips,trust_score,trust_level').eq('id', user.id).single(),
+        supabase.from('driver_profiles').select('*').eq('user_id', user.id).single(),
         supabase.from('rides')
-          .select('id,final_price,passenger_price_offer,created_at,started_at,completed_at')
+          .select('id,final_price,estimated_price,created_at,started_at,completed_at')
           .eq('driver_id', user.id)
           .eq('status', 'completed')
           .gte('completed_at', new Date(new Date().setHours(0,0,0,0)).toISOString()),
@@ -162,8 +162,8 @@ export default function DriverHomePage() {
       // Calcular ganhos do dia
       if (earningsRes.data) {
         const rides = earningsRes.data
-        const total = rides.reduce((sum: number, r: { final_price?: number; passenger_price_offer?: number }) =>
-          sum + (Number(r.final_price) || Number(r.passenger_price_offer) || 0), 0)
+      const total = rides.reduce((sum: number, r: { final_price?: number; estimated_price?: number }) =>
+        sum + (Number(r.final_price) || Number(r.estimated_price) || 0), 0)
         const hours = rides.reduce((sum: number, r: { started_at?: string; completed_at?: string }) => {
           if (r.started_at && r.completed_at) {
             return sum + (new Date(r.completed_at).getTime() - new Date(r.started_at).getTime()) / 3600000
@@ -181,7 +181,7 @@ export default function DriverHomePage() {
           status: r.ride.status,
           pickup_address: r.ride.pickup_address,
           dropoff_address: r.ride.dropoff_address,
-          final_price: Number(r.ride.final_price || r.ride.passenger_price_offer || 0),
+          final_price: Number(r.ride.final_price || r.ride.estimated_price || 0),
           passenger: r.passenger,
         })
       }
@@ -216,7 +216,7 @@ export default function DriverHomePage() {
         // Buscar dados do passageiro
         const { data: passenger } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, rating, total_rides')
+          .select('id, full_name, avatar_url, rating, total_trips')
           .eq('id', ride.passenger_id as string)
           .single()
 
@@ -224,11 +224,11 @@ export default function DriverHomePage() {
           id: ride.id as string,
           pickup_address: ride.pickup_address as string,
           dropoff_address: ride.dropoff_address as string,
-          pickup_lat: ride.pickup_lat as number | null,
-          pickup_lng: ride.pickup_lng as number | null,
-          distance_km: Number(ride.distance_km) || 0,
-          estimated_duration_minutes: Number(ride.estimated_duration_minutes) || 0,
-          passenger_price_offer: Number(ride.passenger_price_offer) || 0,
+          pickup_latitude: (ride.pickup_latitude ?? ride.pickup_lat) as number | null,
+          pickup_longitude: (ride.pickup_longitude ?? ride.pickup_lng) as number | null,
+          estimated_distance: Number(ride.estimated_distance ?? ride.distance_km) || 0,
+          estimated_duration_minutes: Number(ride.estimated_duration ?? ride.estimated_duration_minutes) || 15,
+          estimated_price: Number(ride.estimated_price ?? ride.passenger_price_offer) || 0,
           vehicle_type: ride.vehicle_type as string,
           payment_method: ride.payment_method as string,
           notes: ride.notes as string | null,
@@ -335,7 +335,7 @@ export default function DriverHomePage() {
         status: 'accepted',
         pickup_address: incomingRide.pickup_address,
         dropoff_address: incomingRide.dropoff_address,
-        final_price: incomingRide.passenger_price_offer,
+          final_price: incomingRide.estimated_price,
         passenger: incomingRide.passenger,
       })
       iosToast.success('Corrida aceita! Va buscar o passageiro.')
@@ -584,7 +584,7 @@ export default function DriverHomePage() {
               </div>
               <div className="bg-zinc-800/60 rounded-[14px] p-3">
                 <p className="text-[11px] text-zinc-500 mb-1">Total corridas</p>
-                <p className="text-[18px] font-bold">{profile?.total_rides || 0}</p>
+                <p className="text-[18px] font-bold">{profile?.total_trips || 0}</p>
               </div>
               <div className="bg-zinc-800/60 rounded-[14px] p-3">
                 <p className="text-[11px] text-zinc-500 mb-1">Ganho total</p>
@@ -670,7 +670,7 @@ export default function DriverHomePage() {
                   <p className="text-[17px] font-bold">{incomingRide.passenger.full_name}</p>
                   <div className="flex items-center gap-1">
                     <svg className="w-3 h-3 text-amber-400 fill-amber-400" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" /></svg>
-                    <span className="text-[13px] text-zinc-400">{Number(incomingRide.passenger.rating || 5).toFixed(1)} • {incomingRide.passenger.total_rides} corridas</span>
+                    <span className="text-[13px] text-zinc-400">{Number(incomingRide.passenger.rating || 5).toFixed(1)} • {incomingRide.passenger.total_trips} corridas</span>
                   </div>
                 </div>
               </div>
@@ -681,7 +681,7 @@ export default function DriverHomePage() {
                 <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><div className="w-2 h-2 bg-blue-400 rounded-full" /></div>
                 <p className="text-[14px] text-zinc-200 leading-snug">{incomingRide.pickup_address}</p>
               </div>
-              <div className="ml-2.5 border-l-2 border-dashed border-zinc-700 pl-5 py-0.5"><p className="text-[11px] text-zinc-600">{formatKm(incomingRide.distance_km)} • {incomingRide.estimated_duration_minutes} min</p></div>
+                  <div className="ml-2.5 border-l-2 border-dashed border-zinc-700 pl-5 py-0.5"><p className="text-[11px] text-zinc-600">{formatKm(incomingRide.estimated_distance)} • {incomingRide.estimated_duration_minutes} min</p></div>
               <div className="flex items-start gap-2">
                 <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><div className="w-2 h-2 bg-emerald-400 rounded-full" /></div>
                 <p className="text-[14px] text-zinc-200 leading-snug">{incomingRide.dropoff_address}</p>
@@ -694,7 +694,7 @@ export default function DriverHomePage() {
                 <span className="text-[13px] text-zinc-400 capitalize">{incomingRide.vehicle_type}</span>
                 <PaymentBadge method={incomingRide.payment_method} />
               </div>
-              <p className="text-[26px] font-bold text-emerald-400">{formatBRL(incomingRide.passenger_price_offer)}</p>
+                <p className="text-[26px] font-bold text-emerald-400">{formatBRL(incomingRide.estimated_price)}</p>
             </div>
 
             {incomingRide.notes && (

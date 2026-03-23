@@ -14,7 +14,7 @@ interface AuctionOffer {
     full_name: string
     avatar_url: string | null
     rating: number
-    total_rides: number
+    total_trips: number
     vehicle_brand: string
     vehicle_model: string
     vehicle_color: string
@@ -56,28 +56,26 @@ export default function AuctionPage() {
   useEffect(() => {
     if (!rideId) return
     const supabase = createClient()
-    supabase.from('rides').select('passenger_price_offer').eq('id', rideId).single()
-      .then(({ data }) => { if (data) setRidePrice(data.passenger_price_offer || 0) })
-  }, [rideId])
+    // coluna real é estimated_price (não passenger_price_offer)
+    supabase.from('rides').select('estimated_price').eq('id', rideId).single()
+      .then(({ data }) => { if (data) setRidePrice(data.estimated_price || 0) })
 
-  // Realtime: novas ofertas
-  useEffect(() => {
-    if (!rideId) return
-    const supabase = createClient()
-
-    supabase.from('price_offers')
+    // tabela real é ride_offers (não price_offers), join correto em driver_profiles
+    supabase.from('ride_offers')
       .select(`
         id, driver_id, offered_price, eta_minutes, created_at,
-        driver:driver_profiles!driver_id(
-          rating, total_rides, trust_score, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate,
-          profile:profiles!id(full_name, avatar_url)
-        )
+        driver:profiles!driver_id(
+          full_name, avatar_url, rating, total_trips,
+          vehicle:driver_profiles!driver_profiles_user_id_fkey(rating, total_trips)
+        ),
+        vehicle:vehicles!vehicles_driver_id_fkey(brand, model, color, plate)
       `)
       .eq('ride_id', rideId)
       .eq('status', 'pending')
       .order('offered_price', { ascending: true })
       .then(({ data }) => {
-        if (data) setOffers(data.map(mapOffer))
+        if (!data) return
+        setOffers(data.map((o: any) => mapOffer(o)))
       })
 
     const channel = supabase
@@ -85,17 +83,15 @@ export default function AuctionPage() {
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'price_offers',
+        table: 'ride_offers',
         filter: `ride_id=eq.${rideId}`,
       }, async (payload) => {
         const { data } = await supabase
-          .from('price_offers')
+          .from('ride_offers')
           .select(`
             id, driver_id, offered_price, eta_minutes, created_at,
-            driver:driver_profiles!driver_id(
-              rating, total_rides, trust_score, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate,
-              profile:profiles!id(full_name, avatar_url)
-            )
+            driver:profiles!driver_id(full_name, avatar_url, rating, total_trips),
+            vehicle:vehicles!vehicles_driver_id_fkey(brand, model, color, plate)
           `)
           .eq('id', payload.new.id)
           .single()
@@ -113,7 +109,9 @@ export default function AuctionPage() {
 
   function mapOffer(data: any): AuctionOffer {
     const dp = Array.isArray(data.driver) ? data.driver[0] : data.driver
-    const profile = Array.isArray(dp?.profile) ? dp?.profile[0] : dp?.profile
+    // nova estrutura: driver vem de profiles, vehicle de vehicles
+    const driver = data.driver as any
+    const vehicle = Array.isArray(data.vehicle) ? data.vehicle[0] : data.vehicle
     return {
       id: data.id,
       driver_id: data.driver_id,
@@ -121,15 +119,15 @@ export default function AuctionPage() {
       eta_minutes: data.eta_minutes,
       created_at: data.created_at,
       driver: {
-        full_name: profile?.full_name || 'Motorista',
-        avatar_url: profile?.avatar_url || null,
-        rating: dp?.rating || 5,
-        total_rides: dp?.total_rides || 0,
-        vehicle_brand: dp?.vehicle_brand || '',
-        vehicle_model: dp?.vehicle_model || '',
-        vehicle_color: dp?.vehicle_color || '',
-        vehicle_plate: dp?.vehicle_plate || '',
-        trust_score: dp?.trust_score || 50,
+        full_name: driver?.full_name || 'Motorista',
+        avatar_url: driver?.avatar_url || null,
+        rating: driver?.rating || 5,
+        total_trips: driver?.total_trips || 0,
+        vehicle_brand: vehicle?.brand || '',
+        vehicle_model: vehicle?.model || '',
+        vehicle_color: vehicle?.color || '',
+        vehicle_plate: vehicle?.plate || '',
+        trust_score: 50,
       },
     }
   }
@@ -296,7 +294,7 @@ export default function AuctionPage() {
                             </svg>
                             <span className="text-[12px] font-semibold text-foreground">{offer.driver.rating?.toFixed(1)}</span>
                           </div>
-                          <span className="text-[12px] text-muted-foreground">{offer.driver.total_rides} corridas</span>
+                          <span className="text-[12px] text-muted-foreground">{offer.driver.total_trips} corridas</span>
                           <span className="text-[12px] text-muted-foreground">{offer.eta_minutes}min</span>
                         </div>
                       </div>

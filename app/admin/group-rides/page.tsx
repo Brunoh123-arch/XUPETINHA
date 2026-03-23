@@ -76,8 +76,9 @@ export default function AdminGroupRidesPage() {
     const ids = (data || []).map(g => g.id)
     let memberCounts: Record<string, number> = {}
     if (ids.length > 0) {
+      // tabela real: group_ride_participants (não group_ride_members)
       const { data: members } = await supabase
-        .from('group_ride_members')
+        .from('group_ride_participants')
         .select('group_ride_id')
         .in('group_ride_id', ids)
 
@@ -97,7 +98,7 @@ export default function AdminGroupRidesPage() {
     channelRef.current = supabase
       .channel('admin-group-rides-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'group_rides' }, fetchGroups)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_ride_members' }, fetchGroups)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'group_ride_participants' }, fetchGroups)
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [fetchGroups])

@@ -47,42 +47,37 @@ export async function POST(
       return errorResponse('Gorjeta já enviada para esta corrida', 409)
     }
 
-    // Criar gorjeta
+    // tip_transactions não existe — usa driver_earnings para registrar gorjeta
     const { data: tip, error: tipError } = await supabase
-      .from('tip_transactions')
+      .from('driver_earnings')
       .insert({
         ride_id: rideId,
-        passenger_id: user.id,
         driver_id: ride.driver_id,
-        amount: Number(amount),
-        payment_method,
+        gross_amount: Number(amount),
+        net_amount: Number(amount),
+        tip_amount: Number(amount),
+        commission_amount: 0,
+        status: 'paid',
       })
       .select()
       .single()
 
     if (tipError) throw tipError
 
-    // Creditar wallet do motorista
-    await supabase
-      .from('wallets')
-      .update({
-        balance: supabase.rpc as unknown as number,
-        updated_at: new Date().toISOString(),
-      })
-
+    // Creditar wallet do motorista via RPC
     await supabase.rpc('update_wallet_balance', {
       p_user_id: ride.driver_id,
       p_amount: Number(amount),
       p_type: 'credit',
     })
 
-    // Notificar motorista
+    // Notificar motorista — campo real é "body"
     await supabase.from('notifications').insert({
       user_id: ride.driver_id,
       type: 'tip',
       title: 'Gorjeta recebida!',
-      message: `Você recebeu uma gorjeta de R$ ${Number(amount).toFixed(2)}`,
-      data: { ride_id: rideId, tip_id: tip.id },
+      body: `Você recebeu uma gorjeta de R$ ${Number(amount).toFixed(2)}`,
+      data: { ride_id: rideId },
       is_read: false,
     })
 

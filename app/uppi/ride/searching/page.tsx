@@ -38,14 +38,14 @@ interface OfferWithDriver {
   id: string
   driver_id: string
   offered_price: number
-  message: string | null
+  notes: string | null
   status: string
   created_at: string
   driver?: {
     full_name: string
     avatar_url: string | null
     rating: number
-    total_rides: number
+    total_trips: number
     driver_profile: DriverProfileInfo[]
   }
   estimatedMinutes?: number
@@ -139,12 +139,12 @@ export default function SearchingDriverPage() {
         body: JSON.stringify({
           pickup_address: route.pickup,
           dropoff_address: route.destination,
-          pickup_lat: route.pickupCoords.lat,
-          pickup_lng: route.pickupCoords.lng,
-          dropoff_lat: route.destinationCoords.lat,
-          dropoff_lng: route.destinationCoords.lng,
-          passenger_price_offer: selectedRide.price,
-          distance_km: selectedRide.distanceKm,
+          pickup_latitude: route.pickupCoords.lat,
+          pickup_longitude: route.pickupCoords.lng,
+          dropoff_latitude: route.destinationCoords.lat,
+          dropoff_longitude: route.destinationCoords.lng,
+          estimated_price: selectedRide.price,
+          estimated_distance: selectedRide.distanceKm,
           estimated_duration_minutes: parseInt(selectedRide.durationText) || 15,
           payment_method: pm[selectedRide.paymentMethod] || 'cash',
           vehicle_type: selectedRide.vehicleType,
@@ -168,9 +168,10 @@ export default function SearchingDriverPage() {
 
   const sub = (id: string) => {
     supabase.channel(`ride-offers-${id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'price_offers', filter: `ride_id=eq.${id}` }, async (pl) => {
-        const o = pl.new
-        const { data: drv } = await supabase.from('profiles').select('full_name, avatar_url, rating, total_rides, driver_profile:driver_profiles(vehicle_type, vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location)').eq('id', o.driver_id).single()
+      // realtime — tabela real: ride_offers
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ride_offers', filter: `ride_id=eq.${id}` }, async (pl) => {
+        const o = pl.new as any
+        const { data: drv } = await supabase.from('profiles').select('full_name, avatar_url, rating, total_trips, driver_profile:driver_profiles!driver_profiles_user_id_fkey(vehicle_brand, vehicle_model, vehicle_color, vehicle_plate, current_location)').eq('id', o.driver_id).single()
         const dp = drv?.driver_profile?.[0] as DriverProfileInfo | undefined
         const loc = dp?.current_location?.coordinates
         const est = estimateArrival(loc?.[1], loc?.[0], route.pickupCoords?.lat, route.pickupCoords?.lng)
@@ -256,7 +257,8 @@ export default function SearchingDriverPage() {
         headers: { 'Content-Type': 'application/json' },
       }).catch(() => {
         // Fallback direto no banco
-        return supabase.from('price_offers').update({ status: 'rejected' }).eq('id', offer.id)
+        // rejeitar oferta — tabela real: ride_offers
+    return supabase.from('ride_offers').update({ status: 'rejected' }).eq('id', offer.id)
       })
     } catch { /* silent */ }
     setOffers(prev => prev.filter(o => o.id !== offer.id))
@@ -381,7 +383,7 @@ export default function SearchingDriverPage() {
                           <div className="flex-1 min-w-0">
                             <h3 className="text-[17px] font-bold text-foreground truncate">{d?.full_name || 'Motorista'}</h3>
                             <div className="flex items-center gap-2 mt-0.5"><Stars rating={d?.rating || 5} /><span className="text-[13px] font-semibold text-muted-foreground">{(d?.rating || 5).toFixed(1)}</span></div>
-                            <p className="text-[12px] text-muted-foreground mt-0.5">{d?.total_rides || 0} corridas realizadas</p>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">{d?.total_trips || 0} corridas realizadas</p>
                           </div>
                           <div className="text-right">
                             <p className="text-[22px] font-bold text-foreground tracking-tight leading-none">R$ {offer.offered_price.toFixed(2)}</p>

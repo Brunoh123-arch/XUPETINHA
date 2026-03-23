@@ -34,22 +34,17 @@ export default function SMSSettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // user_sms_preferences não existe — usa user_settings
       const { data, error } = await supabase
-        .from('user_sms_preferences')
-        .select('*')
+        .from('user_settings')
+        .select('sms_notifications, phone')
         .eq('user_id', user.id)
         .single()
 
       if (data) {
-        setPhoneNumber(data.phone_number || '')
-        setPhoneVerified(data.phone_verified || false)
-        setEnabled(data.enabled || false)
-        setFallbackOnly(data.fallback_only ?? true)
-        setRideUpdates(data.ride_updates ?? true)
-        setPriceAlerts(data.price_alerts ?? true)
-        setDriverArrival(data.driver_arrival ?? true)
-        setPaymentUpdates(data.payment_updates ?? false)
-        setMarketing(data.marketing ?? false)
+        setEnabled(data.sms_notifications ?? false)
+        setPhoneNumber(data.phone || '')
+        setPhoneVerified(!!data.phone)
       }
     } catch (error) {
       console.error('Error loading SMS preferences:', error)
@@ -64,20 +59,15 @@ export default function SMSSettingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // salva em user_settings (tabela real)
       const { error } = await supabase
-        .from('user_sms_preferences')
+        .from('user_settings')
         .upsert({
           user_id: user.id,
-          phone_number: phoneNumber,
-          phone_verified: phoneVerified,
-          enabled,
-          fallback_only: fallbackOnly,
-          ride_updates: rideUpdates,
-          price_alerts: priceAlerts,
-          driver_arrival: driverArrival,
-          payment_updates: paymentUpdates,
-          marketing,
-        })
+          sms_notifications: enabled,
+          phone: phoneNumber,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' })
 
       if (error) throw error
 

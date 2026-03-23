@@ -88,7 +88,7 @@ export default function DriverAcceptRidePage() {
         return
       }
       setRide(data)
-      setCounterPrice(String(data.passenger_price_offer || ''))
+      setCounterPrice(String(data.estimated_price || ''))
     } finally {
       setLoading(false)
     }
@@ -104,7 +104,7 @@ export default function DriverAcceptRidePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ride_id: ride.id,
-          offered_price: ride.passenger_price_offer,
+          offered_price: ride.estimated_price,
           estimated_arrival_minutes: 5,
           message: 'Aceito pelo preço oferecido',
         }),
@@ -175,7 +175,7 @@ export default function DriverAcceptRidePage() {
     }
   }
 
-  const estimatedEarnings = ride ? (ride.passenger_price_offer || 0) * 0.85 : 0
+  const estimatedEarnings = ride ? (ride.estimated_price || 0) * 0.85 : 0
   const timerPercent = (timeLeft / TIMEOUT_SECONDS) * 100
   const timerColor = timeLeft > 15 ? '#10b981' : timeLeft > 7 ? '#f59e0b' : '#ef4444'
 
@@ -262,7 +262,7 @@ export default function DriverAcceptRidePage() {
           {/* Stats da corrida */}
           <div className="flex gap-3 mt-4 pt-4 border-t border-[color:var(--border)]">
             {[
-              { label: 'Distância', value: ride.distance_km ? `${ride.distance_km} km` : '—' },
+              { label: 'Distância', value: ride.estimated_distance ? `${ride.estimated_distance} km` : '—' },
               { label: 'Tempo est.', value: ride.estimated_duration_minutes ? `${ride.estimated_duration_minutes} min` : '—' },
               { label: 'Tipo', value: ride.vehicle_type || 'Carro' },
             ].map(s => (
@@ -280,7 +280,7 @@ export default function DriverAcceptRidePage() {
             <div>
               <p className="text-[13px] font-semibold text-white/75">Valor oferecido</p>
               <p className="text-[38px] font-black text-white tracking-tight leading-none mt-1">
-                R$ {(ride.passenger_price_offer || 0).toFixed(2)}
+                R$ {(ride.estimated_price || 0).toFixed(2)}
               </p>
               <p className="text-[13px] text-white/75 mt-1">
                 Seus ganhos: <strong className="text-white">R$ {estimatedEarnings.toFixed(2)}</strong> (85%)

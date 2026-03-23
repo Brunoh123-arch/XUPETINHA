@@ -18,10 +18,10 @@ interface RideInfo {
   driver?: { full_name: string; avatar_url: string | null; rating: number }
   driver_vehicle?: string
   pickup_address: string
-  destination_address: string
+  dropoff_address: string
   completed_at: string
   final_price?: number
-  passenger_price_offer?: number
+  estimated_price?: number
 }
 
 export default function RateRidePage() {
@@ -58,10 +58,10 @@ export default function RateRidePage() {
       const { data: rideData, error } = await supabase
         .from('rides')
         .select(`
-          id, driver_id, pickup_address, destination_address, completed_at,
-          final_price, passenger_price_offer,
+          id, driver_id, pickup_address, dropoff_address, completed_at,
+          final_price, estimated_price,
           driver:profiles!rides_driver_id_fkey(full_name, avatar_url, rating),
-          dp:driver_profiles!driver_profiles_id_fkey(vehicle_make, vehicle_model)
+          vehicle:vehicles!vehicles_driver_id_fkey(brand, model)
         `)
         .eq('id', rideId)
         .single()
@@ -72,11 +72,11 @@ export default function RateRidePage() {
         return
       }
 
-      const dp = (rideData as any).dp
+      const v = (rideData as any).vehicle
       setRide({
         ...rideData,
         driver: Array.isArray((rideData as any).driver) ? (rideData as any).driver[0] : (rideData as any).driver,
-        driver_vehicle: dp ? `${(Array.isArray(dp) ? dp[0] : dp)?.vehicle_make || ''} ${(Array.isArray(dp) ? dp[0] : dp)?.vehicle_model || ''}`.trim() : undefined,
+        driver_vehicle: v ? `${(Array.isArray(v) ? v[0] : v)?.brand || ''} ${(Array.isArray(v) ? v[0] : v)?.model || ''}`.trim() : undefined,
       } as RideInfo)
     } catch (err) {
       console.error('[rate] load error', err)
@@ -202,7 +202,7 @@ export default function RateRidePage() {
             </div>
             <div className="text-right">
               <p className="text-[22px] font-bold text-foreground">
-                R$ {(ride.final_price || ride.passenger_price_offer || 0).toFixed(2)}
+                  R$ {(ride.final_price || ride.estimated_price || 0).toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground">valor total</p>
             </div>
