@@ -59,33 +59,69 @@ export default function PassengerSignupPage() {
       },
     })
 
+    // Se o signup público falhou, tenta via Admin API (bypassa "Signup disabled")
     if (signUpError) {
-      setError(
-        signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")
-          ? "Este e-mail já está cadastrado. Tente fazer login."
-          : signUpError.message.includes("Password should be") 
-          ? "A senha não atende aos requisitos mínimos."
-          : "Ocorreu um erro ao criar a conta. Tente novamente."
-      )
-      setLoading(false)
+      const msg = signUpError.message
+      const isSignupDisabled = msg.includes("Signup is disabled") || msg.includes("signup_disabled") || msg.includes("not allowed")
+
+      if (!isSignupDisabled) {
+        setError(
+          msg.includes("already registered") || msg.includes("already been registered")
+            ? "Este e-mail já está cadastrado. Tente fazer login."
+            : msg.includes("Password should be")
+            ? "A senha não atende aos requisitos mínimos."
+            : msg.includes("rate limit") || msg.includes("429") || msg.includes("over_email_send_rate_limit")
+            ? "Muitas tentativas. Aguarde alguns minutos e tente novamente."
+            : msg.includes("invalid") || msg.includes("unable to validate")
+            ? "E-mail inválido. Verifique e tente novamente."
+            : `Erro: ${msg}`
+        )
+        setLoading(false)
+        return
+      }
+
+      // Tenta criar via Admin API
+      const adminRes = await fetch("/api/auth/confirm-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName: name, role: "passenger" }),
+      })
+      const adminData = await adminRes.json()
+
+      if (!adminRes.ok || adminData.error) {
+        const adminMsg = adminData.error ?? ""
+        setError(
+          adminMsg.includes("already registered") || adminMsg.includes("already exists")
+            ? "Este e-mail já está cadastrado. Tente fazer login."
+            : "Ocorreu um erro ao criar a conta. Tente novamente."
+        )
+        setLoading(false)
+        return
+      }
+
+      // Usuário criado via admin, faz login
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError) {
+        router.push("/uppi/home")
+        return
+      }
+      router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
       return
     }
 
-    // Se a sessão já foi criada (confirmação de email desabilitada), vai direto para home
+    // Signup público funcionou — sessão criada diretamente
     if (signUpData?.session) {
       router.push("/uppi/home")
       return
     }
 
-    // Confirma o email automaticamente via API (usando service_role)
+    // Sem sessão, confirma email via admin e faz login
     if (signUpData?.user?.id) {
       await fetch("/api/auth/confirm-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: signUpData.user.id }),
       })
-
-      // Faz login automatico apos confirmacao
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
       if (!signInError) {
         router.push("/uppi/home")
@@ -93,7 +129,6 @@ export default function PassengerSignupPage() {
       }
     }
 
-    // Fallback: redireciona para pagina de confirmacao de email
     router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
   }
 
