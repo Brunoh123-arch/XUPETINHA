@@ -47,7 +47,7 @@ export default function PassengerSignupPage() {
     setError("")
 
     const supabase = createClient()
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -63,12 +63,37 @@ export default function PassengerSignupPage() {
       setError(
         signUpError.message.includes("already registered") || signUpError.message.includes("already been registered")
           ? "Este e-mail já está cadastrado. Tente fazer login."
+          : signUpError.message.includes("Password should be") 
+          ? "A senha não atende aos requisitos mínimos."
           : "Ocorreu um erro ao criar a conta. Tente novamente."
       )
       setLoading(false)
       return
     }
 
+    // Se a sessão já foi criada (confirmação de email desabilitada), vai direto para home
+    if (signUpData?.session) {
+      router.push("/uppi/home")
+      return
+    }
+
+    // Confirma o email automaticamente via API (usando service_role)
+    if (signUpData?.user?.id) {
+      await fetch("/api/auth/confirm-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: signUpData.user.id }),
+      })
+
+      // Faz login automatico apos confirmacao
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError) {
+        router.push("/uppi/home")
+        return
+      }
+    }
+
+    // Fallback: redireciona para pagina de confirmacao de email
     router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
   }
 
