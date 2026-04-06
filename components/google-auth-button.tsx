@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { getSiteUrl } from "@/lib/utils"
 
@@ -22,30 +23,29 @@ interface GoogleAuthButtonProps {
 export function GoogleAuthButton({ label = "Continuar com Google" }: GoogleAuthButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const router = useRouter()
 
   const handleGoogleLogin = async () => {
     setLoading(true)
     setError("")
     try {
       const supabase = createClient()
-      const redirectTo = `${getSiteUrl()}/auth/callback`
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
+          redirectTo: `${getSiteUrl()}/auth/callback`,
         },
       })
 
       if (error) {
         setError(error.message)
         setLoading(false)
+        return
       }
-      // Se não houver erro, o Supabase redireciona automaticamente para o Google
+
+      // Firebase popup login retornou com sucesso — redireciona
+      router.push("/uppi/home")
     } catch {
       setError("Erro ao conectar com Google. Tente novamente.")
       setLoading(false)

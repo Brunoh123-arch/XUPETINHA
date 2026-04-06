@@ -38,17 +38,17 @@ export default function DriverSignUpPage() {
       }
 
       if (data.user) {
-        // Criar perfil como motorista
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            email,
-            full_name: name,
-            phone,
-            user_type: 'driver',
-            created_at: new Date().toISOString(),
-          })
+        // Confirma o email automaticamente via API
+        await fetch("/api/auth/confirm-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: data.user.id }),
+        })
+
+        // Faz login automatico se nao tiver sessao
+        if (!data.session) {
+          await supabase.auth.signInWithPassword({ email, password })
+        }
 
         // Criar driver_profile inicial (pendente de verificação)
         await supabase

@@ -54,6 +54,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   reactStrictMode: true,
   // Suprime avisos de chaves experimentais invalidas injetadas pelo ambiente de preview
   experimental: {

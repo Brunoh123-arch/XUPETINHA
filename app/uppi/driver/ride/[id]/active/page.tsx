@@ -574,15 +574,24 @@ export default function DriverActiveRidePage() {
             showUserLocation
             followMode={navActive}
             showRoute={!!(
-      (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude) &&
-      (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)
-        ? { lat: (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude)!, lng: (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)! }
-        : undefined
-      ...(ride.pickup_latitude && ride.pickup_longitude
-        ? [{ id: 'pickup', lat: ride.pickup_latitude, lng: ride.pickup_longitude, title: 'Buscar passageiro' }]
-        : []),
-      ...(ride.dropoff_latitude && ride.dropoff_longitude && ride.status !== 'accepted'
-        ? [{ id: 'dropoff', lat: ride.dropoff_latitude, lng: ride.dropoff_longitude, title: 'Destino' }]
+              (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude) &&
+              (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)
+            )}
+            destination={
+              (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude) &&
+              (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)
+                ? {
+                    lat: (ride.status === 'accepted' ? ride.pickup_latitude : ride.dropoff_latitude)!,
+                    lng: (ride.status === 'accepted' ? ride.pickup_longitude : ride.dropoff_longitude)!,
+                  }
+                : undefined
+            }
+            markers={[
+              ...(ride.pickup_latitude && ride.pickup_longitude
+                ? [{ id: 'pickup', lat: ride.pickup_latitude, lng: ride.pickup_longitude, title: 'Buscar passageiro' }]
+                : []),
+              ...(ride.dropoff_latitude && ride.dropoff_longitude && ride.status !== 'accepted'
+                ? [{ id: 'dropoff', lat: ride.dropoff_latitude, lng: ride.dropoff_longitude, title: 'Destino' }]
                 : []),
             ]}
             onLocationFound={(lat, lng) => {

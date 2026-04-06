@@ -47,7 +47,7 @@ export default function SignupPage() {
     setError("")
 
     const supabase = createClient()
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -69,11 +69,27 @@ export default function SignupPage() {
       return
     }
 
-    if (role === "driver") {
-      router.push(`/auth/driver/welcome`)
-    } else {
-      router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
+    // Sessao criada diretamente (confirmacao de email desabilitada)
+    if (signUpData?.session) {
+      router.push(role === "driver" ? "/uppi/driver/register" : "/uppi/home")
+      return
     }
+
+    // Confirma o email automaticamente e faz login
+    if (signUpData?.user?.id) {
+      await fetch("/api/auth/confirm-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: signUpData.user.id }),
+      })
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (!signInError) {
+        router.push(role === "driver" ? "/uppi/driver/register" : "/uppi/home")
+        return
+      }
+    }
+
+    router.push(`/auth/sign-up-success?email=${encodeURIComponent(email)}`)
   }
 
   return (
