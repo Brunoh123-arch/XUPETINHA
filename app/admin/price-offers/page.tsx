@@ -222,8 +222,14 @@ export default function AdminPriceOffersPage() {
                         <p className="text-[17px] font-bold text-blue-400 tabular-nums">R$ {Number(offer.ride.estimated_price).toFixed(2)}</p>
                       </div>
                     )}
-                        </>
-                      )}
+                    {diff !== null && (
+                      <div>
+                        <p className="text-[10px] text-slate-500">Diferença</p>
+                        <p className={cn('text-[17px] font-bold tabular-nums', diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-slate-400')}>
+                          {diff > 0 ? '+' : ''}R$ {diff.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
                     </div>
 
                     {/* Ride addresses */}
