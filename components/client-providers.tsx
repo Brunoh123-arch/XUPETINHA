@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'sonner'
 import { GoogleMapsProvider } from '@/lib/google-maps/provider'
 import { CapacitorProvider } from '@/components/capacitor-provider'
+import { AuthProvider } from '@/lib/firebase/auth-context'
 
 // Lazy-loaded providers that are not needed during SSR prerendering
 function LazyProviders({ children }: { children: ReactNode }) {
@@ -22,6 +23,7 @@ function LazyProviders({ children }: { children: ReactNode }) {
   // Once mounted on client, dynamically import heavy providers
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <AuthProvider>
       <CapacitorProvider>
         <GoogleMapsProvider>
           {children}
@@ -42,6 +44,7 @@ function LazyProviders({ children }: { children: ReactNode }) {
         }}
       />
       <ClientOnlyProviders />
+      </AuthProvider>
     </ThemeProvider>
   )
 }

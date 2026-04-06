@@ -1,6 +1,6 @@
 /**
- * Arquivo de teste para verificar a conexão com Supabase
- * Use este arquivo para testar a integração em diferentes contextos
+ * Arquivo de teste para verificar a conexao com Firebase/Firestore
+ * Use este arquivo para testar a integracao em diferentes contextos
  */
 
 import { createClient as createServerClient } from './server'

@@ -1,51 +1,63 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
-
-// Cria ou confirma usuário via Admin API (bypassa restrições de signup público)
+/**
+ * Confirma/cria usuario via Firebase Admin.
+ * Substitui o Supabase Admin API.
+ */
 export async function POST(request: Request) {
   try {
     const body = await request.json()
     const { userId, email, password, fullName, role } = body
 
-    // Modo 1: confirmar email de usuário já criado
+    // Modo 1: confirmar email de usuario ja criado
     if (userId && !email) {
-      const { error } = await supabaseAdmin.auth.admin.updateUser(userId, {
-        email_confirm: true,
-      })
-      if (error) {
-        console.error("[confirm-user] updateUser error:", error.message)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+      try {
+        const { adminAuth } = await import("@/lib/firebase/admin")
+        await adminAuth.updateUser(userId, { emailVerified: true })
+        return NextResponse.json({ success: true })
+      } catch (err: unknown) {
+        console.error("[confirm-user] updateUser error:", (err as Error).message)
+        return NextResponse.json({ error: (err as Error).message }, { status: 500 })
       }
-      return NextResponse.json({ success: true })
     }
 
-    // Modo 2: criar usuário via admin (bypassa "Signup disabled")
+    // Modo 2: criar usuario via admin
     if (email && password) {
-      const { data, error } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: fullName ?? "",
-          role: role ?? "passenger",
-        },
-      })
+      try {
+        const { adminAuth } = await import("@/lib/firebase/admin")
+        const { adminDb } = await import("@/lib/firebase/admin")
 
-      if (error) {
-        console.error("[confirm-user] createUser error:", error.message)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const user = await adminAuth.createUser({
+          email,
+          password,
+          emailVerified: true,
+          displayName: fullName ?? "",
+        })
+
+        // Cria perfil no Firestore
+        await adminDb.collection("profiles").doc(user.uid).set({
+          email,
+          full_name: fullName ?? null,
+          avatar_url: null,
+          phone: null,
+          user_type: role ?? "passenger",
+          trust_score: 100,
+          trust_level: "gold",
+          referral_code: user.uid.slice(0, 8).toUpperCase(),
+          is_verified: true,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+
+        return NextResponse.json({ success: true, userId: user.uid })
+      } catch (err: unknown) {
+        console.error("[confirm-user] createUser error:", (err as Error).message)
+        return NextResponse.json({ error: (err as Error).message }, { status: 500 })
       }
-
-      return NextResponse.json({ success: true, userId: data.user?.id })
     }
 
-    return NextResponse.json({ error: "Parâmetros inválidos" }, { status: 400 })
+    return NextResponse.json({ error: "Parametros invalidos" }, { status: 400 })
   } catch (err) {
     console.error("[confirm-user] catch:", err)
     return NextResponse.json({ error: "Erro interno" }, { status: 500 })

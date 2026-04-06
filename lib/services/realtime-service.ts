@@ -1,22 +1,33 @@
-import { createClient } from '@/lib/supabase/client'
-import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+/**
+ * Realtime Service — Firebase Firestore onSnapshot
+ * Substitui o Supabase Realtime por listeners do Firestore.
+ */
+import { db } from "@/lib/firebase/config"
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  type Unsubscribe,
+  type DocumentData,
+} from "firebase/firestore"
 
-export type TableName = 
-  | 'rides'
-  | 'price_offers'
-  | 'messages'
-  | 'notifications'
-  | 'driver_profiles'
-  | 'driver_locations'
-  | 'social_posts'
-  | 'post_likes'
-  | 'post_comments'
-  | 'wallet_transactions'
-  | 'payments'
-  | 'ratings'
-  | 'user_achievements'
+export type TableName =
+  | "rides"
+  | "price_offers"
+  | "messages"
+  | "notifications"
+  | "driver_profiles"
+  | "driver_locations"
+  | "social_posts"
+  | "post_likes"
+  | "post_comments"
+  | "wallet_transactions"
+  | "payments"
+  | "ratings"
+  | "user_achievements"
 
-export type ChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+export type ChangeEvent = "INSERT" | "UPDATE" | "DELETE" | "*"
 
 export interface RealtimeOptions {
   event?: ChangeEvent
@@ -24,192 +35,131 @@ export interface RealtimeOptions {
   filter?: string
 }
 
+// Compat payload para manter a mesma interface
+interface CompatPayload<T = DocumentData> {
+  eventType: "INSERT" | "UPDATE" | "DELETE"
+  new: T | null
+  old: T | null
+  table: string
+}
+
+// Wrapper de channel para compatibilidade
+class FirestoreChannel {
+  topic: string
+  private unsub: Unsubscribe | null = null
+
+  constructor(topic: string, unsub: Unsubscribe) {
+    this.topic = topic
+    this.unsub = unsub
+  }
+
+  unsubscribe() {
+    if (this.unsub) {
+      this.unsub()
+      this.unsub = null
+    }
+  }
+}
+
 class RealtimeService {
-  private supabase = createClient()
-  private channels: Map<string, RealtimeChannel> = new Map()
+  private channels: Map<string, FirestoreChannel> = new Map()
 
-  /**
-   * Subscribe to table changes
-   */
-  subscribeToTable<T = any>(
+  subscribeToTable<T = DocumentData>(
     table: TableName,
-    callback: (payload: RealtimePostgresChangesPayload<T>) => void,
+    callback: (payload: CompatPayload<T>) => void,
     options?: RealtimeOptions
-  ): RealtimeChannel {
-    const channelName = `${table}_${options?.event || 'all'}_${Date.now()}`
-    
-    const channel = this.supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: options?.event || '*',
-          schema: options?.schema || 'public',
-          table: table,
-          filter: options?.filter,
-        },
-        (payload) => {
-          callback(payload as RealtimePostgresChangesPayload<T>)
-        }
-      )
-      .subscribe()
+  ): FirestoreChannel {
+    const channelName = `${table}_${options?.event || "all"}_${Date.now()}`
+    const col = collection(db, table)
 
+    // Parse do filtro Supabase-style (e.g. "id=eq.123")
+    let q = query(col)
+    if (options?.filter) {
+      const parts = options.filter.split("=eq.")
+      if (parts.length === 2) {
+        q = query(col, where(parts[0], "==", parts[1]))
+      }
+    }
+
+    const unsub = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        let eventType: "INSERT" | "UPDATE" | "DELETE" = "UPDATE"
+        if (change.type === "added") eventType = "INSERT"
+        if (change.type === "removed") eventType = "DELETE"
+
+        if (options?.event && options.event !== "*" && options.event !== eventType) return
+
+        callback({
+          eventType,
+          new: eventType !== "DELETE" ? ({ id: change.doc.id, ...change.doc.data() } as T) : null,
+          old: eventType === "DELETE" ? ({ id: change.doc.id, ...change.doc.data() } as T) : null,
+          table,
+        })
+      })
+    })
+
+    const channel = new FirestoreChannel(channelName, unsub)
     this.channels.set(channelName, channel)
     return channel
   }
 
-  /**
-   * Subscribe to ride updates
-   */
-  subscribeToRide(
-    rideId: string,
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('rides', callback, {
-      filter: `id=eq.${rideId}`,
-    })
+  subscribeToRide(rideId: string, callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("rides", callback, { filter: `id=eq.${rideId}` })
   }
 
-  /**
-   * Subscribe to price offers for a ride
-   */
-  subscribeToPriceOffers(
-    rideId: string,
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('price_offers', callback, {
-      filter: `ride_id=eq.${rideId}`,
-    })
+  subscribeToPriceOffers(rideId: string, callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("price_offers", callback, { filter: `ride_id=eq.${rideId}` })
   }
 
-  /**
-   * Subscribe to messages for a ride
-   */
-  subscribeToMessages(
-    rideId: string,
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('messages', callback, {
-      filter: `ride_id=eq.${rideId}`,
-    })
+  subscribeToMessages(rideId: string, callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("messages", callback, { filter: `ride_id=eq.${rideId}` })
   }
 
-  /**
-   * Subscribe to user notifications
-   */
-  subscribeToNotifications(
-    userId: string,
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('notifications', callback, {
+  subscribeToNotifications(userId: string, callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("notifications", callback, {
       filter: `user_id=eq.${userId}`,
-      event: 'INSERT',
+      event: "INSERT",
     })
   }
 
-  /**
-   * Subscribe to driver location updates
-   */
-  subscribeToDriverLocation(
-    driverId: string,
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('driver_locations', callback, {
+  subscribeToDriverLocation(driverId: string, callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("driver_locations", callback, {
       filter: `driver_id=eq.${driverId}`,
-      event: 'UPDATE',
+      event: "UPDATE",
     })
   }
 
-  /**
-   * Subscribe to nearby drivers (within a bounding box)
-   */
-  subscribeToNearbyDrivers(
-    callback: (payload: RealtimePostgresChangesPayload<any>) => void
-  ): RealtimeChannel {
-    return this.subscribeToTable('driver_profiles', callback, {
-      event: 'UPDATE',
-    })
+  subscribeToNearbyDrivers(callback: (payload: CompatPayload) => void): FirestoreChannel {
+    return this.subscribeToTable("driver_profiles", callback, { event: "UPDATE" })
   }
 
-  /**
-   * Unsubscribe from a channel
-   */
-  async unsubscribe(channel: RealtimeChannel): Promise<void> {
-    const channelName = channel.topic
-    await this.supabase.removeChannel(channel)
-    this.channels.delete(channelName)
+  async unsubscribe(channel: FirestoreChannel): Promise<void> {
+    channel.unsubscribe()
+    this.channels.delete(channel.topic)
   }
 
-  /**
-   * Unsubscribe from all channels
-   */
   async unsubscribeAll(): Promise<void> {
-    const promises = Array.from(this.channels.values()).map((channel) =>
-      this.supabase.removeChannel(channel)
-    )
-    await Promise.all(promises)
+    this.channels.forEach((ch) => ch.unsubscribe())
     this.channels.clear()
   }
 
-  /**
-   * Get active channels count
-   */
   getActiveChannelsCount(): number {
     return this.channels.size
   }
 
-  /**
-   * Check if realtime is connected
-   */
   isConnected(): boolean {
     return this.channels.size > 0
   }
 
-  /**
-   * Broadcast a message to a channel
-   */
-  async broadcast(
-    channelName: string,
-    event: string,
-    payload: any
-  ): Promise<void> {
-    const channel = this.channels.get(channelName)
-    if (!channel) return
-
-    await channel.send({
-      type: 'broadcast',
-      event,
-      payload,
-    })
+  async broadcast(_channelName: string, _event: string, _payload: unknown): Promise<void> {
+    // Firestore nao tem broadcast nativo — no-op
   }
 
-  /**
-   * Create a presence channel (for showing online users)
-   */
-  createPresenceChannel(
-    channelName: string,
-    userId: string,
-    userData: any
-  ): RealtimeChannel {
-    const channel = this.supabase.channel(channelName, {
-      config: {
-        presence: {
-          key: userId,
-        },
-      },
-    })
-
-    channel
-      .on('presence', { event: 'sync' }, () => {})
-      .on('presence', { event: 'join' }, () => {})
-      .on('presence', { event: 'leave' }, () => {})
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track(userData)
-        }
-      })
-
-    this.channels.set(channelName, channel)
+  createPresenceChannel(_channelName: string, _userId: string, _userData: unknown): FirestoreChannel {
+    // Firestore nao tem presence nativo — retorna channel vazio
+    const unsub: Unsubscribe = () => {}
+    const channel = new FirestoreChannel(_channelName, unsub)
+    this.channels.set(_channelName, channel)
     return channel
   }
 }
