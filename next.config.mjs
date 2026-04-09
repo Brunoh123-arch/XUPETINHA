@@ -4,13 +4,9 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
-// next.config.mjs v2 — sem chaves experimentais invalidas
 
-// Quando BUILD_TARGET=android, gera output estatico para o Capacitor
-// Em producao Vercel, BUILD_TARGET nao e definido e o app roda normalmente
 const isAndroidBuild = process.env.BUILD_TARGET === 'android'
 
-// Pacotes nativos/opcionais que devem ser substituidos por mocks no build web
 const NATIVE_PACKAGES = [
   '@capacitor/core',
   '@capacitor/geolocation',
@@ -35,7 +31,6 @@ const NATIVE_PACKAGES = [
   '@capacitor-community/text-to-speech',
   '@capacitor-community/biometric-auth',
   '@capacitor-community/microphone',
-  // Google Maps packages (only needed at runtime when API key is set)
   '@vis.gl/react-google-maps',
   'google-maps',
 ]
@@ -43,97 +38,59 @@ const NATIVE_PACKAGES = [
 const capacitorMockPath = path.resolve(__dirname, 'lib/capacitor-mock.js')
 
 const nextConfig = {
-  // Static export apenas para build Android (Capacitor usa /out como webDir)
   ...(isAndroidBuild && { output: 'export' }),
 
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
-  serverExternalPackages: ['resend', 'web-push'],
+  serverExternalPackages: ['resend', 'web-push', ...NATIVE_PACKAGES],
   typescript: {
     ignoreBuildErrors: true,
   },
   reactStrictMode: true,
 
-  // Webpack aliases para build web (substitui pacotes nativos Capacitor por mocks)
-  webpack(config, { isServer }) {
+  webpack: function webpackConfig(config) {
     if (!isAndroidBuild) {
-      NATIVE_PACKAGES.forEach((pkg) => {
+      NATIVE_PACKAGES.forEach(function addAlias(pkg) {
         config.resolve.alias[pkg] = capacitorMockPath
       })
     }
     return config
   },
+
   images: {
-    // Necessario para static export (Android) — no Vercel usa o Image Optimizer normal
     unoptimized: isAndroidBuild,
   },
+
   async headers() {
-    // Headers de seguranca para todas as rotas
     const securityHeaders = [
-      {
-        key: 'X-DNS-Prefetch-Control',
-        value: 'on',
-      },
-      {
-        key: 'Strict-Transport-Security',
-        value: 'max-age=63072000; includeSubDomains; preload',
-      },
-      {
-        key: 'X-Frame-Options',
-        value: 'SAMEORIGIN',
-      },
-      {
-        key: 'X-Content-Type-Options',
-        value: 'nosniff',
-      },
-      {
-        key: 'X-XSS-Protection',
-        value: '1; mode=block',
-      },
-      {
-        key: 'Referrer-Policy',
-        value: 'strict-origin-when-cross-origin',
-      },
-      {
-        key: 'Permissions-Policy',
-        value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)',
-      },
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self), payment=(self)' },
     ]
 
     return [
       {
-        // Aplicar headers de seguranca em todas as rotas
         source: '/:path*',
         headers: securityHeaders,
       },
       {
-        // Digital Asset Links must be served with this content-type
         source: '/.well-known/assetlinks.json',
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/json',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600',
-          },
+          { key: 'Content-Type', value: 'application/json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
       {
-        // Manifest must be accessible
         source: '/manifest.json',
         headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/manifest+json',
-          },
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600',
-          },
+          { key: 'Content-Type', value: 'application/manifest+json' },
+          { key: 'Cache-Control', value: 'public, max-age=3600' },
         ],
       },
     ]
